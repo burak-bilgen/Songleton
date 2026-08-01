@@ -318,14 +318,15 @@ struct PlayerPanelView: View {
 
     private func progressView(info: NowPlayingInfo) -> some View {
         VStack(spacing: 4) {
-            Slider(value: $sliderPosition, in: 0...max(info.duration, 1)) { editing in
-                isDraggingPosition = editing
-                if !editing { model.seekTo(sliderPosition) }
-            }
-            .controlSize(.mini)
-            .tint(Color.accentColor)
-            .focusEffectDisabled()
-            .focusable(false)
+            CustomSliderView(
+                value: $sliderPosition,
+                range: 0...max(info.duration, 1),
+                onEditingChanged: { editing in
+                    isDraggingPosition = editing
+                    if !editing { model.seekTo(sliderPosition) }
+                },
+                barColor: .primary
+            )
             .onAppear { if !isDraggingPosition { sliderPosition = info.position } }
             .onChange(of: info.position) { _, v in if !isDraggingPosition { sliderPosition = v } }
 
@@ -408,14 +409,17 @@ struct PlayerPanelView: View {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.tertiary)
                 .frame(width: 14)
-            Slider(value: $sliderVolume, in: 0...100) { editing in
-                isDraggingVolume = editing
-                if !editing { model.setVolume(Int(sliderVolume)) }
-            }
-            .controlSize(.mini)
-            .tint(Color.primary.opacity(0.8))
-            .focusEffectDisabled()
-            .focusable(false)
+
+            CustomSliderView(
+                value: $sliderVolume,
+                range: 0...100,
+                onEditingChanged: { editing in
+                    isDraggingVolume = editing
+                    if !editing { model.setVolume(Int(sliderVolume)) }
+                },
+                barColor: .primary
+            )
+
             Image(systemName: "speaker.wave.3.fill")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.tertiary)
@@ -703,5 +707,56 @@ struct PlayerPanelView: View {
     private func formatTime(_ seconds: Double) -> String {
         let s = Int(seconds)
         return String(format: "%d:%02d", s / 60, s % 60)
+    }
+}
+
+// MARK: - CustomSliderView
+
+struct CustomSliderView: View {
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let onEditingChanged: (Bool) -> Void
+    var barColor: Color = .primary
+
+    var body: some View {
+        GeometryReader { geometry in
+            let totalWidth = max(geometry.size.width, 1)
+            let safeRangeLength = max(range.upperBound - range.lowerBound, 0.001)
+            let percent = max(0, min(1, (value - range.lowerBound) / safeRangeLength))
+            let activeWidth = totalWidth * CGFloat(percent)
+
+            ZStack(alignment: .leading) {
+                // Background Track
+                Capsule()
+                    .fill(Color.primary.opacity(0.12))
+                    .frame(height: 4)
+
+                // Active Progress Track
+                Capsule()
+                    .fill(barColor.opacity(0.85))
+                    .frame(width: max(4, activeWidth), height: 4)
+
+                // Monochrome White Thumb Handle (Zero blue system tint!)
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 10, height: 10)
+                    .shadow(color: Color.black.opacity(0.25), radius: 2, x: 0, y: 1)
+                    .offset(x: max(0, min(totalWidth - 10, activeWidth - 5)))
+            }
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { gesture in
+                        onEditingChanged(true)
+                        let newPercent = max(0, min(1, gesture.location.x / totalWidth))
+                        value = range.lowerBound + Double(newPercent) * safeRangeLength
+                    }
+                    .onEnded { _ in
+                        onEditingChanged(false)
+                    }
+            )
+        }
+        .frame(height: 14)
     }
 }
