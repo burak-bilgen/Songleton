@@ -32,8 +32,8 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // 2. Backward Status Item [⏮] (Created 1st -> Placed on the Far Right)
-        let bwdItem = NSStatusBar.system.statusItem(withLength: 18)
+        // 2. Backward Status Item [⏮] (Created 1st -> Placed on the Far Right, Tight Length)
+        let bwdItem = NSStatusBar.system.statusItem(withLength: 16)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: "Önceki Şarkı")
             button.target = self
@@ -49,7 +49,7 @@ final class MenuBarManager: NSObject {
             settings: SettingsModel.shared
         )
         let hosting = NSHostingView(rootView: mainLabel)
-        let fittingWidth = min(max(50, hosting.fittingSize.width + 4), SettingsModel.shared.menuBarWidth + 24)
+        let fittingWidth = min(max(40, hosting.fittingSize.width), SettingsModel.shared.menuBarWidth + 10)
         hosting.frame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
         hosting.autoresizingMask = [.width, .height]
 
@@ -64,8 +64,8 @@ final class MenuBarManager: NSObject {
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // 4. Forward Status Item [⏭] (Created 3rd -> Placed on the Far Left)
-        let fwdItem = NSStatusBar.system.statusItem(withLength: 18)
+        // 4. Forward Status Item [⏭] (Created 3rd -> Placed on the Far Left, Tight Length)
+        let fwdItem = NSStatusBar.system.statusItem(withLength: 16)
         if let button = fwdItem.button {
             button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: "Sonraki Şarkı")
             button.target = self
@@ -86,7 +86,7 @@ final class MenuBarManager: NSObject {
     func updateWidth() {
         guard let mainItem = mainStatusItem, let button = mainItem.button else { return }
         if let hosting = button.subviews.first as? NSHostingView<MenuBarMainLabelView> {
-            let fittingWidth = min(max(50, hosting.fittingSize.width + 4), SettingsModel.shared.menuBarWidth + 24)
+            let fittingWidth = min(max(40, hosting.fittingSize.width), SettingsModel.shared.menuBarWidth + 10)
             let newFrame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
             hosting.frame = newFrame
             button.frame = newFrame
