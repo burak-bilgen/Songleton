@@ -8,7 +8,7 @@ struct PlayerPanelView: View {
     @ObservedObject private var settings = SettingsModel.shared
     @Environment(\.openSettings) private var openSettings
 
-    @State private var selectedTab = 0 // 0: Now Playing, 1: Spotify Playlists, 2: History
+    @State private var selectedTab = 0 // 0: Now Playing, 1: Lyrics, 2: Spotify Playlists, 3: History
     @State private var sliderVolume: Double = 50
     @State private var isDraggingVolume = false
     @State private var sliderPosition: Double = 0
@@ -17,7 +17,7 @@ struct PlayerPanelView: View {
     @State private var toastText = ""
 
     private var isCompact: Bool { settings.panelStyle == .compact }
-    private var panelWidth: CGFloat { 320 }
+    private var panelWidth: CGFloat { 350 }
 
     var body: some View {
         ZStack {
@@ -25,37 +25,44 @@ struct PlayerPanelView: View {
             backgroundView
 
             VStack(spacing: 0) {
-                // Top Segmented Tab Picker
+                // Pinned Stationary Top Segmented Tab Picker
                 topTabBar
-                    .padding(.top, 12)
-                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 6)
 
-                switch selectedTab {
-                case 0:
-                    // Now Playing Tab
-                    switch model.state {
-                    case .loaded(let info, let source):
-                        loadedView(info: info, source: source)
-                    case .notRunning:
-                        notRunningView
-                    case .permissionDenied:
-                        permissionDeniedView
+                Divider()
+
+                // Content View Container (Fixed Height so Top Bar Never Shifts)
+                ZStack {
+                    switch selectedTab {
+                    case 0:
+                        // Now Playing Tab
+                        switch model.state {
+                        case .loaded(let info, let source):
+                            loadedView(info: info, source: source)
+                        case .notRunning:
+                            notRunningView
+                        case .permissionDenied:
+                            permissionDeniedView
+                        }
+                    case 1:
+                        // Synced Karaoke Lyrics Tab
+                        SyncedLyricsView(nowPlaying: model)
+                            .frame(height: 380)
+                    case 2:
+                        // Spotify Playlists Tab
+                        SpotifyPlaylistsView()
+                            .frame(height: 380)
+                    case 3:
+                        // History Tab
+                        recentTracksSheet
+                            .frame(height: 380)
+                    default:
+                        EmptyView()
                     }
-                case 1:
-                    // Synced Karaoke Lyrics Tab
-                    SyncedLyricsView(nowPlaying: model)
-                        .frame(height: 380)
-                case 2:
-                    // Spotify Playlists Tab
-                    SpotifyPlaylistsView()
-                        .frame(height: 380)
-                case 3:
-                    // History Tab
-                    recentTracksSheet
-                        .frame(height: 380)
-                default:
-                    EmptyView()
                 }
+                .frame(height: 380)
             }
 
             // Toast Notification Overlay
@@ -81,14 +88,14 @@ struct PlayerPanelView: View {
         }
     }
 
-    // MARK: - Top Tab Bar
+    // MARK: - Pinned Stationary Top Tab Bar
 
     private var topTabBar: some View {
-        HStack(spacing: 3) {
-            tabButton(title: "Oynatıcı", icon: "music.note", index: 0)
-            tabButton(title: "Sözler", icon: "quote.bubble.fill", index: 1)
-            tabButton(title: "Playlistler", icon: "music.note.list", index: 2)
-            tabButton(title: "Geçmiş", icon: "clock", index: 3)
+        HStack(spacing: 4) {
+            tabButton(title: NSLocalizedString("Oynatıcı", comment: "Now Playing Tab"), icon: "music.note", index: 0)
+            tabButton(title: NSLocalizedString("Sözler", comment: "Lyrics Tab"), icon: "quote.bubble.fill", index: 1)
+            tabButton(title: NSLocalizedString("Playlistler", comment: "Playlists Tab"), icon: "music.note.list", index: 2)
+            tabButton(title: NSLocalizedString("Geçmiş", comment: "History Tab"), icon: "clock", index: 3)
         }
         .padding(3)
         .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -100,11 +107,13 @@ struct PlayerPanelView: View {
                 selectedTab = index
             }
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: 3) {
                 Image(systemName: icon)
                     .font(.system(size: 10, weight: .semibold))
                 Text(title)
                     .font(.system(size: 11, weight: selectedTab == index ? .bold : .medium, design: .rounded))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
             .foregroundStyle(selectedTab == index ? Color.primary : Color.secondary)
             .frame(maxWidth: .infinity)
@@ -181,7 +190,7 @@ struct PlayerPanelView: View {
                         insertion: .scale(scale: 0.92).combined(with: .opacity),
                         removal: .scale(scale: 1.05).combined(with: .opacity)
                     ))
-                    .padding(.top, 14)
+                    .padding(.top, 10)
                     .padding(.horizontal, 16)
 
                 // Track info
@@ -191,26 +200,26 @@ struct PlayerPanelView: View {
                         insertion: .move(edge: .top).combined(with: .opacity),
                         removal: .move(edge: .bottom).combined(with: .opacity)
                     ))
-                    .padding(.top, 12)
+                    .padding(.top, 8)
                     .padding(.horizontal, 16)
 
                 // Progress bar
                 if settings.showProgressBar && info.duration > 0 {
                     progressView(info: info)
-                        .padding(.top, 10)
+                        .padding(.top, 8)
                         .padding(.horizontal, 20)
                 }
 
-                // Controls (Without Rewind/Restart Button)
+                // Controls
                 controlsView(info: info)
-                    .padding(.top, 12)
+                    .padding(.top, 8)
                     .padding(.horizontal, 20)
 
                 // Volume
                 volumeView(info: info)
-                    .padding(.top, 10)
+                    .padding(.top, 8)
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 6)
+                    .padding(.bottom, 4)
             } else {
                 // Compact mode
                 compactLoadedView(info: info, source: source)
@@ -253,7 +262,7 @@ struct PlayerPanelView: View {
                 }
             }
         }
-        .frame(width: panelWidth - 56, height: panelWidth - 56)
+        .frame(width: 175, height: 175)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 6)
         .overlay(
@@ -261,7 +270,7 @@ struct PlayerPanelView: View {
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
         .onTapGesture { activateActivePlayer() }
-        .help("Çalan uygulamayı ön plana getirmek için tıklayın")
+        .help(NSLocalizedString("Çalan uygulamayı ön plana getirmek için tıklayın", comment: "Bring app to front"))
     }
 
     // MARK: - Track Info View
@@ -277,10 +286,10 @@ struct PlayerPanelView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 if let copied = model.copyTrackInfo() {
-                    triggerToast("Kopyalandı: \(copied)")
+                    triggerToast("\(NSLocalizedString("Kopyalandı", comment: "Copied")): \(copied)")
                 }
             }
-            .help("Tıklayarak şarkı ve sanatçı adını kopyalayın")
+            .help(NSLocalizedString("Tıklayarak şarkı ve sanatçı adını kopyalayın", comment: "Copy track info"))
 
             Text(info.artist)
                 .font(.system(size: 13, weight: .medium, design: .rounded))
@@ -304,7 +313,7 @@ struct PlayerPanelView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(.primary.opacity(0.06), in: Capsule())
-            .padding(.top, 4)
+            .padding(.top, 2)
         }
     }
 
@@ -333,7 +342,7 @@ struct PlayerPanelView: View {
         }
     }
 
-    // MARK: - Controls View (Clean & Balanced without Rewind)
+    // MARK: - Controls View
 
     private func controlsView(info: NowPlayingInfo) -> some View {
         HStack(spacing: 36) {
@@ -348,7 +357,7 @@ struct PlayerPanelView: View {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .help("Önceki şarkı")
+            .help(NSLocalizedString("Önceki şarkı", comment: "Previous track"))
 
             // 2. Canlı Oynat / Durdur Butonu (Play / Pause Button)
             Button(action: { model.togglePlayPause() }) {
@@ -366,7 +375,7 @@ struct PlayerPanelView: View {
                                 .stroke(Color.primary.opacity(0.15), lineWidth: 0.75)
                         )
                         .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
-                        .frame(width: 52, height: 52)
+                        .frame(width: 50, height: 50)
 
                     Image(systemName: info.isPlaying ? "pause.fill" : "play.fill")
                         .font(.system(size: 22, weight: .bold))
@@ -375,7 +384,7 @@ struct PlayerPanelView: View {
                 }
             }
             .buttonStyle(.plain)
-            .help(info.isPlaying ? "Duraklat" : "Oynat")
+            .help(info.isPlaying ? NSLocalizedString("Duraklat", comment: "Pause") : NSLocalizedString("Oynat", comment: "Play"))
 
             // 3. Sonraki Şarkı (Next Track)
             Button(action: { model.nextTrack() }) {
@@ -386,7 +395,7 @@ struct PlayerPanelView: View {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .help("Sonraki şarkı")
+            .help(NSLocalizedString("Sonraki şarkı", comment: "Next track"))
 
             Spacer(minLength: 0)
         }
@@ -457,7 +466,7 @@ struct PlayerPanelView: View {
     private var recentTracksSheet: some View {
         VStack(spacing: 10) {
             HStack {
-                Label("Son Çalınanlar", systemImage: "clock.fill")
+                Label(NSLocalizedString("Son Çalınanlar", comment: "Recent Tracks"), systemImage: "clock.fill")
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                 Spacer()
             }
@@ -469,7 +478,7 @@ struct PlayerPanelView: View {
                     Image(systemName: "music.note.list")
                         .font(.system(size: 28, weight: .thin))
                         .foregroundStyle(.tertiary)
-                    Text("Henüz geçmiş yok")
+                    Text(NSLocalizedString("Henüz geçmiş yok", comment: "No history yet"))
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
@@ -512,14 +521,14 @@ struct PlayerPanelView: View {
                 let text = "\(item.track) - \(item.artist)"
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(text, forType: .string)
-                triggerToast("Kopyalandı")
+                triggerToast(NSLocalizedString("Kopyalandı", comment: "Copied"))
             }) {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 10))
                     .foregroundStyle(.tertiary)
             }
             .buttonStyle(.plain)
-            .help("Kopyala")
+            .help(NSLocalizedString("Kopyala", comment: "Copy"))
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
@@ -540,9 +549,9 @@ struct PlayerPanelView: View {
                     .foregroundStyle(.secondary)
             }
             VStack(spacing: 6) {
-                Text("Müzik çalmıyor")
+                Text(NSLocalizedString("Müzik çalmıyor", comment: "Not playing"))
                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                Text("Spotify veya Apple Music'i başlatın")
+                Text(NSLocalizedString("Spotify veya Apple Music'i başlatın", comment: "Launch Spotify or Music"))
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -589,9 +598,9 @@ struct PlayerPanelView: View {
                     .foregroundStyle(.orange)
             }
             VStack(spacing: 6) {
-                Text("İzin Gerekli")
+                Text(NSLocalizedString("İzin Gerekli", comment: "Permission Required"))
                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                Text("Songleton, Spotify veya Apple Music'e erişmek için Otomasyon izni istiyor.")
+                Text(NSLocalizedString("Songleton, Spotify veya Apple Music'e erişmek için Otomasyon izni istiyor.", comment: "Automation permission explanation"))
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -601,7 +610,7 @@ struct PlayerPanelView: View {
                 Button(action: { openAutomationSettings() }) {
                     HStack {
                         Image(systemName: "gear")
-                        Text("Gizlilik Ayarlarını Aç")
+                        Text(NSLocalizedString("Gizlilik Ayarlarını Aç", comment: "Open Privacy Settings"))
                     }
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .frame(maxWidth: .infinity)
@@ -614,7 +623,7 @@ struct PlayerPanelView: View {
                 Button(action: {
                     model.requestPermissionByScript()
                 }) {
-                    Text("Tekrar Dene")
+                    Text(NSLocalizedString("Tekrar Dene", comment: "Try Again"))
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
@@ -631,9 +640,9 @@ struct PlayerPanelView: View {
     private var dividerAndFooter: some View {
         VStack(spacing: 0) {
             Divider()
-                .padding(.top, 12)
+                .padding(.top, 8)
             HStack(spacing: 0) {
-                Button("Ayarlar…") {
+                Button(NSLocalizedString("Ayarlar…", comment: "Settings")) {
                     openSettings()
                     NSApp.activate(ignoringOtherApps: true)
                 }
@@ -644,13 +653,13 @@ struct PlayerPanelView: View {
 
                 Spacer()
 
-                Button("Çıkış") { NSApplication.shared.terminate(nil) }
+                Button(NSLocalizedString("Çıkış", comment: "Quit")) { NSApplication.shared.terminate(nil) }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .padding(.trailing, 16)
             }
-            .frame(height: 36)
+            .frame(height: 34)
         }
     }
 

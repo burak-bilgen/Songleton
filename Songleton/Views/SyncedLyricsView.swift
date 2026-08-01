@@ -6,6 +6,9 @@ struct SyncedLyricsView: View {
     @ObservedObject var nowPlaying: NowPlayingModel
     @StateObject private var lyricsModel = LyricsModel.shared
 
+    @State private var isUserScrolling = false
+    @State private var userScrollTimer: Task<Void, Never>? = nil
+
     private var playbackPosition: Double {
         if case .loaded(let info, _) = nowPlaying.state {
             return info.position
@@ -42,7 +45,7 @@ struct SyncedLyricsView: View {
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 14) {
-                            Spacer().frame(height: 120)
+                            Spacer().frame(height: 140)
 
                             ForEach(Array(lyricsModel.lines.enumerated()), id: \.element.id) { index, line in
                                 let isActive = index == activeIndex
@@ -56,21 +59,33 @@ struct SyncedLyricsView: View {
                                     .foregroundStyle(isActive ? .primary : .secondary)
                                     .opacity(isActive ? 1.0 : (index < (activeIndex ?? 0) ? 0.35 : 0.5))
                                     .scaleEffect(isActive ? 1.03 : 1.0, anchor: .leading)
-                                    .blur(radius: isActive ? 0 : 0.4)
                                     .shadow(color: isActive ? Color.accentColor.opacity(0.4) : .clear, radius: 4)
                                     .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isActive)
                                     .id(index)
+                                    .contentShape(Rectangle())
                                     .onTapGesture {
                                         nowPlaying.seekTo(line.timestamp)
                                     }
                             }
 
-                            Spacer().frame(height: 140)
+                            Spacer().frame(height: 160)
                         }
                         .padding(.horizontal, 20)
                     }
+                    .simultaneousGesture(
+                        DragGesture().onChanged { _ in
+                            isUserScrolling = true
+                            userScrollTimer?.cancel()
+                            userScrollTimer = Task {
+                                try? await Task.sleep(for: .seconds(4.0))
+                                if !Task.isCancelled {
+                                    isUserScrolling = false
+                                }
+                            }
+                        }
+                    )
                     .onChange(of: activeIndex) { _, newIndex in
-                        if let newIndex {
+                        if let newIndex, !isUserScrolling {
                             withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
                                 proxy.scrollTo(newIndex, anchor: .center)
                             }

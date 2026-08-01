@@ -39,10 +39,13 @@ final class LyricsModel: ObservableObject {
     func activeLineIndex(for position: Double) -> Int? {
         guard !lines.isEmpty else { return nil }
 
-        for (index, line) in lines.enumerated().reversed() {
-            if position >= line.timestamp - 0.3 {
-                return index
+        for i in 0..<(lines.count - 1) {
+            if position >= lines[i].timestamp && position < lines[i + 1].timestamp {
+                return i
             }
+        }
+        if let last = lines.last, position >= last.timestamp {
+            return lines.count - 1
         }
         return 0
     }
