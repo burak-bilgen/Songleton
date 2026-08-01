@@ -36,13 +36,16 @@ final class LyricsModel: ObservableObject {
         }
     }
 
-    /// Finds the latest lyric line that has started based on playback position.
+    /// Finds the latest lyric line that has started based on playback position and delay compensation offset.
     func activeLineIndex(for position: Double) -> Int? {
         guard !lines.isEmpty else { return nil }
 
-        // Find the last line where position is greater than or equal to timestamp
+        let offset = SettingsModel.shared.lyricsOffset
+        let effectivePosition = position + offset
+
+        // Find the last line where effectivePosition is greater than or equal to timestamp
         for (index, line) in lines.enumerated().reversed() {
-            if position >= (line.timestamp - 0.2) {
+            if effectivePosition >= line.timestamp {
                 return index
             }
         }

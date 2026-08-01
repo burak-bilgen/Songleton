@@ -67,6 +67,10 @@ final class SettingsModel: ObservableObject {
         didSet { defaults.set(showMenuBarControls, forKey: "showMenuBarControls") }
     }
 
+    @Published var lyricsOffset: Double {
+        didSet { defaults.set(lyricsOffset, forKey: "lyricsOffset") }
+    }
+
     private let defaults = UserDefaults.standard
 
     private init() {
@@ -78,7 +82,8 @@ final class SettingsModel: ObservableObject {
             "panelStyle": PanelStyle.full.rawValue,
             "showProgressBar": true,
             "useDynamicColor": true,
-            "showMenuBarControls": true
+            "showMenuBarControls": true,
+            "lyricsOffset": 1.2
         ])
         showArtistInMenuBar = defaults.bool(forKey: "showArtistInMenuBar")
         menuBarWidth = defaults.double(forKey: "menuBarWidth")
@@ -88,6 +93,7 @@ final class SettingsModel: ObservableObject {
         showProgressBar = defaults.bool(forKey: "showProgressBar")
         useDynamicColor = defaults.bool(forKey: "useDynamicColor")
         showMenuBarControls = defaults.bool(forKey: "showMenuBarControls")
+        lyricsOffset = defaults.double(forKey: "lyricsOffset")
     }
 
     private func applyLaunchAtLogin() {

@@ -25,6 +25,20 @@ struct SettingsView: View {
                 Toggle("İlerleme çubuğu göster", isOn: $settings.showProgressBar)
             }
 
+            // MARK: Lyrics
+            Section("Şarkı Sözleri") {
+                LabeledContent("Gecikme Düzeltme (Offset)") {
+                    HStack {
+                        Slider(value: $settings.lyricsOffset, in: -3.0...3.0, step: 0.1)
+                        Text(String(format: "%+.1fs", settings.lyricsOffset))
+                            .monospacedDigit()
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                    .frame(width: 200)
+                }
+                .help("Sözler şarkıdan geride kalıyorsa artırın (+), önde gidiyorsa azaltın (-).")
+            }
+
             // MARK: Menu Bar
             Section("Menü Çubuğu") {
                 Picker("Yazı tipi", selection: $settings.menuBarFont) {
