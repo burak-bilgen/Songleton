@@ -54,33 +54,63 @@ final class LyricsService {
         return nil
     }
 
+    /// Robust LRC Parser matching any standard or non-standard timestamp:
+    /// e.g. [01:23.45], [1:23.4], [01:23:45], [01:23]
     private func parseLRC(_ lrcString: String) -> [LyricLine] {
         var lines: [LyricLine] = []
-        let regex = try? NSRegularExpression(pattern: "\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})\\](.*)")
+
+        // Match [mm:ss.xx], [m:ss.x], [mm:ss:xx], [mm:ss]
+        let pattern = "\\[(\\d{1,2}):(\\d{2})(?:[\\.\\:](\\d{1,3}))?\\](.*)"
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
 
         let rawLines = lrcString.components(separatedBy: .newlines)
         for line in rawLines {
-            let nsString = line as NSString
-            let matches = regex?.matches(in: line, range: NSRange(location: 0, length: nsString.length)) ?? []
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty { continue }
+
+            // Skip metadata tags like [ar:Artist], [ti:Title], [al:Album], [by:...]
+            if trimmed.hasPrefix("[ar:") || trimmed.hasPrefix("[ti:") || trimmed.hasPrefix("[al:") || trimmed.hasPrefix("[by:") || trimmed.hasPrefix("[length:") {
+                continue
+            }
+
+            let nsString = trimmed as NSString
+            let matches = regex.matches(in: trimmed, range: NSRange(location: 0, length: nsString.length))
 
             for match in matches {
-                if match.numberOfRanges >= 5 {
+                if match.numberOfRanges >= 3 {
                     let minStr = nsString.substring(with: match.range(at: 1))
                     let secStr = nsString.substring(with: match.range(at: 2))
-                    let msStr = nsString.substring(with: match.range(at: 3))
-                    let text = nsString.substring(with: match.range(at: 4)).trimmingCharacters(in: .whitespaces)
+
+                    var msSeconds = 0.0
+                    if match.numberOfRanges >= 4 && match.range(at: 3).location != NSNotFound {
+                        let msStr = nsString.substring(with: match.range(at: 3))
+                        if let msVal = Double(msStr) {
+                            if msStr.count == 1 {
+                                msSeconds = msVal / 10.0
+                            } else if msStr.count == 2 {
+                                msSeconds = msVal / 100.0
+                            } else {
+                                msSeconds = msVal / 1000.0
+                            }
+                        }
+                    }
+
+                    var lyricText = ""
+                    if match.numberOfRanges >= 5 && match.range(at: 4).location != NSNotFound {
+                        lyricText = nsString.substring(with: match.range(at: 4)).trimmingCharacters(in: .whitespaces)
+                    }
 
                     if let minutes = Double(minStr), let seconds = Double(secStr) {
-                        let ms = Double(msStr) ?? 0.0
-                        let msDivider = msStr.count == 3 ? 1000.0 : 100.0
-                        let totalSeconds = minutes * 60.0 + seconds + (ms / msDivider)
-                        if !text.isEmpty {
-                            lines.append(LyricLine(timestamp: totalSeconds, text: text))
+                        let totalSeconds = minutes * 60.0 + seconds + msSeconds
+                        // Keep line even if music note symbol ♪
+                        if !lyricText.isEmpty {
+                            lines.append(LyricLine(timestamp: totalSeconds, text: lyricText))
                         }
                     }
                 }
             }
         }
+
         return lines.sorted { $0.timestamp < $1.timestamp }
     }
 

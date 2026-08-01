@@ -10,10 +10,7 @@ struct SyncedLyricsView: View {
     @State private var userScrollTimer: Task<Void, Never>? = nil
 
     private var playbackPosition: Double {
-        if case .loaded(let info, _) = nowPlaying.state {
-            return info.position
-        }
-        return 0
+        nowPlaying.currentPosition
     }
 
     var body: some View {

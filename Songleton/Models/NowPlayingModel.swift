@@ -43,6 +43,17 @@ final class NowPlayingModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var lastLoadedKey: String?
 
+    private var lastFetchTime: Date = Date()
+
+    var currentPosition: Double {
+        guard case .loaded(let info, _) = state else { return 0 }
+        if info.isPlaying {
+            let elapsed = Date().timeIntervalSince(lastFetchTime)
+            return min(info.duration > 0 ? info.duration : Double.infinity, info.position + elapsed)
+        }
+        return info.position
+    }
+
     private var timerCancellable: AnyCancellable?
 
     private init() {
@@ -50,8 +61,8 @@ final class NowPlayingModel: ObservableObject {
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
-        // Real-time 0.5s polling timer for position & lyrics sync
-        timerCancellable = Timer.publish(every: 0.5, on: .main, in: .common)
+        // Real-time 0.25s polling timer for position & lyrics sync
+        timerCancellable = Timer.publish(every: 0.25, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 self?.refresh()
@@ -188,6 +199,7 @@ final class NowPlayingModel: ObservableObject {
                     }
                 }
                 state = result.state
+                lastFetchTime = Date()
                 activeController = result.active
                 await syncArtwork(with: result.state)
             }
