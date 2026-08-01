@@ -23,6 +23,11 @@ final class MenuBarControls: NSObject {
             .store(in: &cancellables)
     }
 
+    deinit {
+        rebuildItems(show: false)
+    }
+
+
     private func rebuildItems(show: Bool) {
         for item in items {
             NSStatusBar.system.removeStatusItem(item)

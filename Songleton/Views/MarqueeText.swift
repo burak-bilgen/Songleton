@@ -9,7 +9,7 @@ struct MarqueeText: View {
 
     @State private var textWidth: CGFloat = 0
     @State private var startDate = Date()
-    @State private var isPaused = true  // Start paused, scroll after delay
+    @State private var isPaused = true
 
     private let speed: Double = 36      // pts/sec
     private let gap: CGFloat = 48
@@ -37,16 +37,11 @@ struct MarqueeText: View {
                 measuredLabel
             }
         }
-        .onChange(of: text) {
+        .task(id: text) {
             startDate = Date()
             isPaused = true
-            // Restart scroll after pause
-            DispatchQueue.main.asyncAfter(deadline: .now() + pauseDuration) {
-                isPaused = false
-            }
-        }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + pauseDuration) {
+            try? await Task.sleep(for: .seconds(pauseDuration))
+            if !Task.isCancelled {
                 isPaused = false
             }
         }
@@ -68,10 +63,10 @@ struct MarqueeText: View {
     private var fadeMask: some View {
         HStack(spacing: 0) {
             LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
-                .frame(width: needsScroll ? 16 : 0)
+                .frame(width: needsScroll ? 12 : 0)
             Color.black
             LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
-                .frame(width: 16)
+                .frame(width: 12)
         }
     }
 }
