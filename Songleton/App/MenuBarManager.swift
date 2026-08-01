@@ -9,7 +9,7 @@ final class MenuBarManager: NSObject {
 
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
-    private var hostingView: NSHostingView<MenuBarUnifiedStackView>?
+    private var stackNSView: MenuBarStackNSView?
 
     private override init() {
         super.init()
@@ -30,8 +30,8 @@ final class MenuBarManager: NSObject {
 
         // Create single unified NSStatusItem with variable length
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        
-        let stackView = MenuBarUnifiedStackView(
+
+        let stackView = MenuBarStackNSView(
             model: NowPlayingModel.shared,
             settings: SettingsModel.shared,
             onTogglePanel: { [weak self] in
@@ -39,28 +39,21 @@ final class MenuBarManager: NSObject {
             }
         )
 
-        let hosting = NSHostingView(rootView: stackView)
-        // Calculate initial dynamic size
-        let initialWidth = SettingsModel.shared.menuBarWidth + 90
-        hosting.frame = NSRect(x: 0, y: 0, width: initialWidth, height: 22)
-        hosting.autoresizingMask = [.width, .height]
-
-        // Crucial: Use item.view directly so sub-buttons receive independent click events
-        item.view = hosting
-
-        self.hostingView = hosting
+        item.view = stackView
+        self.stackNSView = stackView
         self.statusItem = item
+
+        updateWidth()
     }
 
     func updateWidth() {
-        guard let hostingView = hostingView, let statusItem = statusItem else { return }
-        let newWidth = SettingsModel.shared.menuBarWidth + 90
-        hostingView.frame = NSRect(x: 0, y: 0, width: newWidth, height: 22)
-        statusItem.length = newWidth
+        guard let stackNSView = stackNSView, let statusItem = statusItem else { return }
+        stackNSView.updateLayout()
+        statusItem.length = stackNSView.frame.width
     }
 
     func togglePopover() {
-        guard let popover = popover, let view = statusItem?.view ?? statusItem?.button else { return }
+        guard let popover = popover, let view = statusItem?.view else { return }
 
         if popover.isShown {
             popover.performClose(nil)
