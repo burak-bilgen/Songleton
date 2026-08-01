@@ -14,7 +14,7 @@ struct MenuBarMainLabelView: View {
     }
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             // Albüm Kapağı Görseli (16x16)
             ZStack {
                 if let artwork = model.artwork {
@@ -37,13 +37,14 @@ struct MenuBarMainLabelView: View {
             }
             .frame(width: 16, height: 16)
 
-            // Kayan Şarkı Metni
+            // Kayan Şarkı Metni (Ortalanmış)
             MarqueeText(
                 text: model.menuBarTitle ?? "Songleton",
                 font: settings.menuBarFont.font(size: 13),
                 maxWidth: settings.menuBarWidth
             )
         }
+        .frame(maxWidth: settings.menuBarWidth, alignment: .center)
         .padding(.horizontal, 4)
     }
 }
