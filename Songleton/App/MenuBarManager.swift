@@ -13,6 +13,7 @@ final class MenuBarManager: NSObject {
     private var fwdStatusItem: NSStatusItem?
 
     private var popover: NSPopover?
+    private var cancellables = Set<AnyCancellable>()
 
     private override init() {
         super.init()
@@ -41,15 +42,15 @@ final class MenuBarManager: NSObject {
         }
         self.bwdStatusItem = bwdItem
 
-        // 3. Main Status Item: [ Artwork + Centered Song Title ] (Created 2nd -> Fixed Length Container)
+        // 3. Main Status Item: [ Artwork + Song Title ] (Created 2nd -> Auto-Fitting Container)
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabel = MenuBarMainLabelView(
             model: NowPlayingModel.shared,
             settings: SettingsModel.shared
         )
         let hosting = NSHostingView(rootView: mainLabel)
-        let fixedWidth = SettingsModel.shared.menuBarWidth + 6
-        hosting.frame = NSRect(x: 0, y: 0, width: fixedWidth, height: 22)
+        let fittingWidth = min(max(50, hosting.fittingSize.width + 4), SettingsModel.shared.menuBarWidth + 24)
+        hosting.frame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
         hosting.autoresizingMask = [.width, .height]
 
         if let button = mainItem.button {
@@ -60,7 +61,7 @@ final class MenuBarManager: NSObject {
         } else {
             mainItem.view = hosting
         }
-        mainItem.length = fixedWidth
+        mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
         // 4. Forward Status Item [⏭] (Created 3rd -> Placed on the Far Left)
@@ -72,17 +73,25 @@ final class MenuBarManager: NSObject {
             button.toolTip = "Sonraki Şarkı"
         }
         self.fwdStatusItem = fwdItem
+
+        // Listen to state/title changes to adjust main item width dynamically without leaving empty gaps
+        NowPlayingModel.shared.$state
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateWidth()
+            }
+            .store(in: &cancellables)
     }
 
     func updateWidth() {
         guard let mainItem = mainStatusItem, let button = mainItem.button else { return }
-        let fixedWidth = SettingsModel.shared.menuBarWidth + 6
-        let newFrame = NSRect(x: 0, y: 0, width: fixedWidth, height: 22)
-        if let hosting = button.subviews.first {
+        if let hosting = button.subviews.first as? NSHostingView<MenuBarMainLabelView> {
+            let fittingWidth = min(max(50, hosting.fittingSize.width + 4), SettingsModel.shared.menuBarWidth + 24)
+            let newFrame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
             hosting.frame = newFrame
+            button.frame = newFrame
+            mainItem.length = fittingWidth
         }
-        button.frame = newFrame
-        mainItem.length = fixedWidth
     }
 
     // MARK: - Actions
