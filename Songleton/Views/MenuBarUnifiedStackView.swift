@@ -38,13 +38,24 @@ struct MenuBarUnifiedStackView: View {
                 triggerPlayPauseAnimation(wasPlaying: currentIsPlaying)
             }) {
                 HStack(spacing: 5) {
-                    // Animasyonlu Oynat / Duraklat Göstergesi
+                    // Albüm Kapağı veya Animasyonlu Oynat / Duraklat Göstergesi
                     ZStack {
                         if isAnimatingFeedback {
                             Image(systemName: feedbackIsPlaying ? "play.fill" : "pause.fill")
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundStyle(Color.accentColor)
                                 .transition(.scale.combined(with: .opacity))
+                        } else if let artwork = model.artwork {
+                            Image(nsImage: artwork)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 16, height: 16)
+                                .clipShape(RoundedRectangle(cornerRadius: 3.5))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 3.5)
+                                        .stroke(Color.white.opacity(0.15), lineWidth: 0.5)
+                                )
+                                .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
                         } else {
                             Image(systemName: isPlaying ? "waveform" : "music.note")
                                 .font(.system(size: 10, weight: .semibold))
@@ -52,7 +63,7 @@ struct MenuBarUnifiedStackView: View {
                                 .symbolEffect(.bounce, value: isPlaying)
                         }
                     }
-                    .frame(width: 14)
+                    .frame(width: 16, height: 16)
 
                     // Kayan Şarkı Metni
                     MarqueeText(
