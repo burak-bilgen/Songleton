@@ -19,9 +19,13 @@ struct MenuBarMainLabelView: View {
         model.menuBarTitle ?? "Songleton"
     }
 
+    private var availableTextWidth: CGFloat {
+        max(60, settings.menuBarWidth - 22)
+    }
+
     var body: some View {
         HStack(spacing: 5) {
-            // Albüm Kapağı Görseli (16x16) ile tatlı zıplama efekti
+            // 1. Albüm Kapağı Görseli (16x16) - En Solda (Geri butonunun hemen yanında)
             ZStack {
                 if let artwork = model.artwork {
                     Image(nsImage: artwork)
@@ -44,11 +48,11 @@ struct MenuBarMainLabelView: View {
             .frame(width: 16, height: 16)
             .scaleEffect(artworkScale)
 
-            // Şarkı değiştiğinde yukarıdan düşen ve tatlıca zıplayan metin
+            // 2. Kayan Şarkı Metni (Tüm kalan alanı kaplar)
             MarqueeText(
                 text: currentTitle,
                 font: settings.menuBarFont.font(size: 13),
-                maxWidth: settings.menuBarWidth
+                maxWidth: availableTextWidth
             )
             .id(currentTitle)
             .transition(
@@ -58,7 +62,7 @@ struct MenuBarMainLabelView: View {
                 )
             )
         }
-        .frame(width: settings.menuBarWidth, alignment: .center)
+        .frame(width: settings.menuBarWidth, alignment: .leading)
         .animation(.spring(response: 0.45, dampingFraction: 0.65), value: currentTitle)
         .onChange(of: currentTitle) { _, _ in
             triggerCuteBounce()
