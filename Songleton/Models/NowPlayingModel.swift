@@ -54,17 +54,24 @@ final class NowPlayingModel: ObservableObject {
         }
     }
 
-    @Published private(set) var showArtistTemporarily = false
+    enum MenuBarDisplayMode {
+        case artistOnly
+        case trackOnly
+    }
+
+    @Published private(set) var displayMode: MenuBarDisplayMode = .trackOnly
     private var artistTimerTask: Task<Void, Never>?
 
     // MARK: - Computed
 
     var menuBarTitle: String? {
         guard case .loaded(let info, _) = state else { return nil }
-        if SettingsModel.shared.showArtistInMenuBar && showArtistTemporarily {
-            return "\(info.track) - \(info.artist)"
+        switch displayMode {
+        case .artistOnly:
+            return info.artist.isEmpty ? info.track : info.artist
+        case .trackOnly:
+            return info.track
         }
-        return info.track
     }
 
     var activeBundleID: String? { activeController?.bundleID }
@@ -178,13 +185,13 @@ final class NowPlayingModel: ObservableObject {
                         recentTracks.insert(recent, at: 0)
                         if recentTracks.count > 20 { recentTracks = Array(recentTracks.prefix(20)) }
 
-                        // Show artist name temporarily for 2.5 seconds on track change
-                        showArtistTemporarily = true
+                        // Show artist name for 1.5s on track change, then transition to track name only
+                        displayMode = .artistOnly
                         artistTimerTask?.cancel()
                         artistTimerTask = Task {
-                            try? await Task.sleep(for: .milliseconds(2500))
+                            try? await Task.sleep(for: .milliseconds(1500))
                             if !Task.isCancelled {
-                                showArtistTemporarily = false
+                                displayMode = .trackOnly
                             }
                         }
                     }
