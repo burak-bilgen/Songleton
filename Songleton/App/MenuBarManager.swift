@@ -78,27 +78,27 @@ final class MenuBarManager: NSObject {
         self.fwdStatusItem = fwdItem
 
         // Volume Group Creation (created Plus -> Minus -> Text)
-        // Screen left-to-right order: [ %50 ] [ -10 ] [ +10 ]
+        // Screen left-to-right order: [ %50 ] [ - ] [ + ]
 
-        // 4th created: +10 Button (rightmost of volume group)
-        let plusItem = NSStatusBar.system.statusItem(withLength: 28)
+        // 4th created: + Button (rightmost of volume group)
+        let plusItem = NSStatusBar.system.statusItem(withLength: 20)
         if let button = plusItem.button {
-            button.title = "+10"
-            button.font = NSFont.systemFont(ofSize: 11, weight: .bold)
+            button.title = "+"
+            button.font = NSFont.systemFont(ofSize: 13, weight: .bold)
             button.target = self
             button.action = #selector(volPlusTapped)
-            button.toolTip = NSLocalizedString("Sesi Artır (+10%)", comment: "Volume Up")
+            button.toolTip = NSLocalizedString("Sesi Artır", comment: "Volume Up")
         }
         self.volPlusStatusItem = plusItem
 
-        // 5th created: -10 Button (middle of volume group)
-        let minusItem = NSStatusBar.system.statusItem(withLength: 28)
+        // 5th created: - Button (middle of volume group)
+        let minusItem = NSStatusBar.system.statusItem(withLength: 20)
         if let button = minusItem.button {
-            button.title = "-10"
-            button.font = NSFont.systemFont(ofSize: 11, weight: .bold)
+            button.title = "-"
+            button.font = NSFont.systemFont(ofSize: 13, weight: .bold)
             button.target = self
             button.action = #selector(volMinusTapped)
-            button.toolTip = NSLocalizedString("Sesi Azalt (-10%)", comment: "Volume Down")
+            button.toolTip = NSLocalizedString("Sesi Azalt", comment: "Volume Down")
         }
         self.volMinusStatusItem = minusItem
 
