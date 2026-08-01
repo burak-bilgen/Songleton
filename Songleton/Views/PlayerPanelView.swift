@@ -8,11 +8,11 @@ struct PlayerPanelView: View {
     @ObservedObject private var settings = SettingsModel.shared
     @Environment(\.openSettings) private var openSettings
 
+    @State private var selectedTab = 0 // 0: Now Playing, 1: Spotify Playlists, 2: History
     @State private var sliderVolume: Double = 50
     @State private var isDraggingVolume = false
     @State private var sliderPosition: Double = 0
     @State private var isDraggingPosition = false
-    @State private var showingRecents = false
     @State private var showCopiedToast = false
     @State private var toastText = ""
 
@@ -25,13 +25,32 @@ struct PlayerPanelView: View {
             backgroundView
 
             VStack(spacing: 0) {
-                switch model.state {
-                case .loaded(let info, let source):
-                    loadedView(info: info, source: source)
-                case .notRunning:
-                    notRunningView
-                case .permissionDenied:
-                    permissionDeniedView
+                // Top Segmented Tab Picker
+                topTabBar
+                    .padding(.top, 10)
+                    .padding(.horizontal, 16)
+
+                switch selectedTab {
+                case 0:
+                    // Now Playing Tab
+                    switch model.state {
+                    case .loaded(let info, let source):
+                        loadedView(info: info, source: source)
+                    case .notRunning:
+                        notRunningView
+                    case .permissionDenied:
+                        permissionDeniedView
+                    }
+                case 1:
+                    // Spotify Playlists Tab
+                    SpotifyPlaylistsView()
+                        .frame(height: 380)
+                case 2:
+                    // History Tab
+                    recentTracksSheet
+                        .frame(height: 380)
+                default:
+                    EmptyView()
                 }
             }
 
@@ -56,6 +75,46 @@ struct PlayerPanelView: View {
             model.nextTrack()
             return .handled
         }
+    }
+
+    // MARK: - Top Tab Bar
+
+    private var topTabBar: some View {
+        HStack(spacing: 4) {
+            tabButton(title: "Oynatıcı", icon: "music.note", index: 0)
+            tabButton(title: "Playlistler", icon: "music.note.list", index: 1)
+            tabButton(title: "Geçmiş", icon: "clock", index: 2)
+        }
+        .padding(3)
+        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private func tabButton(title: String, icon: String, index: Int) -> some View {
+        Button {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                selectedTab = index
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 11, weight: selectedTab == index ? .bold : .medium, design: .rounded))
+            }
+            .foregroundStyle(selectedTab == index ? Color.primary : Color.secondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 5)
+            .background(
+                ZStack {
+                    if selectedTab == index {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(.thinMaterial)
+                            .shadow(color: .black.opacity(0.12), radius: 2, x: 0, y: 1)
+                    }
+                }
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Backgrounds
@@ -109,10 +168,7 @@ struct PlayerPanelView: View {
     @ViewBuilder
     private func loadedView(info: NowPlayingInfo, source: String) -> some View {
         VStack(spacing: 0) {
-            if showingRecents {
-                recentTracksSheet
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            } else if !isCompact {
+            if !isCompact {
                 // Album artwork with glow
                 artworkView
                     .id(info.track)
@@ -120,7 +176,7 @@ struct PlayerPanelView: View {
                         insertion: .scale(scale: 0.9).combined(with: .opacity),
                         removal: .scale(scale: 1.05).combined(with: .opacity)
                     ))
-                    .padding(.top, 16)
+                    .padding(.top, 12)
                     .padding(.horizontal, 16)
 
                 // Track info
@@ -130,7 +186,7 @@ struct PlayerPanelView: View {
                         insertion: .move(edge: .top).combined(with: .opacity),
                         removal: .move(edge: .bottom).combined(with: .opacity)
                     ))
-                    .padding(.top, 12)
+                    .padding(.top, 10)
                     .padding(.horizontal, 16)
 
                 // Progress bar
@@ -142,7 +198,7 @@ struct PlayerPanelView: View {
 
                 // Controls
                 controlsView(info: info)
-                    .padding(.top, 12)
+                    .padding(.top, 10)
                     .padding(.horizontal, 16)
 
                 // Volume
@@ -192,7 +248,7 @@ struct PlayerPanelView: View {
                 }
             }
         }
-        .frame(width: panelWidth - 32, height: panelWidth - 32)
+        .frame(width: panelWidth - 56, height: panelWidth - 56)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .shadow(color: .black.opacity(0.25), radius: 10, x: 0, y: 5)
         .overlay(
@@ -288,9 +344,9 @@ struct PlayerPanelView: View {
                 ZStack {
                     Circle()
                         .fill(.primary.opacity(0.1))
-                        .frame(width: 50, height: 50)
+                        .frame(width: 48, height: 48)
                     Image(systemName: info.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 22, weight: .semibold))
+                        .font(.system(size: 20, weight: .semibold))
                         .contentTransition(.symbolEffect(.replace))
                 }
             }
@@ -300,23 +356,6 @@ struct PlayerPanelView: View {
             Spacer()
             controlButton("forward.fill", size: 18) { model.nextTrack() }
                 .help("Sonraki şarkı")
-            Spacer()
-
-            // Recents button
-            Button(action: {
-                withAnimation(.spring(duration: 0.35)) {
-                    showingRecents.toggle()
-                }
-            }) {
-                Image(systemName: showingRecents ? "clock.fill" : "clock")
-                    .font(.system(size: 15))
-                    .frame(width: 32, height: 32)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(showingRecents ? Color.accentColor : .secondary)
-            .help("Son çalınan şarkılar")
-
             Spacer()
         }
     }
@@ -386,16 +425,8 @@ struct PlayerPanelView: View {
         VStack(spacing: 10) {
             HStack {
                 Label("Son Çalınanlar", systemImage: "clock.fill")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
                 Spacer()
-                Button(action: {
-                    withAnimation(.spring(duration: 0.3)) { showingRecents = false }
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 14))
-                        .foregroundStyle(.tertiary)
-                }
-                .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
             .padding(.top, 12)
@@ -409,7 +440,7 @@ struct PlayerPanelView: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
-                .frame(height: 180)
+                .frame(height: 280)
             } else {
                 ScrollView {
                     VStack(spacing: 6) {
@@ -417,9 +448,9 @@ struct PlayerPanelView: View {
                             recentTrackRow(item: item)
                         }
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, 16)
                 }
-                .frame(maxHeight: 280)
+                .frame(maxHeight: 320)
             }
         }
     }

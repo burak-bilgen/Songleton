@@ -8,15 +8,21 @@ import SwiftUI
 final class MenuBarManager: NSObject {
     static let shared = MenuBarManager()
 
-    private var statusItem: NSStatusItem?
+    private var bwdStatusItem: NSStatusItem?
+    private var mainStatusItem: NSStatusItem?
+    private var fwdStatusItem: NSStatusItem?
+
     private var popover: NSPopover?
+    private var cancellables = Set<AnyCancellable>()
+
+    var mainButton: NSStatusBarButton? { mainStatusItem?.button }
 
     private override init() {
         super.init()
     }
 
     func setup() {
-        guard statusItem == nil else { return }
+        guard mainStatusItem == nil else { return }
 
         // 1. Create NSPopover for PlayerPanelView
         let popover = NSPopover()
@@ -28,45 +34,95 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // 2. Single Unified Status Item containing [bwd] [Artwork + Text] [fwd]
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        let unifiedView = MenuBarMainLabelView(
+        // 2. Backward Status Item [⏮] (Created 1st -> Placed on the Far Right)
+        let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
+        if let button = bwdItem.button {
+            button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: "Önceki Şarkı")
+            button.target = self
+            button.action = #selector(bwdTapped)
+            button.toolTip = "Önceki Şarkı"
+        }
+        self.bwdStatusItem = bwdItem
+
+        // 3. Main Status Item: [ Artwork + Song Title ] (Created 2nd -> Placed in Center)
+        let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        let mainLabel = MenuBarMainLabelView(
             model: NowPlayingModel.shared,
-            settings: SettingsModel.shared,
-            onPrevious: { NowPlayingModel.shared.previousTrack() },
-            onNext: { NowPlayingModel.shared.nextTrack() },
-            onOpenPanel: { [weak self] in self?.togglePopover() }
+            settings: SettingsModel.shared
         )
-        let hosting = NSHostingView(rootView: unifiedView)
-        let totalWidth = SettingsModel.shared.menuBarWidth + 74
-        hosting.frame = NSRect(x: 0, y: 0, width: totalWidth, height: 22)
+        let hosting = NSHostingView(rootView: mainLabel)
+        let fittingWidth = min(max(50, hosting.fittingSize.width + 4), SettingsModel.shared.menuBarWidth + 16)
+        hosting.frame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
         hosting.autoresizingMask = [.width, .height]
 
-        if let button = item.button {
+        if let button = mainItem.button {
             button.addSubview(hosting)
             button.frame = hosting.frame
+            button.target = self
+            button.action = #selector(mainItemClicked)
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            button.toolTip = "Sol Tık: Oynat/Durdur | Sağ Tık: Detay Paneli"
         } else {
-            item.view = hosting
+            mainItem.view = hosting
         }
-        item.length = totalWidth
-        self.statusItem = item
+        mainItem.length = fittingWidth
+        self.mainStatusItem = mainItem
+
+        // 4. Forward Status Item [⏭] (Created 3rd -> Placed on the Far Left)
+        let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
+        if let button = fwdItem.button {
+            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: "Sonraki Şarkı")
+            button.target = self
+            button.action = #selector(fwdTapped)
+            button.toolTip = "Sonraki Şarkı"
+        }
+        self.fwdStatusItem = fwdItem
+
+        // Dynamic width updates when track title or display mode changes
+        NowPlayingModel.shared.$state
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateWidth()
+            }
+            .store(in: &cancellables)
     }
 
     func updateWidth() {
-        guard let statusItem = statusItem, let button = statusItem.button else { return }
-        let totalWidth = SettingsModel.shared.menuBarWidth + 74
-        let newFrame = NSRect(x: 0, y: 0, width: totalWidth, height: 22)
-        if let hosting = button.subviews.first {
+        guard let mainItem = mainStatusItem, let button = mainItem.button else { return }
+        if let hosting = button.subviews.first as? NSHostingView<MenuBarMainLabelView> {
+            let fittingWidth = min(max(50, hosting.fittingSize.width + 4), SettingsModel.shared.menuBarWidth + 16)
+            let newFrame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
             hosting.frame = newFrame
+            button.frame = newFrame
+            mainItem.length = fittingWidth
         }
-        button.frame = newFrame
-        statusItem.length = totalWidth
     }
 
     // MARK: - Actions
 
+    @objc private func mainItemClicked() {
+        guard let event = NSApp.currentEvent else {
+            togglePopover()
+            return
+        }
+
+        if event.type == .rightMouseUp {
+            togglePopover()
+        } else {
+            NowPlayingModel.shared.togglePlayPause()
+        }
+    }
+
+    @objc private func bwdTapped() {
+        NowPlayingModel.shared.previousTrack()
+    }
+
+    @objc private func fwdTapped() {
+        NowPlayingModel.shared.nextTrack()
+    }
+
     func togglePopover() {
-        guard let popover = popover, let button = statusItem?.button else { return }
+        guard let popover = popover, let button = mainStatusItem?.button else { return }
 
         if popover.isShown {
             popover.performClose(nil)

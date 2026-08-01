@@ -6,6 +6,7 @@ struct MarqueeText: View {
     let text: String
     var font: Font
     var maxWidth: CGFloat
+    var alignment: Alignment = .center
 
     @State private var textWidth: CGFloat = 0
     @State private var startDate = Date()
@@ -35,8 +36,12 @@ struct MarqueeText: View {
                 .mask(fadeMask)
             } else {
                 measuredLabel
+                    .frame(width: maxWidth, alignment: alignment)
+                    .clipped()
             }
         }
+        .frame(width: maxWidth, alignment: alignment)
+        .clipped()
         .task(id: text) {
             startDate = Date()
             isPaused = true
@@ -50,7 +55,8 @@ struct MarqueeText: View {
     private var measuredLabel: some View {
         Text(text)
             .font(font)
-            .fixedSize()
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .background(
                 GeometryReader { proxy in
                     Color.clear

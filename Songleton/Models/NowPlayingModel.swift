@@ -54,24 +54,11 @@ final class NowPlayingModel: ObservableObject {
         }
     }
 
-    enum MenuBarDisplayMode {
-        case artistOnly
-        case trackOnly
-    }
-
-    @Published private(set) var displayMode: MenuBarDisplayMode = .trackOnly
-    private var artistTimerTask: Task<Void, Never>?
-
     // MARK: - Computed
 
     var menuBarTitle: String? {
         guard case .loaded(let info, _) = state else { return nil }
-        switch displayMode {
-        case .artistOnly:
-            return info.artist.isEmpty ? info.track : info.artist
-        case .trackOnly:
-            return info.track
-        }
+        return info.track
     }
 
     var activeBundleID: String? { activeController?.bundleID }
@@ -185,15 +172,13 @@ final class NowPlayingModel: ObservableObject {
                         recentTracks.insert(recent, at: 0)
                         if recentTracks.count > 20 { recentTracks = Array(recentTracks.prefix(20)) }
 
-                        // Show artist name for 1.5s on track change, then transition to track name only
-                        displayMode = .artistOnly
-                        artistTimerTask?.cancel()
-                        artistTimerTask = Task {
-                            try? await Task.sleep(for: .milliseconds(1500))
-                            if !Task.isCancelled {
-                                displayMode = .trackOnly
-                            }
-                        }
+                        // Trigger HUD popup toast on song change
+                        HUDToastManager.shared.show(
+                            track: info.track,
+                            artist: info.artist,
+                            artwork: artwork,
+                            source: src
+                        )
                     }
                 }
                 state = result.state
