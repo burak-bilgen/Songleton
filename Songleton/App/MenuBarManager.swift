@@ -11,8 +11,8 @@ final class MenuBarManager: NSObject {
     private var fwdStatusItem: NSStatusItem?
 
     private var volPlusStatusItem: NSStatusItem?
-    private var volTextStatusItem: NSStatusItem?
     private var volMinusStatusItem: NSStatusItem?
+    private var volTextStatusItem: NSStatusItem?
 
     private var popover: NSPopover?
     private var cancellables = Set<AnyCancellable>()
@@ -36,7 +36,7 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // 1st: Previous Track (appears rightmost of control group)
+        // 1st: Previous Track (rightmost)
         let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: nil)
@@ -77,9 +77,10 @@ final class MenuBarManager: NSObject {
         }
         self.fwdStatusItem = fwdItem
 
-        // Creation order for Volume group (created Plus -> Text -> Minus so they appear Minus -> Text -> Plus left-to-right)
+        // Volume Group Creation (created Plus -> Minus -> Text)
+        // Screen left-to-right order: [ %50 ] [ 🔉 ] [ 🔊 ]
 
-        // 4th created: Volume Plus Button (appears rightmost of volume group, next to Next Track)
+        // 4th created: Volume Plus Button (rightmost of volume group)
         let plusItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = plusItem.button {
             button.image = NSImage(systemSymbolName: "speaker.plus.fill", accessibilityDescription: nil)
@@ -89,7 +90,17 @@ final class MenuBarManager: NSObject {
         }
         self.volPlusStatusItem = plusItem
 
-        // 5th created: Volume Percentage Text Display (appears center of volume group)
+        // 5th created: Volume Minus Button (middle of volume group)
+        let minusItem = NSStatusBar.system.statusItem(withLength: 22)
+        if let button = minusItem.button {
+            button.image = NSImage(systemSymbolName: "speaker.minus.fill", accessibilityDescription: nil)
+            button.target = self
+            button.action = #selector(volMinusTapped)
+            button.toolTip = NSLocalizedString("Sesi Azalt (-10%)", comment: "Volume Down")
+        }
+        self.volMinusStatusItem = minusItem
+
+        // 6th created: Volume Percentage Text Display (leftmost of volume group)
         let textItem = NSStatusBar.system.statusItem(withLength: 34)
         let textHosting = NSHostingView(rootView: VolumePercentTextView())
         textHosting.frame = NSRect(x: 0, y: 0, width: 34, height: 22)
@@ -104,16 +115,6 @@ final class MenuBarManager: NSObject {
             textItem.view = textHosting
         }
         self.volTextStatusItem = textItem
-
-        // 6th created: Volume Minus Button (appears leftmost of volume group)
-        let minusItem = NSStatusBar.system.statusItem(withLength: 22)
-        if let button = minusItem.button {
-            button.image = NSImage(systemSymbolName: "speaker.minus.fill", accessibilityDescription: nil)
-            button.target = self
-            button.action = #selector(volMinusTapped)
-            button.toolTip = NSLocalizedString("Sesi Azalt (-10%)", comment: "Volume Down")
-        }
-        self.volMinusStatusItem = minusItem
 
         NowPlayingModel.shared.$state
             .receive(on: DispatchQueue.main)
