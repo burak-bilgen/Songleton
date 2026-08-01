@@ -42,10 +42,14 @@ struct PlayerPanelView: View {
                         permissionDeniedView
                     }
                 case 1:
+                    // Synced Karaoke Lyrics Tab
+                    SyncedLyricsView(nowPlaying: model)
+                        .frame(height: 380)
+                case 2:
                     // Spotify Playlists Tab
                     SpotifyPlaylistsView()
                         .frame(height: 380)
-                case 2:
+                case 3:
                     // History Tab
                     recentTracksSheet
                         .frame(height: 380)
@@ -80,10 +84,11 @@ struct PlayerPanelView: View {
     // MARK: - Top Tab Bar
 
     private var topTabBar: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 3) {
             tabButton(title: "Oynatıcı", icon: "music.note", index: 0)
-            tabButton(title: "Playlistler", icon: "music.note.list", index: 1)
-            tabButton(title: "Geçmiş", icon: "clock", index: 2)
+            tabButton(title: "Sözler", icon: "quote.bubble.fill", index: 1)
+            tabButton(title: "Playlistler", icon: "music.note.list", index: 2)
+            tabButton(title: "Geçmiş", icon: "clock", index: 3)
         }
         .padding(3)
         .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
