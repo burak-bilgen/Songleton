@@ -3,8 +3,6 @@ import SwiftUI
 
 struct VolumePercentTextView: View {
     @ObservedObject var model: NowPlayingModel = .shared
-    @State private var previousVolume: Int = 50
-    @State private var isIncreasing = true
 
     private var currentVolume: Int {
         guard case .loaded(let info, _) = model.state else { return 0 }
@@ -12,29 +10,39 @@ struct VolumePercentTextView: View {
     }
 
     var body: some View {
+        VolumeNumberAnimatedView(volume: currentVolume)
+            .frame(width: 34, height: 22)
+            .clipped()
+            .allowsHitTesting(false)
+    }
+}
+
+private struct VolumeNumberAnimatedView: View {
+    let volume: Int
+    @State private var prevVolume: Int = 50
+    @State private var isUp: Bool = true
+
+    var body: some View {
         ZStack {
-            Text("\(currentVolume)%")
-                .id(currentVolume)
+            Text("\(volume)%")
+                .id(volume)
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(.primary.opacity(0.88))
                 .transition(.asymmetric(
-                    insertion: .move(edge: isIncreasing ? .bottom : .top).combined(with: .opacity),
-                    removal: .move(edge: isIncreasing ? .top : .bottom).combined(with: .opacity)
+                    insertion: .move(edge: isUp ? .bottom : .top).combined(with: .opacity),
+                    removal: .move(edge: isUp ? .top : .bottom).combined(with: .opacity)
                 ))
         }
-        .frame(width: 34, height: 22)
-        .clipped()
-        .allowsHitTesting(false)
-        .animation(.spring(response: 0.28, dampingFraction: 0.75), value: currentVolume)
-        .onChange(of: currentVolume) { oldVal, newVal in
+        .animation(.spring(response: 0.25, dampingFraction: 0.78), value: volume)
+        .onChange(of: volume) { oldVal, newVal in
             if newVal != oldVal {
-                isIncreasing = newVal > oldVal
-                previousVolume = newVal
+                isUp = newVal > oldVal
+                prevVolume = newVal
             }
         }
         .onAppear {
-            previousVolume = currentVolume
+            prevVolume = volume
         }
     }
 }
