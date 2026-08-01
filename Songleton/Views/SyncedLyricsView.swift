@@ -42,7 +42,7 @@ struct SyncedLyricsView: View {
                     VStack(spacing: 10) {
                         Image(systemName: "quote.bubble.fill")
                             .font(.system(size: 36, weight: .thin))
-                            .foregroundStyle(Color.accentColor.opacity(0.6))
+                            .foregroundStyle(.secondary.opacity(0.6))
                         Text("Şarkı Sözü Bulunamadı")
                             .font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundStyle(.primary)
@@ -58,8 +58,8 @@ struct SyncedLyricsView: View {
 
                     ScrollViewReader { proxy in
                         ScrollView(.vertical, showsIndicators: false) {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Spacer().frame(height: 120)
+                            VStack(alignment: .leading, spacing: 10) {
+                                Spacer().frame(height: 110)
 
                                 ForEach(Array(lyricsModel.lines.enumerated()), id: \.element.id) { index, line in
                                     let isActive = index == activeIndex
@@ -67,7 +67,7 @@ struct SyncedLyricsView: View {
                                     HStack(spacing: 0) {
                                         Text(line.text)
                                             .font(.system(
-                                                size: isActive ? 16 : 13,
+                                                size: isActive ? 15 : 13,
                                                 weight: isActive ? .bold : .medium,
                                                 design: .rounded
                                             ))
@@ -76,16 +76,19 @@ struct SyncedLyricsView: View {
                                                     ? LinearGradient(colors: [.white, .white.opacity(0.9)], startPoint: .top, endPoint: .bottom)
                                                     : LinearGradient(colors: [.primary.opacity(0.5), .primary.opacity(0.35)], startPoint: .top, endPoint: .bottom)
                                             )
-                                            .lineSpacing(4)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, isActive ? 8 : 4)
+                                            .lineLimit(nil)
+                                            .multilineTextAlignment(.leading)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .lineSpacing(3)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, isActive ? 7 : 4)
                                             .background(
                                                 ZStack {
                                                     if isActive {
-                                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                        RoundedRectangle(cornerRadius: 10, style: .continuous)
                                                             .fill(.ultraThinMaterial)
                                                             .overlay(
-                                                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                                RoundedRectangle(cornerRadius: 10, style: .continuous)
                                                                     .stroke(
                                                                         LinearGradient(
                                                                             colors: [Color.white.opacity(0.35), Color.white.opacity(0.1)],
@@ -95,24 +98,27 @@ struct SyncedLyricsView: View {
                                                                         lineWidth: 0.75
                                                                     )
                                                             )
-                                                            .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
+                                                            .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 3)
                                                     }
                                                 }
                                             )
-                                            .scaleEffect(isActive ? 1.03 : 1.0, anchor: .leading)
+                                            .scaleEffect(isActive ? 1.02 : 1.0, anchor: .leading)
                                             .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isActive)
                                     }
+                                    .frame(maxWidth: 310, alignment: .leading)
                                     .id(index)
                                     .contentShape(Rectangle())
+                                    .focusable(false)
                                     .onTapGesture {
                                         nowPlaying.seekTo(line.timestamp)
                                     }
                                 }
 
-                                Spacer().frame(height: 140)
+                                Spacer().frame(height: 130)
                             }
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal, 14)
                         }
+                        .focusable(false)
                         .simultaneousGesture(
                             DragGesture().onChanged { _ in
                                 isUserScrolling = true
@@ -136,6 +142,9 @@ struct SyncedLyricsView: View {
                 }
             }
         }
+        .frame(maxWidth: 350)
+        .clipped()
+        .focusable(false)
         .onAppear {
             loadLyricsForCurrentTrack()
         }

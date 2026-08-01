@@ -43,15 +43,21 @@ final class NowPlayingModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var lastLoadedKey: String?
 
+    private var timerCancellable: AnyCancellable?
+
     private init() {
         SettingsModel.shared.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
+
+        // Real-time 0.5s polling timer for position & lyrics sync
+        timerCancellable = Timer.publish(every: 0.5, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.refresh()
+            }
+        
         refresh()
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in self.refresh() }
-        }
     }
 
     // MARK: - Computed
