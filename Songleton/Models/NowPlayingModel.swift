@@ -106,49 +106,33 @@ final class NowPlayingModel: ObservableObject {
 
     /// Triggers the macOS "Songleton wants to control X" permission dialog
     /// by actually executing an AppleScript targeting each player app.
+    /// Triggers the macOS "Songleton wants to control X" permission dialog
+    /// by actually executing an AppleScript targeting each player app.
     func requestPermissionByScript() {
-        var results: [String] = []
-
         for controller in controllers {
             let src = """
             tell application "\(controller.scriptAppName)"
                 get name
             end tell
             """
-            guard let script = NSAppleScript(source: src) else {
-                results.append("❌ \(controller.displayName): Script oluşturulamadı")
-                continue
-            }
+            guard let script = NSAppleScript(source: src) else { continue }
             var errDict: NSDictionary?
-            let result = script.executeAndReturnError(&errDict)
-
-            if let err = errDict {
-                let code    = err[NSAppleScript.errorNumber] as? Int ?? 0
-                let message = err[NSAppleScript.errorMessage] as? String ?? "Bilinmeyen hata"
-                if code == -1743 {
-                    results.append("🔒 \(controller.displayName): İzin reddedildi (kod: \(code))")
-                } else if code == -600 {
-                    results.append("⚠️ \(controller.displayName): Uygulama çalışmıyor (kod: \(code))")
-                } else {
-                    results.append("❌ \(controller.displayName): \(message) (kod: \(code))")
-                }
-            } else {
-                results.append("✅ \(controller.displayName): İzin alındı — \(result.stringValue ?? "ok")")
-            }
+            _ = script.executeAndReturnError(&errDict)
         }
-
-        // Show debug alert with results
-        let alert = NSAlert()
-        alert.messageText = "İzin İsteği Sonucu"
-        alert.informativeText = results.joined(separator: "\n\n")
-        alert.alertStyle = results.allSatisfy({ $0.hasPrefix("✅") }) ? .informational : .warning
-        alert.addButton(withTitle: "Tamam")
-        alert.runModal()
 
         checkAutomationPermission(askUser: false)
         refresh()
     }
 
+    /// Copies currently playing track and artist to system pasteboard
+    func copyTrackInfo() -> String? {
+        guard case .loaded(let info, _) = state else { return nil }
+        let text = "\(info.track) - \(info.artist)"
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+        return text
+    }
 
     // MARK: - Refresh
 
@@ -246,7 +230,7 @@ final class NowPlayingModel: ObservableObject {
         let (image, color) = await Self.downloadArtworkAndColor(from: url)
         if currentArtworkKey == key {
             artwork = image
-            dominantColor = color ?? .accentColor
+            dominantColor = color ?? (image != nil ? extractColor(from: image!) : .accentColor)
         }
     }
 
@@ -254,8 +238,8 @@ final class NowPlayingModel: ObservableObject {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return .accentColor
         }
-        let width = 8
-        let height = 8
+        let width = 16
+        let height = 16
         var data = [UInt8](repeating: 0, count: width * height * 4)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         guard let ctx = CGContext(
@@ -265,27 +249,57 @@ final class NowPlayingModel: ObservableObject {
         ) else { return .accentColor }
         ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
-        let count = CGFloat(width * height)
+        var totalR: CGFloat = 0, totalG: CGFloat = 0, totalB: CGFloat = 0
+        var validPixelCount: CGFloat = 0
+
         for i in 0..<(width * height) {
-            r += CGFloat(data[i * 4]) / 255.0
-            g += CGFloat(data[i * 4 + 1]) / 255.0
-            b += CGFloat(data[i * 4 + 2]) / 255.0
+            let r = CGFloat(data[i * 4]) / 255.0
+            let g = CGFloat(data[i * 4 + 1]) / 255.0
+            let b = CGFloat(data[i * 4 + 2]) / 255.0
+            let a = CGFloat(data[i * 4 + 3]) / 255.0
+
+            if a < 0.5 { continue }
+
+            // Filter out near-black and near-white pixels for better vibrancy
+            let maxC = max(r, max(g, b))
+            let minC = min(r, min(g, b))
+            let brightness = (maxC + minC) / 2
+            let saturation = maxC == 0 ? 0 : (maxC - minC) / maxC
+
+            // Ignore pure black, pure white, or non-saturated pixels unless there are few options
+            if brightness > 0.08 && brightness < 0.92 {
+                let weight = 1.0 + saturation * 2.0 // Prefer saturated colors
+                totalR += r * weight
+                totalG += g * weight
+                totalB += b * weight
+                validPixelCount += weight
+            }
         }
-        // Boost saturation to make color more vibrant
-        let avg = (r / count + g / count + b / count) / 3
-        let boost: CGFloat = 1.4
-        let fr = min(1, avg + (r / count - avg) * boost)
-        let fg = min(1, avg + (g / count - avg) * boost)
-        let fb = min(1, avg + (b / count - avg) * boost)
-        return Color(red: fr, green: fg, blue: fb)
+
+        if validPixelCount == 0 {
+            return .accentColor
+        }
+
+        var avgR = totalR / validPixelCount
+        var avgG = totalG / validPixelCount
+        var avgB = totalB / validPixelCount
+
+        // Boost saturation for a rich UI background glow
+        let avgLuminance = 0.2126 * avgR + 0.7152 * avgG + 0.0722 * avgB
+        let boost: CGFloat = 1.35
+        avgR = min(1.0, max(0.0, avgLuminance + (avgR - avgLuminance) * boost))
+        avgG = min(1.0, max(0.0, avgLuminance + (avgG - avgLuminance) * boost))
+        avgB = min(1.0, max(0.0, avgLuminance + (avgB - avgLuminance) * boost))
+
+        return Color(red: avgR, green: avgG, blue: avgB)
     }
 
     nonisolated private static func downloadArtworkAndColor(from url: URL) async -> (NSImage?, Color?) {
         guard let (data, _) = try? await URLSession.shared.data(from: url),
               let image = NSImage(data: data) else { return (nil, nil) }
-        return (image, nil) // color extracted on main after
+        return (image, nil)
     }
+
 
     // MARK: - Send Command
 
