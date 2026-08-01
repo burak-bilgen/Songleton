@@ -61,8 +61,8 @@ final class NowPlayingModel: ObservableObject {
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
-        // Real-time 0.25s polling timer for position & lyrics sync
-        timerCancellable = Timer.publish(every: 0.25, on: .main, in: .common)
+        // Lightweight 1.0s polling timer for AppleScript state sync
+        timerCancellable = Timer.publish(every: 1.0, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 self?.refresh()

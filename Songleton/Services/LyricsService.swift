@@ -54,59 +54,54 @@ final class LyricsService {
         return nil
     }
 
-    /// Robust LRC Parser matching any standard or non-standard timestamp:
-    /// e.g. [01:23.45], [1:23.4], [01:23:45], [01:23]
+    /// Robust LRC Parser handling single/multi-timestamp lines:
+    /// e.g. [01:23.45] text line
+    /// e.g. [01:23.45][02:10.12] repeated chorus line
     private func parseLRC(_ lrcString: String) -> [LyricLine] {
         var lines: [LyricLine] = []
 
-        // Match [mm:ss.xx], [m:ss.x], [mm:ss:xx], [mm:ss]
-        let pattern = "\\[(\\d{1,2}):(\\d{2})(?:[\\.\\:](\\d{1,3}))?\\](.*)"
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let tagPattern = "\\[(\\d{1,2}):(\\d{2})(?:[\\.\\:](\\d{1,3}))?\\]"
+        guard let tagRegex = try? NSRegularExpression(pattern: tagPattern) else { return [] }
 
         let rawLines = lrcString.components(separatedBy: .newlines)
         for line in rawLines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty { continue }
 
-            // Skip metadata tags like [ar:Artist], [ti:Title], [al:Album], [by:...]
+            // Skip metadata tags
             if trimmed.hasPrefix("[ar:") || trimmed.hasPrefix("[ti:") || trimmed.hasPrefix("[al:") || trimmed.hasPrefix("[by:") || trimmed.hasPrefix("[length:") {
                 continue
             }
 
             let nsString = trimmed as NSString
-            let matches = regex.matches(in: trimmed, range: NSRange(location: 0, length: nsString.length))
+            let matches = tagRegex.matches(in: trimmed, range: NSRange(location: 0, length: nsString.length))
+            if matches.isEmpty { continue }
 
+            // Extract lyric text after the last timestamp tag
+            let lastMatch = matches.last!
+            let textStartIndex = lastMatch.range.location + lastMatch.range.length
+            let lyricText = nsString.substring(from: textStartIndex).trimmingCharacters(in: .whitespaces)
+
+            if lyricText.isEmpty { continue }
+
+            // Create a LyricLine entry for every timestamp on this line
             for match in matches {
-                if match.numberOfRanges >= 3 {
-                    let minStr = nsString.substring(with: match.range(at: 1))
-                    let secStr = nsString.substring(with: match.range(at: 2))
+                let minStr = nsString.substring(with: match.range(at: 1))
+                let secStr = nsString.substring(with: match.range(at: 2))
 
-                    var msSeconds = 0.0
-                    if match.numberOfRanges >= 4 && match.range(at: 3).location != NSNotFound {
-                        let msStr = nsString.substring(with: match.range(at: 3))
-                        if let msVal = Double(msStr) {
-                            if msStr.count == 1 {
-                                msSeconds = msVal / 10.0
-                            } else if msStr.count == 2 {
-                                msSeconds = msVal / 100.0
-                            } else {
-                                msSeconds = msVal / 1000.0
-                            }
-                        }
+                var msSeconds = 0.0
+                if match.numberOfRanges >= 4 && match.range(at: 3).location != NSNotFound {
+                    let msStr = nsString.substring(with: match.range(at: 3))
+                    if let msVal = Double(msStr) {
+                        if msStr.count == 1 { msSeconds = msVal / 10.0 }
+                        else if msStr.count == 2 { msSeconds = msVal / 100.0 }
+                        else { msSeconds = msVal / 1000.0 }
                     }
+                }
 
-                    var lyricText = ""
-                    if match.numberOfRanges >= 5 && match.range(at: 4).location != NSNotFound {
-                        lyricText = nsString.substring(with: match.range(at: 4)).trimmingCharacters(in: .whitespaces)
-                    }
-
-                    if let minutes = Double(minStr), let seconds = Double(secStr) {
-                        let totalSeconds = minutes * 60.0 + seconds + msSeconds
-                        // Keep line even if music note symbol ♪
-                        if !lyricText.isEmpty {
-                            lines.append(LyricLine(timestamp: totalSeconds, text: lyricText))
-                        }
-                    }
+                if let minutes = Double(minStr), let seconds = Double(secStr) {
+                    let totalSeconds = minutes * 60.0 + seconds + msSeconds
+                    lines.append(LyricLine(timestamp: totalSeconds, text: lyricText))
                 }
             }
         }
