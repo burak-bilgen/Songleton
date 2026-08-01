@@ -32,15 +32,15 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // 2. Forward Status Item [⏭] (Created 1st -> Placed on the Far Right)
-        let fwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        if let button = fwdItem.button {
-            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: "Sonraki Şarkı")
+        // 2. Backward Status Item [⏮] (Created 1st -> Placed on the Far Right)
+        let bwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = bwdItem.button {
+            button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: "Önceki Şarkı")
             button.target = self
-            button.action = #selector(fwdTapped)
-            button.toolTip = "Sonraki Şarkı"
+            button.action = #selector(bwdTapped)
+            button.toolTip = "Önceki Şarkı"
         }
-        self.fwdStatusItem = fwdItem
+        self.bwdStatusItem = bwdItem
 
         // 3. Main Status Item: [ Artwork + Centered Song Title ] (Created 2nd -> Placed in the Center)
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -64,15 +64,15 @@ final class MenuBarManager: NSObject {
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // 4. Backward Status Item [⏮] (Created 3rd -> Placed on the Far Left)
-        let bwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        if let button = bwdItem.button {
-            button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: "Önceki Şarkı")
+        // 4. Forward Status Item [⏭] (Created 3rd -> Placed on the Far Left)
+        let fwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = fwdItem.button {
+            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: "Sonraki Şarkı")
             button.target = self
-            button.action = #selector(bwdTapped)
-            button.toolTip = "Önceki Şarkı"
+            button.action = #selector(fwdTapped)
+            button.toolTip = "Sonraki Şarkı"
         }
-        self.bwdStatusItem = bwdItem
+        self.fwdStatusItem = fwdItem
 
         // Listen to title changes to adjust menu bar width dynamically without empty space
         NowPlayingModel.shared.$state
