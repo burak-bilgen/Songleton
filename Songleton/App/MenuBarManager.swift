@@ -8,8 +8,8 @@ import SwiftUI
 final class MenuBarManager: NSObject {
     static let shared = MenuBarManager()
 
-    private var mainStatusItem: NSStatusItem?
     private var bwdStatusItem: NSStatusItem?
+    private var mainStatusItem: NSStatusItem?
     private var fwdStatusItem: NSStatusItem?
 
     private var popover: NSPopover?
@@ -32,8 +32,17 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // 2. Main Status Item: [ Artwork + Centered Song Title ] -> Opens Popover
-        // Created first so macOS places it on the right
+        // 2. Forward Status Item [⏭] (Created 1st -> Placed on the Far Right)
+        let fwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = fwdItem.button {
+            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: "Sonraki Şarkı")
+            button.target = self
+            button.action = #selector(fwdTapped)
+            button.toolTip = "Sonraki Şarkı"
+        }
+        self.fwdStatusItem = fwdItem
+
+        // 3. Main Status Item: [ Artwork + Centered Song Title ] (Created 2nd -> Placed in the Center)
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabel = MenuBarMainLabelView(
             model: NowPlayingModel.shared,
@@ -55,17 +64,7 @@ final class MenuBarManager: NSObject {
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // 3. Forward Status Item [⏭] -> Placed to the left of mainItem
-        let fwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        if let button = fwdItem.button {
-            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: "Sonraki Şarkı")
-            button.target = self
-            button.action = #selector(fwdTapped)
-            button.toolTip = "Sonraki Şarkı"
-        }
-        self.fwdStatusItem = fwdItem
-
-        // 4. Backward Status Item [⏮] -> Placed to the left of fwdItem
+        // 4. Backward Status Item [⏮] (Created 3rd -> Placed on the Far Left)
         let bwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: "Önceki Şarkı")
