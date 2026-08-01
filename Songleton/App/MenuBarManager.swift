@@ -9,7 +9,7 @@ final class MenuBarManager: NSObject {
     private var bwdStatusItem: NSStatusItem?
     private var mainStatusItem: NSStatusItem?
     private var fwdStatusItem: NSStatusItem?
-    private var volSliderItem: NSStatusItem?
+    private var volStatusItems: [NSStatusItem] = []
 
     private var popover: NSPopover?
     private var cancellables = Set<AnyCancellable>()
@@ -32,7 +32,7 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // bwd — created 1st, appears rightmost
+        // 1st: bwd
         let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: nil)
@@ -42,7 +42,7 @@ final class MenuBarManager: NSObject {
         }
         self.bwdStatusItem = bwdItem
 
-        // main — created 2nd, appears center
+        // 2nd: main track info
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabel = MenuBarMainLabelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
         let hosting = NSHostingView(rootView: mainLabel)
@@ -63,7 +63,7 @@ final class MenuBarManager: NSObject {
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // fwd — created 3rd, appears left of main
+        // 3rd: fwd
         let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = fwdItem.button {
             button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
@@ -73,11 +73,24 @@ final class MenuBarManager: NSObject {
         }
         self.fwdStatusItem = fwdItem
 
-        // volume segmented bar — single item, created last → appears leftmost
-        let volItem = NSStatusBar.system.statusItem(withLength: 44)
-        let volView = VolumeSegmentedNSView(frame: NSRect(x: 0, y: 0, width: 44, height: 22))
-        volItem.view = volView
-        self.volSliderItem = volItem
+        // 4th to 8th: 5 separate volume status items (created 5 down to 1 so they display 1 to 5 left-to-right)
+        var items: [NSStatusItem] = []
+        for i in stride(from: 5, through: 1, by: -1) {
+            let item = NSStatusBar.system.statusItem(withLength: 10)
+            if let button = item.button {
+                let barView = NSHostingView(rootView: VolumeBarItemView(barIndex: i))
+                barView.frame = NSRect(x: 0, y: 0, width: 10, height: 22)
+                barView.autoresizingMask = [.width, .height]
+                button.addSubview(barView)
+                button.frame = NSRect(x: 0, y: 0, width: 10, height: 22)
+                button.tag = i
+                button.target = self
+                button.action = #selector(volumeBarTapped(_:))
+                button.toolTip = "%\(i * 20)"
+            }
+            items.append(item)
+        }
+        self.volStatusItems = items
 
         NowPlayingModel.shared.$state
             .receive(on: DispatchQueue.main)
@@ -112,6 +125,11 @@ final class MenuBarManager: NSObject {
 
     @objc private func bwdTapped() { NowPlayingModel.shared.previousTrack() }
     @objc private func fwdTapped() { NowPlayingModel.shared.nextTrack() }
+
+    @objc private func volumeBarTapped(_ sender: NSButton) {
+        let level = sender.tag * 20
+        NowPlayingModel.shared.setVolume(level)
+    }
 
     func togglePopover() {
         guard let popover = popover, let button = mainStatusItem?.button else { return }
