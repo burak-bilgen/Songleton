@@ -1,8 +1,7 @@
 import AppKit
 import SwiftUI
 
-struct VolumeBarItemView: View {
-    let barIndex: Int
+struct VolumePercentTextView: View {
     @ObservedObject var model: NowPlayingModel = .shared
 
     private var currentVolume: Int {
@@ -10,13 +9,12 @@ struct VolumeBarItemView: View {
         return info.volume
     }
 
-    private var isActive: Bool { currentVolume >= barIndex * 20 - 5 }
-
     var body: some View {
-        Capsule()
-            .fill(isActive ? Color.primary.opacity(0.88) : Color.primary.opacity(0.18))
-            .frame(width: 4, height: 12)
-            .animation(.easeOut(duration: 0.1), value: isActive)
+        Text("\(currentVolume)%")
+            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .monospacedDigit()
+            .foregroundStyle(.primary.opacity(0.85))
+            .frame(height: 22)
             .allowsHitTesting(false)
     }
 }

@@ -9,10 +9,14 @@ final class MenuBarManager: NSObject {
     private var bwdStatusItem: NSStatusItem?
     private var mainStatusItem: NSStatusItem?
     private var fwdStatusItem: NSStatusItem?
-    private var volStatusItems: [NSStatusItem] = []
+
+    private var volPlusStatusItem: NSStatusItem?
+    private var volTextStatusItem: NSStatusItem?
+    private var volMinusStatusItem: NSStatusItem?
 
     private var popover: NSPopover?
     private var cancellables = Set<AnyCancellable>()
+    private var lastPreMuteVolume: Int = 50
 
     var mainButton: NSStatusBarButton? { mainStatusItem?.button }
 
@@ -32,7 +36,7 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // 1st: bwd
+        // 1st: Previous Track (appears rightmost of control group)
         let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: nil)
@@ -42,7 +46,7 @@ final class MenuBarManager: NSObject {
         }
         self.bwdStatusItem = bwdItem
 
-        // 2nd: main track info
+        // 2nd: Main Track Info Label
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabel = MenuBarMainLabelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
         let hosting = NSHostingView(rootView: mainLabel)
@@ -63,7 +67,7 @@ final class MenuBarManager: NSObject {
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // 3rd: fwd
+        // 3rd: Next Track
         let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = fwdItem.button {
             button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
@@ -73,24 +77,43 @@ final class MenuBarManager: NSObject {
         }
         self.fwdStatusItem = fwdItem
 
-        // 4th to 8th: 5 separate volume status items (created 5 down to 1 so they display 1 to 5 left-to-right)
-        var items: [NSStatusItem] = []
-        for i in stride(from: 5, through: 1, by: -1) {
-            let item = NSStatusBar.system.statusItem(withLength: 10)
-            if let button = item.button {
-                let barView = NSHostingView(rootView: VolumeBarItemView(barIndex: i))
-                barView.frame = NSRect(x: 0, y: 0, width: 10, height: 22)
-                barView.autoresizingMask = [.width, .height]
-                button.addSubview(barView)
-                button.frame = NSRect(x: 0, y: 0, width: 10, height: 22)
-                button.tag = i
-                button.target = self
-                button.action = #selector(volumeBarTapped(_:))
-                button.toolTip = "%\(i * 20)"
-            }
-            items.append(item)
+        // Creation order for Volume group (created Plus -> Text -> Minus so they appear Minus -> Text -> Plus left-to-right)
+
+        // 4th created: Volume Plus Button (appears rightmost of volume group, next to Next Track)
+        let plusItem = NSStatusBar.system.statusItem(withLength: 22)
+        if let button = plusItem.button {
+            button.image = NSImage(systemSymbolName: "speaker.plus.fill", accessibilityDescription: nil)
+            button.target = self
+            button.action = #selector(volPlusTapped)
+            button.toolTip = NSLocalizedString("Sesi Artır (+10%)", comment: "Volume Up")
         }
-        self.volStatusItems = items
+        self.volPlusStatusItem = plusItem
+
+        // 5th created: Volume Percentage Text Display (appears center of volume group)
+        let textItem = NSStatusBar.system.statusItem(withLength: 34)
+        let textHosting = NSHostingView(rootView: VolumePercentTextView())
+        textHosting.frame = NSRect(x: 0, y: 0, width: 34, height: 22)
+        textHosting.autoresizingMask = [.width, .height]
+        if let button = textItem.button {
+            button.addSubview(textHosting)
+            button.frame = textHosting.frame
+            button.target = self
+            button.action = #selector(volTextTapped)
+            button.toolTip = NSLocalizedString("Sesi Kapat / Aç (Sessiz)", comment: "Toggle Mute")
+        } else {
+            textItem.view = textHosting
+        }
+        self.volTextStatusItem = textItem
+
+        // 6th created: Volume Minus Button (appears leftmost of volume group)
+        let minusItem = NSStatusBar.system.statusItem(withLength: 22)
+        if let button = minusItem.button {
+            button.image = NSImage(systemSymbolName: "speaker.minus.fill", accessibilityDescription: nil)
+            button.target = self
+            button.action = #selector(volMinusTapped)
+            button.toolTip = NSLocalizedString("Sesi Azalt (-10%)", comment: "Volume Down")
+        }
+        self.volMinusStatusItem = minusItem
 
         NowPlayingModel.shared.$state
             .receive(on: DispatchQueue.main)
@@ -126,9 +149,26 @@ final class MenuBarManager: NSObject {
     @objc private func bwdTapped() { NowPlayingModel.shared.previousTrack() }
     @objc private func fwdTapped() { NowPlayingModel.shared.nextTrack() }
 
-    @objc private func volumeBarTapped(_ sender: NSButton) {
-        let level = sender.tag * 20
-        NowPlayingModel.shared.setVolume(level)
+    @objc private func volMinusTapped() {
+        guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
+        let newVol = max(0, info.volume - 10)
+        NowPlayingModel.shared.setVolume(newVol)
+    }
+
+    @objc private func volPlusTapped() {
+        guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
+        let newVol = min(100, info.volume + 10)
+        NowPlayingModel.shared.setVolume(newVol)
+    }
+
+    @objc private func volTextTapped() {
+        guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
+        if info.volume > 0 {
+            lastPreMuteVolume = info.volume
+            NowPlayingModel.shared.setVolume(0)
+        } else {
+            NowPlayingModel.shared.setVolume(lastPreMuteVolume > 0 ? lastPreMuteVolume : 50)
+        }
     }
 
     func togglePopover() {
