@@ -32,8 +32,8 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // 2. Backward Status Item [⏮] (Created 1st -> Placed on the Far Right)
-        let bwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        // 2. Backward Status Item [⏮] (Created 1st -> Placed on the Far Right, Compact Length)
+        let bwdItem = NSStatusBar.system.statusItem(withLength: 18)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: "Önceki Şarkı")
             button.target = self
@@ -49,7 +49,7 @@ final class MenuBarManager: NSObject {
             settings: SettingsModel.shared
         )
         let hosting = NSHostingView(rootView: mainLabel)
-        let fittingWidth = max(80, min(hosting.fittingSize.width + 12, SettingsModel.shared.menuBarWidth + 30))
+        let fittingWidth = max(70, min(hosting.fittingSize.width + 4, SettingsModel.shared.menuBarWidth + 20))
         hosting.frame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
         hosting.autoresizingMask = [.width, .height]
 
@@ -64,8 +64,8 @@ final class MenuBarManager: NSObject {
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // 4. Forward Status Item [⏭] (Created 3rd -> Placed on the Far Left)
-        let fwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        // 4. Forward Status Item [⏭] (Created 3rd -> Placed on the Far Left, Compact Length)
+        let fwdItem = NSStatusBar.system.statusItem(withLength: 18)
         if let button = fwdItem.button {
             button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: "Sonraki Şarkı")
             button.target = self
@@ -86,7 +86,7 @@ final class MenuBarManager: NSObject {
     func updateWidth() {
         guard let mainItem = mainStatusItem, let button = mainItem.button else { return }
         if let hosting = button.subviews.first as? NSHostingView<MenuBarMainLabelView> {
-            let fittingWidth = max(80, min(hosting.fittingSize.width + 12, SettingsModel.shared.menuBarWidth + 30))
+            let fittingWidth = max(70, min(hosting.fittingSize.width + 4, SettingsModel.shared.menuBarWidth + 20))
             let newFrame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
             hosting.frame = newFrame
             button.frame = newFrame
