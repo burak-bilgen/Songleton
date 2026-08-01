@@ -1,15 +1,10 @@
-import AppKit
 import SwiftUI
 
-// MARK: - MenuBarCenterTitleView
+// MARK: - MenuBarMainLabelView
 
-struct MenuBarCenterTitleView: View {
+struct MenuBarMainLabelView: View {
     @ObservedObject var model: NowPlayingModel
     @ObservedObject var settings: SettingsModel
-    let onTapPlayPause: () -> Void
-
-    @State private var isAnimatingFeedback = false
-    @State private var feedbackIsPlaying = false
 
     private var isPlaying: Bool {
         if case .loaded(let info, _) = model.state {
@@ -20,14 +15,9 @@ struct MenuBarCenterTitleView: View {
 
     var body: some View {
         HStack(spacing: 5) {
-            // Albüm Kapağı veya Animasyonlu Oynat / Duraklat Göstergesi
+            // Albüm Kapağı Görseli (16x16)
             ZStack {
-                if isAnimatingFeedback {
-                    Image(systemName: feedbackIsPlaying ? "play.fill" : "pause.fill")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color.accentColor)
-                        .transition(.scale.combined(with: .opacity))
-                } else if let artwork = model.artwork {
+                if let artwork = model.artwork {
                     Image(nsImage: artwork)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -55,24 +45,5 @@ struct MenuBarCenterTitleView: View {
             )
         }
         .padding(.horizontal, 4)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            let currentIsPlaying = isPlaying
-            onTapPlayPause()
-            triggerPlayPauseAnimation(wasPlaying: currentIsPlaying)
-        }
-        .help("Tıklayın: Oynat / Duraklat")
-    }
-
-    private func triggerPlayPauseAnimation(wasPlaying: Bool) {
-        feedbackIsPlaying = !wasPlaying
-        withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
-            isAnimatingFeedback = true
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                isAnimatingFeedback = false
-            }
-        }
     }
 }
