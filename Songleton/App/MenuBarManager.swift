@@ -77,30 +77,28 @@ final class MenuBarManager: NSObject {
         }
         self.fwdStatusItem = fwdItem
 
-        // Volume Group Creation (created Plus -> Minus -> Text)
-        // Screen left-to-right order: [ %50 ] [ - ] [ + ]
+        // Volume Group Creation (created Minus -> Plus -> Text)
+        // Screen left-to-right order: [ %50 ] [ 🔊 ] [ 🔉 ]
 
-        // 4th created: + Button (rightmost of volume group)
-        let plusItem = NSStatusBar.system.statusItem(withLength: 20)
-        if let button = plusItem.button {
-            button.title = "+"
-            button.font = NSFont.systemFont(ofSize: 13, weight: .bold)
-            button.target = self
-            button.action = #selector(volPlusTapped)
-            button.toolTip = NSLocalizedString("Sesi Artır", comment: "Volume Up")
-        }
-        self.volPlusStatusItem = plusItem
-
-        // 5th created: - Button (middle of volume group)
-        let minusItem = NSStatusBar.system.statusItem(withLength: 20)
+        // 4th created: Volume Minus Button (rightmost of volume group)
+        let minusItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = minusItem.button {
-            button.title = "-"
-            button.font = NSFont.systemFont(ofSize: 13, weight: .bold)
+            button.image = NSImage(systemSymbolName: "speaker.minus.fill", accessibilityDescription: nil)
             button.target = self
             button.action = #selector(volMinusTapped)
-            button.toolTip = NSLocalizedString("Sesi Azalt", comment: "Volume Down")
+            button.toolTip = NSLocalizedString("Sesi Azalt (-10%)", comment: "Volume Down")
         }
         self.volMinusStatusItem = minusItem
+
+        // 5th created: Volume Plus Button (middle of volume group)
+        let plusItem = NSStatusBar.system.statusItem(withLength: 22)
+        if let button = plusItem.button {
+            button.image = NSImage(systemSymbolName: "speaker.plus.fill", accessibilityDescription: nil)
+            button.target = self
+            button.action = #selector(volPlusTapped)
+            button.toolTip = NSLocalizedString("Sesi Artır (+10%)", comment: "Volume Up")
+        }
+        self.volPlusStatusItem = plusItem
 
         // 6th created: Volume Percentage Text Display (leftmost of volume group)
         let textItem = NSStatusBar.system.statusItem(withLength: 34)
