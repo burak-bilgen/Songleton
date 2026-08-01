@@ -2,23 +2,20 @@ import AppKit
 import Combine
 import SwiftUI
 
-// Shared observable state between NSView (event handler) and SwiftUI (display)
 @MainActor
-final class VolumeSliderState: ObservableObject {
-    static let shared = VolumeSliderState()
-    @Published var isDragging = false
-    @Published var pendingVolume: Double? = nil
+final class VolumeSegmentState: ObservableObject {
+    static let shared = VolumeSegmentState()
+    @Published var pendingVolume: Int? = nil
     private init() {}
 }
 
-// NSView subclass — captures mouseDown / mouseDragged / mouseUp directly
 @MainActor
-final class VolumeStatusNSView: NSView {
-    private let state = VolumeSliderState.shared
+final class VolumeSegmentedNSView: NSView {
+    private let state = VolumeSegmentState.shared
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        let hosting = NSHostingView(rootView: VolumeMiniSliderView())
+        let hosting = NSHostingView(rootView: VolumeSegmentedView())
         hosting.frame = bounds
         hosting.autoresizingMask = [.width, .height]
         addSubview(hosting)
@@ -28,68 +25,61 @@ final class VolumeStatusNSView: NSView {
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    override func mouseDown(with event: NSEvent)    { handle(event, commit: false) }
-    override func mouseDragged(with event: NSEvent) { handle(event, commit: false) }
-    override func mouseUp(with event: NSEvent)      { handle(event, commit: true) }
-
-    private func handle(_ event: NSEvent, commit: Bool) {
+    override func mouseDown(with event: NSEvent) {
         let x = convert(event.locationInWindow, from: nil).x
-        let percent = max(0, min(1, Double(x - 6) / Double(bounds.width - 12)))
-        let vol = percent * 100
-        state.isDragging = !commit
-        if commit {
-            state.pendingVolume = nil
-            NowPlayingModel.shared.setVolume(Int(vol))
-        } else {
-            state.pendingVolume = vol
+        let stepWidth = bounds.width / 5.0
+        let segmentIndex = min(5, max(1, Int(x / stepWidth) + 1))
+        let targetVolume = segmentIndex * 20
+        
+        state.pendingVolume = targetVolume
+        NowPlayingModel.shared.setVolume(targetVolume)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            if self?.state.pendingVolume == targetVolume {
+                self?.state.pendingVolume = nil
+            }
+        }
+    }
+
+    override func scrollWheel(with event: NSEvent) {
+        guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
+        let delta = event.deltaY
+        if abs(delta) > 0.1 {
+            let change = delta > 0 ? 5 : -5
+            let newVol = max(0, min(100, info.volume + change))
+            state.pendingVolume = newVol
+            NowPlayingModel.shared.setVolume(newVol)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                if self?.state.pendingVolume == newVol {
+                    self?.state.pendingVolume = nil
+                }
+            }
         }
     }
 }
 
-// SwiftUI view — display only, no gestures (NSView handles everything)
-struct VolumeMiniSliderView: View {
-    @ObservedObject private var state = VolumeSliderState.shared
+struct VolumeSegmentedView: View {
+    @ObservedObject private var state = VolumeSegmentState.shared
     @ObservedObject private var model = NowPlayingModel.shared
 
-    private var displayVolume: Double {
+    private var currentVolume: Int {
         if let p = state.pendingVolume { return p }
         guard case .loaded(let info, _) = model.state else { return 0 }
-        return Double(info.volume)
+        return info.volume
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let percent = CGFloat(displayVolume / 100.0)
-            let fillWidth = (w - 12) * percent
-            let thumbX = 6 + fillWidth
-
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color.primary.opacity(0.13))
-                    .frame(height: 3)
-                    .padding(.horizontal, 6)
-
-                Capsule()
-                    .fill(Color.primary.opacity(state.isDragging ? 0.8 : 0.55))
-                    .frame(width: max(6, fillWidth), height: 3)
-                    .padding(.leading, 6)
-                    .animation(.easeOut(duration: 0.06), value: displayVolume)
-
-                Circle()
-                    .fill(Color.white)
-                    .frame(
-                        width: state.isDragging ? 12 : 10,
-                        height: state.isDragging ? 12 : 10
-                    )
-                    .shadow(color: .black.opacity(0.28), radius: state.isDragging ? 4 : 2, x: 0, y: 1)
-                    .offset(x: thumbX - (state.isDragging ? 6 : 5))
-                    .animation(.spring(response: 0.18, dampingFraction: 0.65), value: state.isDragging)
-                    .animation(.easeOut(duration: 0.06), value: displayVolume)
+        HStack(spacing: 3) {
+            ForEach(1...5, id: \.self) { index in
+                let isActive = currentVolume >= (index * 20 - 10)
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(isActive ? Color.primary.opacity(0.88) : Color.primary.opacity(0.18))
+                    .frame(width: 5, height: 12)
             }
-            .frame(maxHeight: .infinity)
         }
-        .frame(width: 56, height: 22)
+        .frame(width: 44, height: 22)
+        .contentShape(Rectangle())
         .allowsHitTesting(false)
     }
 }

@@ -73,10 +73,9 @@ final class MenuBarManager: NSObject {
         }
         self.fwdStatusItem = fwdItem
 
-        // volume slider — single item, created last → appears leftmost
-        // Uses statusItem.view so the custom NSView can capture drag events
-        let volItem = NSStatusBar.system.statusItem(withLength: 60)
-        let volView = VolumeStatusNSView(frame: NSRect(x: 0, y: 0, width: 60, height: 22))
+        // volume segmented bar — single item, created last → appears leftmost
+        let volItem = NSStatusBar.system.statusItem(withLength: 44)
+        let volView = VolumeSegmentedNSView(frame: NSRect(x: 0, y: 0, width: 44, height: 22))
         volItem.view = volView
         self.volSliderItem = volItem
 
