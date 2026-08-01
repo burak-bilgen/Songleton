@@ -58,7 +58,7 @@ struct MenuBarMainLabelView: View {
                 )
             )
         }
-        .frame(maxWidth: settings.menuBarWidth, alignment: .leading)
+        .frame(width: settings.menuBarWidth, alignment: .center)
         .animation(.spring(response: 0.45, dampingFraction: 0.65), value: currentTitle)
         .onChange(of: currentTitle) { _, _ in
             triggerCuteBounce()

@@ -13,7 +13,6 @@ final class MenuBarManager: NSObject {
     private var fwdStatusItem: NSStatusItem?
 
     private var popover: NSPopover?
-    private var cancellables = Set<AnyCancellable>()
 
     private override init() {
         super.init()
@@ -32,7 +31,7 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // 2. Backward Status Item [⏮] (Created 1st -> Placed on the Far Right, Tight Length)
+        // 2. Backward Status Item [⏮] (Created 1st -> Placed on the Far Right, Fixed 16px)
         let bwdItem = NSStatusBar.system.statusItem(withLength: 16)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: "Önceki Şarkı")
@@ -42,15 +41,15 @@ final class MenuBarManager: NSObject {
         }
         self.bwdStatusItem = bwdItem
 
-        // 3. Main Status Item: [ Artwork + Song Title ] (Created 2nd -> Auto-Fitting Container)
+        // 3. Main Status Item: [ Artwork + Centered Song Title ] (Created 2nd -> Strict Fixed Length)
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabel = MenuBarMainLabelView(
             model: NowPlayingModel.shared,
             settings: SettingsModel.shared
         )
         let hosting = NSHostingView(rootView: mainLabel)
-        let fittingWidth = min(max(40, hosting.fittingSize.width), SettingsModel.shared.menuBarWidth + 10)
-        hosting.frame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
+        let fixedWidth = SettingsModel.shared.menuBarWidth + 10
+        hosting.frame = NSRect(x: 0, y: 0, width: fixedWidth, height: 22)
         hosting.autoresizingMask = [.width, .height]
 
         if let button = mainItem.button {
@@ -61,10 +60,10 @@ final class MenuBarManager: NSObject {
         } else {
             mainItem.view = hosting
         }
-        mainItem.length = fittingWidth
+        mainItem.length = fixedWidth
         self.mainStatusItem = mainItem
 
-        // 4. Forward Status Item [⏭] (Created 3rd -> Placed on the Far Left, Tight Length)
+        // 4. Forward Status Item [⏭] (Created 3rd -> Placed on the Far Left, Fixed 16px)
         let fwdItem = NSStatusBar.system.statusItem(withLength: 16)
         if let button = fwdItem.button {
             button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: "Sonraki Şarkı")
@@ -73,25 +72,17 @@ final class MenuBarManager: NSObject {
             button.toolTip = "Sonraki Şarkı"
         }
         self.fwdStatusItem = fwdItem
-
-        // Listen to state/title changes to adjust main item width dynamically without leaving empty gaps
-        NowPlayingModel.shared.$state
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.updateWidth()
-            }
-            .store(in: &cancellables)
     }
 
     func updateWidth() {
         guard let mainItem = mainStatusItem, let button = mainItem.button else { return }
-        if let hosting = button.subviews.first as? NSHostingView<MenuBarMainLabelView> {
-            let fittingWidth = min(max(40, hosting.fittingSize.width), SettingsModel.shared.menuBarWidth + 10)
-            let newFrame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
+        let fixedWidth = SettingsModel.shared.menuBarWidth + 10
+        let newFrame = NSRect(x: 0, y: 0, width: fixedWidth, height: 22)
+        if let hosting = button.subviews.first {
             hosting.frame = newFrame
-            button.frame = newFrame
-            mainItem.length = fittingWidth
         }
+        button.frame = newFrame
+        mainItem.length = fixedWidth
     }
 
     // MARK: - Actions
