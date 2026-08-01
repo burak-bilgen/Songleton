@@ -74,15 +74,10 @@ final class MenuBarManager: NSObject {
         self.fwdStatusItem = fwdItem
 
         // volume slider — single item, created last → appears leftmost
-        let volItem = NSStatusBar.system.statusItem(withLength: 56)
-        if let button = volItem.button {
-            let sliderView = NSHostingView(rootView: VolumeMiniSliderView())
-            sliderView.frame = NSRect(x: 0, y: 0, width: 56, height: 22)
-            sliderView.autoresizingMask = [.width, .height]
-            button.addSubview(sliderView)
-            button.frame = NSRect(x: 0, y: 0, width: 56, height: 22)
-            button.toolTip = NSLocalizedString("Ses Seviyesi", comment: "Volume")
-        }
+        // Uses statusItem.view so the custom NSView can capture drag events
+        let volItem = NSStatusBar.system.statusItem(withLength: 60)
+        let volView = VolumeStatusNSView(frame: NSRect(x: 0, y: 0, width: 60, height: 22))
+        volItem.view = volView
         self.volSliderItem = volItem
 
         NowPlayingModel.shared.$state
