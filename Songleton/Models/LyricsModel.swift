@@ -39,12 +39,14 @@ final class LyricsModel: ObservableObject {
     func activeLineIndex(for position: Double) -> Int? {
         guard !lines.isEmpty else { return nil }
 
+        let offsetPosition = position + 0.1 // anticipatory offset for zero-lag feeling
+
         for i in 0..<(lines.count - 1) {
-            if position >= lines[i].timestamp && position < lines[i + 1].timestamp {
+            if offsetPosition >= lines[i].timestamp && offsetPosition < lines[i + 1].timestamp {
                 return i
             }
         }
-        if let last = lines.last, position >= last.timestamp {
+        if let last = lines.last, offsetPosition >= last.timestamp {
             return lines.count - 1
         }
         return 0
