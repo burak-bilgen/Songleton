@@ -324,6 +324,8 @@ struct PlayerPanelView: View {
             }
             .controlSize(.mini)
             .tint(Color.accentColor)
+            .focusEffectDisabled()
+            .focusable(false)
             .onAppear { if !isDraggingPosition { sliderPosition = info.position } }
             .onChange(of: info.position) { _, v in if !isDraggingPosition { sliderPosition = v } }
 
@@ -412,6 +414,8 @@ struct PlayerPanelView: View {
             }
             .controlSize(.mini)
             .tint(Color.primary.opacity(0.8))
+            .focusEffectDisabled()
+            .focusable(false)
             Image(systemName: "speaker.wave.3.fill")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.tertiary)
