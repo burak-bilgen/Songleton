@@ -54,13 +54,17 @@ final class NowPlayingModel: ObservableObject {
         }
     }
 
+    @Published private(set) var showArtistTemporarily = false
+    private var artistTimerTask: Task<Void, Never>?
+
     // MARK: - Computed
 
     var menuBarTitle: String? {
         guard case .loaded(let info, _) = state else { return nil }
-        return SettingsModel.shared.showArtistInMenuBar
-            ? "\(info.track) - \(info.artist)"
-            : info.track
+        if SettingsModel.shared.showArtistInMenuBar && showArtistTemporarily {
+            return "\(info.track) - \(info.artist)"
+        }
+        return info.track
     }
 
     var activeBundleID: String? { activeController?.bundleID }
@@ -173,6 +177,16 @@ final class NowPlayingModel: ObservableObject {
                         let recent = RecentTrack(track: info.track, artist: info.artist, source: src, playedAt: Date())
                         recentTracks.insert(recent, at: 0)
                         if recentTracks.count > 20 { recentTracks = Array(recentTracks.prefix(20)) }
+
+                        // Show artist name temporarily for 2.5 seconds on track change
+                        showArtistTemporarily = true
+                        artistTimerTask?.cancel()
+                        artistTimerTask = Task {
+                            try? await Task.sleep(for: .milliseconds(2500))
+                            if !Task.isCancelled {
+                                showArtistTemporarily = false
+                            }
+                        }
                     }
                 }
                 state = result.state
