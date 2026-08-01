@@ -109,7 +109,12 @@ final class MenuBarManager: NSObject {
         if event.type == .rightMouseUp {
             togglePopover()
         } else {
-            NowPlayingModel.shared.togglePlayPause()
+            // Left click: If popover is currently open, close it without pausing song
+            if let popover = popover, popover.isShown {
+                popover.performClose(nil)
+            } else {
+                NowPlayingModel.shared.togglePlayPause()
+            }
         }
     }
 

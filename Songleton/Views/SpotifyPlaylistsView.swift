@@ -26,21 +26,24 @@ struct SpotifyPlaylistsView: View {
 
                 Spacer()
 
+                // Add Custom Button
                 Button {
                     showAddSheet = true
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
                             .font(.system(size: 10, weight: .bold))
-                        Text("Ekle")
+                        Text("Playlist Ekle")
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.primary.opacity(0.1))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color(red: 0.11, green: 0.73, blue: 0.33).opacity(0.15))
+                    .foregroundStyle(Color(red: 0.11, green: 0.73, blue: 0.33))
                     .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
+                .help("Spotify Bağlantısı ile Playlist Ekle")
             }
             .padding(.horizontal, 16)
             .padding(.top, 12)
@@ -69,7 +72,7 @@ struct SpotifyPlaylistsView: View {
                     Text("Playlist Adı")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
-                    TextField("Örn: Spor Listem", text: $newName)
+                    TextField("Örn: Favori Şarkılarım", text: $newName)
                         .textFieldStyle(.roundedBorder)
 
                     Text("Spotify Bağlantısı veya URI")
@@ -123,7 +126,7 @@ struct PlaylistRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Icon / Cover
+            // Icon
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(

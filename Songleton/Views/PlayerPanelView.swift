@@ -21,13 +21,13 @@ struct PlayerPanelView: View {
 
     var body: some View {
         ZStack {
-            // Dynamic background layer
+            // Dynamic ambient background layer
             backgroundView
 
             VStack(spacing: 0) {
                 // Top Segmented Tab Picker
                 topTabBar
-                    .padding(.top, 10)
+                    .padding(.top, 12)
                     .padding(.horizontal, 16)
 
                 switch selectedTab {
@@ -86,7 +86,7 @@ struct PlayerPanelView: View {
             tabButton(title: "Geçmiş", icon: "clock", index: 2)
         }
         .padding(3)
-        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private func tabButton(title: String, icon: String, index: Int) -> some View {
@@ -107,9 +107,9 @@ struct PlayerPanelView: View {
             .background(
                 ZStack {
                     if selectedTab == index {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(.thinMaterial)
-                            .shadow(color: .black.opacity(0.12), radius: 2, x: 0, y: 1)
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                            .shadow(color: .black.opacity(0.12), radius: 3, x: 0, y: 1)
                     }
                 }
             )
@@ -123,8 +123,8 @@ struct PlayerPanelView: View {
         ZStack {
             if settings.useDynamicColor, case .loaded = model.state {
                 model.dominantColor
-                    .opacity(0.22)
-                    .blur(radius: 20)
+                    .opacity(0.24)
+                    .blur(radius: 28)
                     .animation(.easeInOut(duration: 0.8), value: model.dominantColor.description)
             }
         }
@@ -139,13 +139,13 @@ struct PlayerPanelView: View {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
                 Text(toastText)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .lineLimit(1)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
             .background(.thinMaterial, in: Capsule())
-            .shadow(color: .black.opacity(0.2), radius: 6, y: 3)
+            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
             Spacer()
         }
@@ -173,10 +173,10 @@ struct PlayerPanelView: View {
                 artworkView
                     .id(info.track)
                     .transition(.asymmetric(
-                        insertion: .scale(scale: 0.9).combined(with: .opacity),
+                        insertion: .scale(scale: 0.92).combined(with: .opacity),
                         removal: .scale(scale: 1.05).combined(with: .opacity)
                     ))
-                    .padding(.top, 12)
+                    .padding(.top, 14)
                     .padding(.horizontal, 16)
 
                 // Track info
@@ -186,26 +186,26 @@ struct PlayerPanelView: View {
                         insertion: .move(edge: .top).combined(with: .opacity),
                         removal: .move(edge: .bottom).combined(with: .opacity)
                     ))
-                    .padding(.top, 10)
+                    .padding(.top, 12)
                     .padding(.horizontal, 16)
 
                 // Progress bar
                 if settings.showProgressBar && info.duration > 0 {
                     progressView(info: info)
-                        .padding(.top, 8)
+                        .padding(.top, 10)
                         .padding(.horizontal, 20)
                 }
 
-                // Controls
+                // Controls (Without Rewind/Restart Button)
                 controlsView(info: info)
-                    .padding(.top, 10)
-                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .padding(.horizontal, 20)
 
                 // Volume
                 volumeView(info: info)
-                    .padding(.top, 8)
+                    .padding(.top, 10)
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, 6)
             } else {
                 // Compact mode
                 compactLoadedView(info: info, source: source)
@@ -226,9 +226,9 @@ struct PlayerPanelView: View {
                 Image(nsImage: artwork)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .blur(radius: 16)
-                    .opacity(0.4)
-                    .offset(y: 6)
+                    .blur(radius: 20)
+                    .opacity(0.45)
+                    .offset(y: 8)
             }
 
             if let artwork = model.artwork {
@@ -249,11 +249,11 @@ struct PlayerPanelView: View {
             }
         }
         .frame(width: panelWidth - 56, height: panelWidth - 56)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.25), radius: 10, x: 0, y: 5)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 6)
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
         .onTapGesture { activateActivePlayer() }
         .help("Çalan uygulamayı ön plana getirmek için tıklayın")
@@ -265,7 +265,7 @@ struct PlayerPanelView: View {
         VStack(spacing: 3) {
             HStack(spacing: 4) {
                 Text(info.track)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
                     .lineLimit(1)
                     .multilineTextAlignment(.center)
             }
@@ -278,26 +278,26 @@ struct PlayerPanelView: View {
             .help("Tıklayarak şarkı ve sanatçı adını kopyalayın")
 
             Text(info.artist)
-                .font(.system(size: 13))
+                .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
             if !info.album.isEmpty {
                 Text(info.album)
-                    .font(.system(size: 11))
+                    .font(.system(size: 11, weight: .regular, design: .rounded))
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
             }
 
             HStack(spacing: 4) {
                 Image(systemName: source == "Spotify" ? "music.note.list" : "music.note")
-                    .font(.system(size: 9))
+                    .font(.system(size: 9, weight: .semibold))
                 Text(source)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
             }
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(.secondary)
             .padding(.horizontal, 8)
-            .padding(.vertical, 2)
+            .padding(.vertical, 3)
             .background(.primary.opacity(0.06), in: Capsule())
             .padding(.top, 4)
         }
@@ -306,57 +306,84 @@ struct PlayerPanelView: View {
     // MARK: - Progress View
 
     private func progressView(info: NowPlayingInfo) -> some View {
-        VStack(spacing: 3) {
+        VStack(spacing: 4) {
             Slider(value: $sliderPosition, in: 0...max(info.duration, 1)) { editing in
                 isDraggingPosition = editing
                 if !editing { model.seekTo(sliderPosition) }
             }
             .controlSize(.mini)
+            .tint(Color.accentColor)
             .onAppear { if !isDraggingPosition { sliderPosition = info.position } }
             .onChange(of: info.position) { _, v in if !isDraggingPosition { sliderPosition = v } }
 
             HStack {
                 Text(formatTime(isDraggingPosition ? sliderPosition : info.position))
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundStyle(.tertiary)
                 Spacer()
                 Text(formatTime(info.duration))
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundStyle(.tertiary)
             }
         }
     }
 
-    // MARK: - Controls View
+    // MARK: - Controls View (Clean & Balanced without Rewind)
 
     private func controlsView(info: NowPlayingInfo) -> some View {
-        HStack(spacing: 0) {
-            Spacer()
-            controlButton("backward.end.fill", size: 16) { model.restartTrack() }
-                .help("Başa dön")
-            Spacer()
-            controlButton("backward.fill", size: 18) { model.previousTrack() }
-                .help("Önceki şarkı")
-            Spacer()
+        HStack(spacing: 36) {
+            Spacer(minLength: 0)
 
-            // Play/Pause button
+            // 1. Önceki Şarkı (Previous Track)
+            Button(action: { model.previousTrack() }) {
+                Image(systemName: "backward.fill")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.primary)
+                    .frame(width: 38, height: 38)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help("Önceki şarkı")
+
+            // 2. Canlı Oynat / Durdur Butonu (Play / Pause Button)
             Button(action: { model.togglePlayPause() }) {
                 ZStack {
                     Circle()
-                        .fill(.primary.opacity(0.1))
-                        .frame(width: 48, height: 48)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.primary.opacity(0.12), Color.primary.opacity(0.06)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(Color.primary.opacity(0.15), lineWidth: 0.75)
+                        )
+                        .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
+                        .frame(width: 52, height: 52)
+
                     Image(systemName: info.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(.primary)
                         .contentTransition(.symbolEffect(.replace))
                 }
             }
             .buttonStyle(.plain)
             .help(info.isPlaying ? "Duraklat" : "Oynat")
 
-            Spacer()
-            controlButton("forward.fill", size: 18) { model.nextTrack() }
-                .help("Sonraki şarkı")
-            Spacer()
+            // 3. Sonraki Şarkı (Next Track)
+            Button(action: { model.nextTrack() }) {
+                Image(systemName: "forward.fill")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.primary)
+                    .frame(width: 38, height: 38)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help("Sonraki şarkı")
+
+            Spacer(minLength: 0)
         }
     }
 
@@ -365,7 +392,7 @@ struct PlayerPanelView: View {
     private func volumeView(info: NowPlayingInfo) -> some View {
         HStack(spacing: 8) {
             Image(systemName: sliderVolume < 1 ? "speaker.slash.fill" : "speaker.fill")
-                .font(.system(size: 11))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.tertiary)
                 .frame(width: 14)
             Slider(value: $sliderVolume, in: 0...100) { editing in
@@ -373,8 +400,9 @@ struct PlayerPanelView: View {
                 if !editing { model.setVolume(Int(sliderVolume)) }
             }
             .controlSize(.mini)
+            .tint(Color.primary.opacity(0.8))
             Image(systemName: "speaker.wave.3.fill")
-                .font(.system(size: 11))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.tertiary)
                 .frame(width: 18)
         }
@@ -398,23 +426,23 @@ struct PlayerPanelView: View {
                 }
             }
             .frame(width: 50, height: 50)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .onTapGesture { activateActivePlayer() }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(info.track)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
                     .lineLimit(1)
                 Text(info.artist)
-                    .font(.system(size: 11))
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer()
-            HStack(spacing: 10) {
-                controlButton("backward.fill", size: 15) { model.previousTrack() }
-                controlButton(info.isPlaying ? "pause.fill" : "play.fill", size: 17) { model.togglePlayPause() }
-                controlButton("forward.fill", size: 15) { model.nextTrack() }
+            HStack(spacing: 12) {
+                controlButton("backward.fill", size: 16) { model.previousTrack() }
+                controlButton(info.isPlaying ? "pause.fill" : "play.fill", size: 18) { model.togglePlayPause() }
+                controlButton("forward.fill", size: 16) { model.nextTrack() }
             }
         }
     }
@@ -437,7 +465,7 @@ struct PlayerPanelView: View {
                         .font(.system(size: 28, weight: .thin))
                         .foregroundStyle(.tertiary)
                     Text("Henüz geçmiş yok")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
                 .frame(height: 280)
@@ -460,15 +488,15 @@ struct PlayerPanelView: View {
             Image(systemName: item.source == "Spotify" ? "music.note.list" : "music.note")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
-                .frame(width: 20, height: 20)
+                .frame(width: 22, height: 22)
                 .background(.primary.opacity(0.06), in: Circle())
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(item.track)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .lineLimit(1)
                 Text(item.artist)
-                    .font(.system(size: 10))
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -490,7 +518,7 @@ struct PlayerPanelView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background(.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 8))
+        .background(.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     // MARK: - Not Running State
@@ -508,9 +536,9 @@ struct PlayerPanelView: View {
             }
             VStack(spacing: 6) {
                 Text("Müzik çalmıyor")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
                 Text("Spotify veya Apple Music'i başlatın")
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
@@ -534,10 +562,10 @@ struct PlayerPanelView: View {
     private func playerLaunchButton(label: String, icon: String, bundleID: String) -> some View {
         Button(action: { openPlayer(bundleID: bundleID) }) {
             Label(label, systemImage: icon)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
-                .background(.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                .background(.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
     }
@@ -557,9 +585,9 @@ struct PlayerPanelView: View {
             }
             VStack(spacing: 6) {
                 Text("İzin Gerekli")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
                 Text("Songleton, Spotify veya Apple Music'e erişmek için Otomasyon izni istiyor.")
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
@@ -570,10 +598,10 @@ struct PlayerPanelView: View {
                         Image(systemName: "gear")
                         Text("Gizlilik Ayarlarını Aç")
                     }
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
+                    .background(.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .foregroundStyle(.orange)
                 }
                 .buttonStyle(.plain)
@@ -582,7 +610,7 @@ struct PlayerPanelView: View {
                     model.requestPermissionByScript()
                 }) {
                     Text("Tekrar Dene")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
@@ -606,7 +634,7 @@ struct PlayerPanelView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
-                .font(.system(size: 12))
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .padding(.leading, 16)
 
                 Spacer()
@@ -614,7 +642,7 @@ struct PlayerPanelView: View {
                 Button("Çıkış") { NSApplication.shared.terminate(nil) }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .padding(.trailing, 16)
             }
             .frame(height: 36)
@@ -626,7 +654,7 @@ struct PlayerPanelView: View {
     private func controlButton(_ systemName: String, size: CGFloat = 20, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: size, weight: .medium))
+                .font(.system(size: size, weight: .semibold))
                 .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
         }
