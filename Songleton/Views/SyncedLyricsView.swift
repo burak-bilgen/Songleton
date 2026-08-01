@@ -131,10 +131,22 @@ struct SyncedLyricsView: View {
                                 }
                             }
                         )
+                        .onAppear {
+                            if let activeIndex {
+                                proxy.scrollTo(activeIndex, anchor: .center)
+                            }
+                        }
                         .onChange(of: activeIndex) { _, newIndex in
                             if let newIndex, !isUserScrolling {
                                 withAnimation(.easeInOut(duration: 0.25)) {
                                     proxy.scrollTo(newIndex, anchor: .center)
+                                }
+                            }
+                        }
+                        .onChange(of: lyricsModel.lines) { _, newLines in
+                            if !newLines.isEmpty, let activeIndex {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                    proxy.scrollTo(activeIndex, anchor: .center)
                                 }
                             }
                         }
