@@ -87,7 +87,7 @@ final class MenuBarManager: NSObject {
             button.font = NSFont.systemFont(ofSize: 13, weight: .bold)
             button.target = self
             button.action = #selector(volPlusTapped)
-            button.toolTip = NSLocalizedString("Sesi Artır", comment: "Volume Up")
+            button.toolTip = NSLocalizedString("Sesi Artır (+20%)", comment: "Volume Up")
         }
         self.volPlusStatusItem = plusItem
 
@@ -98,7 +98,7 @@ final class MenuBarManager: NSObject {
             button.font = NSFont.systemFont(ofSize: 13, weight: .bold)
             button.target = self
             button.action = #selector(volMinusTapped)
-            button.toolTip = NSLocalizedString("Sesi Azalt", comment: "Volume Down")
+            button.toolTip = NSLocalizedString("Sesi Azalt (-20%)", comment: "Volume Down")
         }
         self.volMinusStatusItem = minusItem
 
@@ -154,13 +154,13 @@ final class MenuBarManager: NSObject {
 
     @objc private func volMinusTapped() {
         guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
-        let newVol = max(0, info.volume - 10)
+        let newVol = max(0, info.volume - 20)
         NowPlayingModel.shared.setVolume(newVol)
     }
 
     @objc private func volPlusTapped() {
         guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
-        let newVol = min(100, info.volume + 10)
+        let newVol = min(100, info.volume + 20)
         NowPlayingModel.shared.setVolume(newVol)
     }
 
