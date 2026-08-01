@@ -34,7 +34,7 @@ struct SettingsView: View {
                 Toggle("Sanatçı adını göster", isOn: $settings.showArtistInMenuBar)
                 LabeledContent("Genişlik") {
                     HStack {
-                        Slider(value: $settings.menuBarWidth, in: 80...400, step: 10)
+                        Slider(value: $settings.menuBarWidth, in: 80...300, step: 10)
                         Text("\(Int(settings.menuBarWidth))")
                             .monospacedDigit()
                             .frame(width: 36, alignment: .trailing)

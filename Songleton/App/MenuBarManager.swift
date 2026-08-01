@@ -48,7 +48,7 @@ final class MenuBarManager: NSObject {
             settings: SettingsModel.shared
         )
         let hosting = NSHostingView(rootView: mainLabel)
-        let fixedWidth = SettingsModel.shared.menuBarWidth + 24
+        let fixedWidth = SettingsModel.shared.menuBarWidth + 6
         hosting.frame = NSRect(x: 0, y: 0, width: fixedWidth, height: 22)
         hosting.autoresizingMask = [.width, .height]
 
@@ -76,7 +76,7 @@ final class MenuBarManager: NSObject {
 
     func updateWidth() {
         guard let mainItem = mainStatusItem, let button = mainItem.button else { return }
-        let fixedWidth = SettingsModel.shared.menuBarWidth + 24
+        let fixedWidth = SettingsModel.shared.menuBarWidth + 6
         let newFrame = NSRect(x: 0, y: 0, width: fixedWidth, height: 22)
         if let hosting = button.subviews.first {
             hosting.frame = newFrame

@@ -72,7 +72,7 @@ final class SettingsModel: ObservableObject {
     private init() {
         defaults.register(defaults: [
             "showArtistInMenuBar": true,
-            "menuBarWidth": 240.0,
+            "menuBarWidth": 130.0,
             "menuBarFont": MenuBarFont.system.rawValue,
             "launchAtLogin": false,
             "panelStyle": PanelStyle.full.rawValue,
