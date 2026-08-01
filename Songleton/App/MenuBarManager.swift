@@ -89,12 +89,16 @@ final class MenuBarManager: NSObject {
 
     func updateWidth() {
         guard let mainItem = mainStatusItem, let button = mainItem.button else { return }
+        // Don't touch button.frame while popover is shown — it causes the popover to dismiss
+        let popoverOpen = popover?.isShown == true
         if let hosting = button.subviews.first as? NSHostingView<MenuBarMainLabelView> {
             let fittingWidth = min(max(50, hosting.fittingSize.width + 4), SettingsModel.shared.menuBarWidth + 16)
-            let newFrame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
-            hosting.frame = newFrame
-            button.frame = newFrame
-            mainItem.length = fittingWidth
+            if !popoverOpen {
+                let newFrame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
+                hosting.frame = newFrame
+                button.frame = newFrame
+                mainItem.length = fittingWidth
+            }
         }
     }
 

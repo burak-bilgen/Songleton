@@ -83,7 +83,7 @@ final class SettingsModel: ObservableObject {
             "showProgressBar": true,
             "useDynamicColor": true,
             "showMenuBarControls": true,
-            "lyricsOffset": 1.2
+            "lyricsOffset": 0.9
         ])
         showArtistInMenuBar = defaults.bool(forKey: "showArtistInMenuBar")
         menuBarWidth = defaults.double(forKey: "menuBarWidth")
