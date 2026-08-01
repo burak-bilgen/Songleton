@@ -44,7 +44,7 @@ struct MenuBarMainLabelView: View {
                 maxWidth: settings.menuBarWidth
             )
         }
-        .frame(maxWidth: settings.menuBarWidth, alignment: .center)
+        .frame(width: settings.menuBarWidth, alignment: .center)
         .padding(.horizontal, 2)
     }
 }
