@@ -8,11 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         registerCustomFonts()
         MenuBarManager.shared.setup()
-
-        // Silently check permission status
         NowPlayingModel.shared.checkAutomationPermission(askUser: false)
 
-        // Show onboarding ONLY if never completed before
         let hasOnboarded = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
         if !hasOnboarded {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -25,7 +22,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 
-    // Called from SettingsView
     func reopenOnboarding() {
         UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
         if let window = onboardingWindow {
@@ -35,8 +31,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         showOnboarding()
     }
-
-    // MARK: - Private
 
     private func registerCustomFonts() {
         guard let url = Bundle.main.url(forResource: "Audiowide-Regular", withExtension: "ttf") else { return }
@@ -79,5 +73,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         onboardingWindow = nil
         NSApp.setActivationPolicy(.accessory)
     }
-
 }

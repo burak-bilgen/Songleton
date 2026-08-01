@@ -1,14 +1,12 @@
 import AppKit
 import SwiftUI
 
-// MARK: - PlayerPanelView
-
 struct PlayerPanelView: View {
     @ObservedObject var model: NowPlayingModel
     @ObservedObject private var settings = SettingsModel.shared
     @Environment(\.openSettings) private var openSettings
 
-    @State private var selectedTab = 0 // 0: Now Playing, 1: Lyrics, 2: Spotify Playlists, 3: History
+    @State private var selectedTab = 0
     @State private var sliderVolume: Double = 50
     @State private var isDraggingVolume = false
     @State private var sliderPosition: Double = 0
@@ -17,15 +15,13 @@ struct PlayerPanelView: View {
     @State private var toastText = ""
 
     private var isCompact: Bool { settings.panelStyle == .compact }
-    private var panelWidth: CGFloat { 350 }
+    private let panelWidth: CGFloat = 350
 
     var body: some View {
         ZStack {
-            // Dynamic ambient background layer
             backgroundView
 
             VStack(spacing: 0) {
-                // Pinned Stationary Top Segmented Tab Picker
                 topTabBar
                     .padding(.top, 10)
                     .padding(.horizontal, 14)
@@ -33,11 +29,9 @@ struct PlayerPanelView: View {
 
                 Divider()
 
-                // Content View Container
                 ZStack {
                     switch selectedTab {
                     case 0:
-                        // Now Playing Tab
                         switch model.state {
                         case .loaded(let info, let source):
                             loadedView(info: info, source: source)
@@ -47,13 +41,10 @@ struct PlayerPanelView: View {
                             permissionDeniedView
                         }
                     case 1:
-                        // Synced Karaoke Lyrics Tab
                         SyncedLyricsView(nowPlaying: model)
                     case 2:
-                        // Spotify Playlists Tab
                         SpotifyPlaylistsView()
                     case 3:
-                        // History Tab
                         recentTracksSheet
                     default:
                         EmptyView()
@@ -62,7 +53,6 @@ struct PlayerPanelView: View {
                 .frame(maxHeight: .infinity)
             }
 
-            // Toast Notification Overlay
             if showCopiedToast {
                 toastView
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -71,21 +61,10 @@ struct PlayerPanelView: View {
         }
         .frame(width: panelWidth)
         .focusable()
-        .onKeyPress(.space) {
-            model.togglePlayPause()
-            return .handled
-        }
-        .onKeyPress(.leftArrow) {
-            model.previousTrack()
-            return .handled
-        }
-        .onKeyPress(.rightArrow) {
-            model.nextTrack()
-            return .handled
-        }
+        .onKeyPress(.space) { model.togglePlayPause(); return .handled }
+        .onKeyPress(.leftArrow) { model.previousTrack(); return .handled }
+        .onKeyPress(.rightArrow) { model.nextTrack(); return .handled }
     }
-
-    // MARK: - Pinned Stationary Top Tab Bar
 
     private var topTabBar: some View {
         HStack(spacing: 4) {
@@ -128,8 +107,6 @@ struct PlayerPanelView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Backgrounds
-
     private var backgroundView: some View {
         ZStack {
             if settings.useDynamicColor, case .loaded = model.state {
@@ -141,8 +118,6 @@ struct PlayerPanelView: View {
         }
         .ignoresSafeArea()
     }
-
-    // MARK: - Toast View
 
     private var toastView: some View {
         VStack {
@@ -157,30 +132,22 @@ struct PlayerPanelView: View {
             .padding(.vertical, 7)
             .background(.thinMaterial, in: Capsule())
             .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
-
             Spacer()
         }
     }
 
     private func triggerToast(_ text: String) {
         toastText = text
-        withAnimation(.spring(duration: 0.3)) {
-            showCopiedToast = true
-        }
+        withAnimation(.spring(duration: 0.3)) { showCopiedToast = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                showCopiedToast = false
-            }
+            withAnimation(.easeInOut(duration: 0.3)) { showCopiedToast = false }
         }
     }
-
-    // MARK: - Loaded State
 
     @ViewBuilder
     private func loadedView(info: NowPlayingInfo, source: String) -> some View {
         VStack(spacing: 0) {
             if !isCompact {
-                // Album artwork with glow
                 artworkView
                     .id(info.track)
                     .transition(.asymmetric(
@@ -190,7 +157,6 @@ struct PlayerPanelView: View {
                     .padding(.top, 18)
                     .padding(.horizontal, 16)
 
-                // Track info
                 trackInfoView(info: info, source: source)
                     .id(info.track + info.artist)
                     .transition(.asymmetric(
@@ -200,25 +166,21 @@ struct PlayerPanelView: View {
                     .padding(.top, 8)
                     .padding(.horizontal, 16)
 
-                // Progress bar
                 if settings.showProgressBar && info.duration > 0 {
                     progressView(info: info)
                         .padding(.top, 8)
                         .padding(.horizontal, 20)
                 }
 
-                // Controls
                 controlsView(info: info)
                     .padding(.top, 8)
                     .padding(.horizontal, 20)
 
-                // Volume
                 volumeView(info: info)
                     .padding(.top, 8)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 4)
             } else {
-                // Compact mode
                 compactLoadedView(info: info, source: source)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
@@ -228,11 +190,8 @@ struct PlayerPanelView: View {
         }
     }
 
-    // MARK: - Artwork View
-
     private var artworkView: some View {
         ZStack {
-            // Ambient glowing shadow
             if let artwork = model.artwork {
                 Image(nsImage: artwork)
                     .resizable()
@@ -269,8 +228,6 @@ struct PlayerPanelView: View {
         .onTapGesture { activateActivePlayer() }
         .help(NSLocalizedString("Çalan uygulamayı ön plana getirmek için tıklayın", comment: "Bring app to front"))
     }
-
-    // MARK: - Track Info View
 
     private func trackInfoView(info: NowPlayingInfo, source: String) -> some View {
         VStack(spacing: 3) {
@@ -314,8 +271,6 @@ struct PlayerPanelView: View {
         }
     }
 
-    // MARK: - Progress View
-
     private func progressView(info: NowPlayingInfo) -> some View {
         VStack(spacing: 4) {
             CustomSliderView(
@@ -342,13 +297,10 @@ struct PlayerPanelView: View {
         }
     }
 
-    // MARK: - Controls View
-
     private func controlsView(info: NowPlayingInfo) -> some View {
         HStack(spacing: 36) {
             Spacer(minLength: 0)
 
-            // 1. Önceki Şarkı (Previous Track)
             Button(action: { model.previousTrack() }) {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 20, weight: .bold))
@@ -359,21 +311,14 @@ struct PlayerPanelView: View {
             .buttonStyle(.plain)
             .help(NSLocalizedString("Önceki şarkı", comment: "Previous track"))
 
-            // 2. Canlı Oynat / Durdur Butonu (Play / Pause Button)
             Button(action: { model.togglePlayPause() }) {
                 ZStack {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.primary.opacity(0.12), Color.primary.opacity(0.06)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay(
-                            Circle()
-                                .stroke(Color.primary.opacity(0.15), lineWidth: 0.75)
-                        )
+                        .fill(LinearGradient(
+                            colors: [Color.primary.opacity(0.12), Color.primary.opacity(0.06)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        ))
+                        .overlay(Circle().stroke(Color.primary.opacity(0.15), lineWidth: 0.75))
                         .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
                         .frame(width: 50, height: 50)
 
@@ -386,7 +331,6 @@ struct PlayerPanelView: View {
             .buttonStyle(.plain)
             .help(info.isPlaying ? NSLocalizedString("Duraklat", comment: "Pause") : NSLocalizedString("Oynat", comment: "Play"))
 
-            // 3. Sonraki Şarkı (Next Track)
             Button(action: { model.nextTrack() }) {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 20, weight: .bold))
@@ -400,8 +344,6 @@ struct PlayerPanelView: View {
             Spacer(minLength: 0)
         }
     }
-
-    // MARK: - Volume View
 
     private func volumeView(info: NowPlayingInfo) -> some View {
         HStack(spacing: 8) {
@@ -428,8 +370,6 @@ struct PlayerPanelView: View {
         .onAppear { sliderVolume = Double(info.volume) }
         .onChange(of: info.volume) { _, v in if !isDraggingVolume { sliderVolume = Double(v) } }
     }
-
-    // MARK: - Compact Loaded View
 
     private func compactLoadedView(info: NowPlayingInfo, source: String) -> some View {
         HStack(spacing: 12) {
@@ -465,8 +405,6 @@ struct PlayerPanelView: View {
             }
         }
     }
-
-    // MARK: - Recent Tracks Sheet
 
     private var recentTracksSheet: some View {
         VStack(spacing: 10) {
@@ -540,8 +478,6 @@ struct PlayerPanelView: View {
         .background(.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
-    // MARK: - Not Running State
-
     private var notRunningView: some View {
         VStack(spacing: 16) {
             Spacer().frame(height: 12)
@@ -562,16 +498,8 @@ struct PlayerPanelView: View {
                     .multilineTextAlignment(.center)
             }
             HStack(spacing: 10) {
-                playerLaunchButton(
-                    label: "Spotify",
-                    icon: "music.note.list",
-                    bundleID: "com.spotify.client"
-                )
-                playerLaunchButton(
-                    label: "Music",
-                    icon: "music.note",
-                    bundleID: "com.apple.Music"
-                )
+                playerLaunchButton(label: "Spotify", icon: "music.note.list", bundleID: "com.spotify.client")
+                playerLaunchButton(label: "Music", icon: "music.note", bundleID: "com.apple.Music")
             }
             dividerAndFooter
         }
@@ -588,8 +516,6 @@ struct PlayerPanelView: View {
         }
         .buttonStyle(.plain)
     }
-
-    // MARK: - Permission Denied State
 
     private var permissionDeniedView: some View {
         VStack(spacing: 16) {
@@ -625,9 +551,7 @@ struct PlayerPanelView: View {
                 }
                 .buttonStyle(.plain)
 
-                Button(action: {
-                    model.requestPermissionByScript()
-                }) {
+                Button(action: { model.requestPermissionByScript() }) {
                     Text(NSLocalizedString("Tekrar Dene", comment: "Try Again"))
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -640,12 +564,9 @@ struct PlayerPanelView: View {
         .padding(.horizontal, 20)
     }
 
-    // MARK: - Footer
-
     private var dividerAndFooter: some View {
         VStack(spacing: 0) {
-            Divider()
-                .padding(.top, 8)
+            Divider().padding(.top, 8)
             HStack(spacing: 0) {
                 Button(NSLocalizedString("Ayarlar…", comment: "Settings")) {
                     openSettings()
@@ -667,8 +588,6 @@ struct PlayerPanelView: View {
             .frame(height: 34)
         }
     }
-
-    // MARK: - Helpers
 
     private func controlButton(_ systemName: String, size: CGFloat = 20, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -710,8 +629,6 @@ struct PlayerPanelView: View {
     }
 }
 
-// MARK: - CustomSliderView
-
 struct CustomSliderView: View {
     @Binding var value: Double
     let range: ClosedRange<Double>
@@ -726,17 +643,14 @@ struct CustomSliderView: View {
             let activeWidth = totalWidth * CGFloat(percent)
 
             ZStack(alignment: .leading) {
-                // Background Track
                 Capsule()
                     .fill(Color.primary.opacity(0.12))
                     .frame(height: 4)
 
-                // Active Progress Track
                 Capsule()
                     .fill(barColor.opacity(0.85))
                     .frame(width: max(4, activeWidth), height: 4)
 
-                // Monochrome White Thumb Handle (Zero blue system tint!)
                 Circle()
                     .fill(Color.white)
                     .frame(width: 10, height: 10)
@@ -752,9 +666,7 @@ struct CustomSliderView: View {
                         let newPercent = max(0, min(1, gesture.location.x / totalWidth))
                         value = range.lowerBound + Double(newPercent) * safeRangeLength
                     }
-                    .onEnded { _ in
-                        onEditingChanged(false)
-                    }
+                    .onEnded { _ in onEditingChanged(false) }
             )
         }
         .frame(height: 14)

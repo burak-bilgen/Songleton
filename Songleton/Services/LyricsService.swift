@@ -1,15 +1,5 @@
 import Foundation
 
-// MARK: - LyricLine
-
-struct LyricLine: Identifiable, Equatable {
-    let id = UUID()
-    let timestamp: Double // seconds
-    let text: String
-}
-
-// MARK: - LyricsService
-
 final class LyricsService {
     static let shared = LyricsService()
 
@@ -54,37 +44,28 @@ final class LyricsService {
         return nil
     }
 
-    /// Robust LRC Parser handling single/multi-timestamp lines:
-    /// e.g. [01:23.45] text line
-    /// e.g. [01:23.45][02:10.12] repeated chorus line
     private func parseLRC(_ lrcString: String) -> [LyricLine] {
         var lines: [LyricLine] = []
 
         let tagPattern = "\\[(\\d{1,2}):(\\d{2})(?:[\\.\\:](\\d{1,3}))?\\]"
         guard let tagRegex = try? NSRegularExpression(pattern: tagPattern) else { return [] }
 
-        let rawLines = lrcString.components(separatedBy: .newlines)
-        for line in rawLines {
+        let metadataPrefixes = ["[ar:", "[ti:", "[al:", "[by:", "[length:"]
+
+        for line in lrcString.components(separatedBy: .newlines) {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty { continue }
-
-            // Skip metadata tags
-            if trimmed.hasPrefix("[ar:") || trimmed.hasPrefix("[ti:") || trimmed.hasPrefix("[al:") || trimmed.hasPrefix("[by:") || trimmed.hasPrefix("[length:") {
-                continue
-            }
+            if metadataPrefixes.contains(where: { trimmed.hasPrefix($0) }) { continue }
 
             let nsString = trimmed as NSString
             let matches = tagRegex.matches(in: trimmed, range: NSRange(location: 0, length: nsString.length))
             if matches.isEmpty { continue }
 
-            // Extract lyric text after the last timestamp tag
             let lastMatch = matches.last!
             let textStartIndex = lastMatch.range.location + lastMatch.range.length
             let lyricText = nsString.substring(from: textStartIndex).trimmingCharacters(in: .whitespaces)
-
             if lyricText.isEmpty { continue }
 
-            // Create a LyricLine entry for every timestamp on this line
             for match in matches {
                 let minStr = nsString.substring(with: match.range(at: 1))
                 let secStr = nsString.substring(with: match.range(at: 2))
@@ -110,10 +91,9 @@ final class LyricsService {
     }
 
     private func parsePlainLyrics(_ plainString: String) -> [LyricLine] {
-        let rawLines = plainString.components(separatedBy: .newlines)
         var lines: [LyricLine] = []
         var dummyTime = 0.0
-        for line in rawLines {
+        for line in plainString.components(separatedBy: .newlines) {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if !trimmed.isEmpty {
                 lines.append(LyricLine(timestamp: dummyTime, text: trimmed))

@@ -1,7 +1,11 @@
 import Combine
 import Foundation
 
-// MARK: - LyricsModel
+struct LyricLine: Identifiable, Equatable {
+    let id = UUID()
+    let timestamp: Double
+    let text: String
+}
 
 @MainActor
 final class LyricsModel: ObservableObject {
@@ -36,14 +40,9 @@ final class LyricsModel: ObservableObject {
         }
     }
 
-    /// Finds the latest lyric line that has started based on playback position and delay compensation offset.
     func activeLineIndex(for position: Double) -> Int? {
         guard !lines.isEmpty else { return nil }
-
-        let offset = SettingsModel.shared.lyricsOffset
-        let effectivePosition = position + offset
-
-        // Find the last line where effectivePosition is greater than or equal to timestamp
+        let effectivePosition = position + SettingsModel.shared.lyricsOffset
         for (index, line) in lines.enumerated().reversed() {
             if effectivePosition >= line.timestamp {
                 return index

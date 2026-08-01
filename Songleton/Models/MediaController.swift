@@ -1,7 +1,5 @@
 import AppKit
 
-// MARK: - Data Types
-
 struct NowPlayingInfo {
     let track: String
     let artist: String
@@ -10,19 +8,15 @@ struct NowPlayingInfo {
     let volume: Int
     let artworkURL: URL?
     let artworkData: Data?
-    let position: Double  // seconds
-    let duration: Double  // seconds (0 = unknown)
+    let position: Double
+    let duration: Double
 }
-
-// MARK: - Errors
 
 enum MediaControllerError: Error {
     case appNotRunning
     case permissionDenied
     case scriptFailed(String)
 }
-
-// MARK: - AppleScript Runner
 
 enum AppleScriptRunner {
     @discardableResult
@@ -42,16 +36,12 @@ enum AppleScriptRunner {
     }
 }
 
-// MARK: - Automation Permission
-
 enum AutomationPermission {
     nonisolated static func status(bundleID: String, askUser: Bool) -> OSStatus {
         let target = NSAppleEventDescriptor(bundleIdentifier: bundleID)
         return AEDeterminePermissionToAutomateTarget(target.aeDesc, typeWildCard, typeWildCard, askUser)
     }
 }
-
-// MARK: - Protocol
 
 protocol MediaController: Sendable {
     nonisolated var bundleID: String { get }
@@ -67,8 +57,6 @@ protocol MediaController: Sendable {
     nonisolated func setVolume(_ volume: Int) throws
     nonisolated func seekTo(_ position: Double) throws
 }
-
-// MARK: - Default Implementations
 
 extension MediaController {
     nonisolated var isRunning: Bool {
@@ -92,8 +80,6 @@ extension MediaController {
         return try AppleScriptRunner.run("tell application \"\(scriptAppName)\"\n\(body)\nend tell")
     }
 }
-
-// MARK: - Spotify
 
 final class SpotifyController: MediaController {
     let bundleID = "com.spotify.client"
@@ -121,7 +107,6 @@ final class SpotifyController: MediaController {
         let volume = Int(result.atIndex(5)?.int32Value ?? 50)
         let artworkURL = result.atIndex(6)?.stringValue.flatMap { URL(string: $0) }
         let position = result.atIndex(7)?.doubleValue ?? 0
-        // Spotify returns duration in ms
         let duration = (result.atIndex(8)?.doubleValue ?? 0) / 1000.0
         return NowPlayingInfo(
             track: track, artist: artist, album: album,
@@ -131,8 +116,6 @@ final class SpotifyController: MediaController {
         )
     }
 }
-
-// MARK: - Apple Music
 
 final class AppleMusicController: MediaController {
     let bundleID = "com.apple.Music"

@@ -1,7 +1,5 @@
 import SwiftUI
 
-// MARK: - HUDToastView
-
 struct HUDToastView: View {
     let track: String
     let artist: String
@@ -10,7 +8,6 @@ struct HUDToastView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Albüm Kapağı (40x40)
             ZStack {
                 if let artwork {
                     Image(nsImage: artwork)
@@ -35,7 +32,6 @@ struct HUDToastView: View {
                 }
             }
 
-            // Şarkı ve Sanatçı İsmi (Tam Boyutlu)
             VStack(alignment: .leading, spacing: 2.5) {
                 HStack(spacing: 5) {
                     Text(track)
@@ -45,8 +41,7 @@ struct HUDToastView: View {
 
                     Spacer(minLength: 0)
 
-                    // Kaynak Rozeti (Spotify / Apple Music)
-                    Image(systemName: source.contains("spotify") ? "waveform" : "apple.logo")
+                    Image(systemName: source.lowercased().contains("spotify") ? "waveform" : "apple.logo")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }

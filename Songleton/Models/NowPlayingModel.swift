@@ -2,8 +2,6 @@ import AppKit
 import Combine
 import SwiftUI
 
-// MARK: - Recent Track
-
 struct RecentTrack: Identifiable {
     let id = UUID()
     let track: String
@@ -11,8 +9,6 @@ struct RecentTrack: Identifiable {
     let source: String
     let playedAt: Date
 }
-
-// MARK: - NowPlayingModel
 
 @MainActor
 final class NowPlayingModel: ObservableObject {
@@ -42,8 +38,8 @@ final class NowPlayingModel: ObservableObject {
     private var currentArtworkKey: String?
     private var cancellables = Set<AnyCancellable>()
     private var lastLoadedKey: String?
-
     private var lastFetchTime: Date = Date()
+    private var timerCancellable: AnyCancellable?
 
     var currentPosition: Double {
         guard case .loaded(let info, _) = state else { return 0 }
@@ -54,24 +50,17 @@ final class NowPlayingModel: ObservableObject {
         return info.position
     }
 
-    private var timerCancellable: AnyCancellable?
-
     private init() {
         SettingsModel.shared.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
-        // Lightweight 1.0s polling timer for AppleScript state sync
         timerCancellable = Timer.publish(every: 1.0, on: .main, in: .common)
             .autoconnect()
-            .sink { [weak self] _ in
-                self?.refresh()
-            }
-        
+            .sink { [weak self] _ in self?.refresh() }
+
         refresh()
     }
-
-    // MARK: - Computed
 
     var menuBarTitle: String? {
         guard case .loaded(let info, _) = state else { return nil }
@@ -80,8 +69,6 @@ final class NowPlayingModel: ObservableObject {
 
     var activeBundleID: String? { activeController?.bundleID }
 
-    // MARK: - Controls
-
     func togglePlayPause() { send { try $0.togglePlayPause() } }
     func nextTrack() { send { try $0.nextTrack() } }
     func previousTrack() { send { try $0.previousTrack() } }
@@ -89,24 +76,17 @@ final class NowPlayingModel: ObservableObject {
     func setVolume(_ volume: Int) { send { try $0.setVolume(volume) } }
     func seekTo(_ position: Double) { send { try $0.seekTo(position) } }
 
-    // MARK: - Permissions
-
-    /// Checks automation permission status.
-    /// IMPORTANT: AEDeterminePermissionToAutomateTarget must be called from
-    /// the main thread — otherwise macOS cannot show the permission dialog.
-    /// Since NowPlayingModel is @MainActor, this method already runs on main.
     func checkAutomationPermission(askUser: Bool) {
         var allGranted = true
-        var anyDenied  = false
+        var anyDenied = false
 
         for controller in controllers {
             let status = AutomationPermission.status(bundleID: controller.bundleID, askUser: askUser)
             switch status {
-            case noErr:
-                continue
+            case noErr: continue
             case OSStatus(errAEEventNotPermitted):
                 allGranted = false
-                anyDenied  = true
+                anyDenied = true
             default:
                 allGranted = false
             }
@@ -119,7 +99,6 @@ final class NowPlayingModel: ObservableObject {
         }
     }
 
-    /// Checks status for a specific app bundle identifier
     func permissionStatus(for bundleID: String, askUser: Bool = false) -> AutomationStatus {
         let status = AutomationPermission.status(bundleID: bundleID, askUser: askUser)
         switch status {
@@ -129,14 +108,10 @@ final class NowPlayingModel: ObservableObject {
         }
     }
 
-    /// Triggers macOS permission prompt for a specific player app
     func requestPermissionFor(bundleID: String) {
         guard let controller = controllers.first(where: { $0.bundleID == bundleID }) else { return }
-        
-        // Try AEDeterminePermissionToAutomateTarget first with askUser: true
         _ = AutomationPermission.status(bundleID: bundleID, askUser: true)
 
-        // Fallback: run AppleScript to ensure macOS triggers dialog
         let src = """
         tell application "\(controller.scriptAppName)"
             get name
@@ -151,8 +126,6 @@ final class NowPlayingModel: ObservableObject {
         refresh()
     }
 
-    /// Triggers the macOS "Songleton wants to control X" permission dialog
-    /// by actually executing an AppleScript targeting each player app.
     func requestPermissionByScript() {
         for controller in controllers {
             requestPermissionFor(bundleID: controller.bundleID)
@@ -161,8 +134,6 @@ final class NowPlayingModel: ObservableObject {
         refresh()
     }
 
-
-    /// Copies currently playing track and artist to system pasteboard
     func copyTrackInfo() -> String? {
         guard case .loaded(let info, _) = state else { return nil }
         let text = "\(info.track) - \(info.artist)"
@@ -172,15 +143,12 @@ final class NowPlayingModel: ObservableObject {
         return text
     }
 
-    // MARK: - Refresh
-
     func refresh() {
         guard !isFetching else { return }
         isFetching = true
         Task {
             let result = await fetchAll()
             if let result {
-                // Track change → add to recents
                 if case .loaded(let info, let src) = result.state {
                     let key = "\(info.track)|\(info.artist)"
                     if key != lastLoadedKey {
@@ -188,14 +156,7 @@ final class NowPlayingModel: ObservableObject {
                         let recent = RecentTrack(track: info.track, artist: info.artist, source: src, playedAt: Date())
                         recentTracks.insert(recent, at: 0)
                         if recentTracks.count > 20 { recentTracks = Array(recentTracks.prefix(20)) }
-
-                        // Trigger HUD popup toast on song change
-                        HUDToastManager.shared.show(
-                            track: info.track,
-                            artist: info.artist,
-                            artwork: artwork,
-                            source: src
-                        )
+                        HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: artwork, source: src)
                     }
                 }
                 state = result.state
@@ -206,8 +167,6 @@ final class NowPlayingModel: ObservableObject {
             isFetching = false
         }
     }
-
-    // MARK: - Fetch All
 
     private struct FetchResult {
         let state: State
@@ -240,16 +199,10 @@ final class NowPlayingModel: ObservableObject {
         if let (controller, info) = pausedCandidate {
             return FetchResult(state: .loaded(info, source: controller.displayName), active: controller)
         }
-        if sawPermissionDenied {
-            return FetchResult(state: .permissionDenied, active: nil)
-        }
-        if !anyRunning {
-            return FetchResult(state: .notRunning, active: nil)
-        }
+        if sawPermissionDenied { return FetchResult(state: .permissionDenied, active: nil) }
+        if !anyRunning { return FetchResult(state: .notRunning, active: nil) }
         return nil
     }
-
-    // MARK: - Artwork + Color
 
     private func syncArtwork(with state: State) async {
         guard case .loaded(let info, _) = state else {
@@ -285,8 +238,7 @@ final class NowPlayingModel: ObservableObject {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return .accentColor
         }
-        let width = 16
-        let height = 16
+        let width = 16, height = 16
         var data = [UInt8](repeating: 0, count: width * height * 4)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         guard let ctx = CGContext(
@@ -304,18 +256,15 @@ final class NowPlayingModel: ObservableObject {
             let g = CGFloat(data[i * 4 + 1]) / 255.0
             let b = CGFloat(data[i * 4 + 2]) / 255.0
             let a = CGFloat(data[i * 4 + 3]) / 255.0
-
             if a < 0.5 { continue }
 
-            // Filter out near-black and near-white pixels for better vibrancy
             let maxC = max(r, max(g, b))
             let minC = min(r, min(g, b))
             let brightness = (maxC + minC) / 2
             let saturation = maxC == 0 ? 0 : (maxC - minC) / maxC
 
-            // Ignore pure black, pure white, or non-saturated pixels unless there are few options
             if brightness > 0.08 && brightness < 0.92 {
-                let weight = 1.0 + saturation * 2.0 // Prefer saturated colors
+                let weight = 1.0 + saturation * 2.0
                 totalR += r * weight
                 totalG += g * weight
                 totalB += b * weight
@@ -323,15 +272,12 @@ final class NowPlayingModel: ObservableObject {
             }
         }
 
-        if validPixelCount == 0 {
-            return .accentColor
-        }
+        guard validPixelCount > 0 else { return .accentColor }
 
         var avgR = totalR / validPixelCount
         var avgG = totalG / validPixelCount
         var avgB = totalB / validPixelCount
 
-        // Boost saturation for a rich UI background glow
         let avgLuminance = 0.2126 * avgR + 0.7152 * avgG + 0.0722 * avgB
         let boost: CGFloat = 1.35
         avgR = min(1.0, max(0.0, avgLuminance + (avgR - avgLuminance) * boost))
@@ -346,9 +292,6 @@ final class NowPlayingModel: ObservableObject {
               let image = NSImage(data: data) else { return (nil, nil) }
         return (image, nil)
     }
-
-
-    // MARK: - Send Command
 
     private func send(_ action: @escaping @Sendable (any MediaController) throws -> Void) {
         guard let controller = activeController else { return }

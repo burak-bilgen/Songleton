@@ -1,7 +1,5 @@
 import SwiftUI
 
-// MARK: - MarqueeText
-
 struct MarqueeText: View {
     let text: String
     var font: Font
@@ -12,7 +10,7 @@ struct MarqueeText: View {
     @State private var startDate = Date()
     @State private var isPaused = true
 
-    private let speed: Double = 36      // pts/sec
+    private let speed: Double = 36
     private let gap: CGFloat = 48
     private let pauseDuration: Double = 2.0
 
@@ -46,9 +44,7 @@ struct MarqueeText: View {
             startDate = Date()
             isPaused = true
             try? await Task.sleep(for: .seconds(pauseDuration))
-            if !Task.isCancelled {
-                isPaused = false
-            }
+            if !Task.isCancelled { isPaused = false }
         }
     }
 
@@ -74,20 +70,5 @@ struct MarqueeText: View {
             LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
                 .frame(width: 12)
         }
-    }
-}
-
-// MARK: - MenuBarLabelView
-
-struct MenuBarLabelView: View {
-    @ObservedObject var model: NowPlayingModel
-    @ObservedObject var settings: SettingsModel
-
-    var body: some View {
-        MarqueeText(
-            text: model.menuBarTitle ?? "Songleton",
-            font: settings.menuBarFont.font(size: 14),
-            maxWidth: settings.menuBarWidth
-        )
     }
 }

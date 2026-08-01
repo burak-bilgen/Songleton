@@ -1,7 +1,5 @@
 import SwiftUI
 
-// MARK: - SyncedLyricsView (Apple Music Style Glass Karaoke UI)
-
 struct SyncedLyricsView: View {
     @ObservedObject var nowPlaying: NowPlayingModel
     @StateObject private var lyricsModel = LyricsModel.shared
@@ -9,13 +7,10 @@ struct SyncedLyricsView: View {
     @State private var isUserScrolling = false
     @State private var userScrollTimer: Task<Void, Never>? = nil
 
-    private var playbackPosition: Double {
-        nowPlaying.currentPosition
-    }
+    private var playbackPosition: Double { nowPlaying.currentPosition }
 
     var body: some View {
         ZStack {
-            // Ambient artwork blur background for lyrics
             if let artwork = nowPlaying.artwork {
                 Image(nsImage: artwork)
                     .resizable()
@@ -28,9 +23,8 @@ struct SyncedLyricsView: View {
             VStack(spacing: 0) {
                 if lyricsModel.isLoading {
                     VStack(spacing: 12) {
-                        ProgressView()
-                            .controlSize(.regular)
-                        Text("Şarkı sözleri yükleniyor…")
+                        ProgressView().controlSize(.regular)
+                        Text(NSLocalizedString("Şarkı sözleri yükleniyor…", comment: "Loading lyrics"))
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(.secondary)
                     }
@@ -40,10 +34,10 @@ struct SyncedLyricsView: View {
                         Image(systemName: "quote.bubble.fill")
                             .font(.system(size: 36, weight: .thin))
                             .foregroundStyle(.secondary.opacity(0.6))
-                        Text("Şarkı Sözü Bulunamadı")
+                        Text(NSLocalizedString("Şarkı Sözü Bulunamadı", comment: "Lyrics not found"))
                             .font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundStyle(.primary)
-                        Text("Bu parça için senkronize söz kaydı bulunmuyor.")
+                        Text(NSLocalizedString("Bu parça için senkronize söz kaydı bulunmuyor.", comment: "No synced lyrics available"))
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -106,9 +100,7 @@ struct SyncedLyricsView: View {
                                     .id(index)
                                     .contentShape(Rectangle())
                                     .focusable(false)
-                                    .onTapGesture {
-                                        nowPlaying.seekTo(line.timestamp)
-                                    }
+                                    .onTapGesture { nowPlaying.seekTo(line.timestamp) }
                                 }
 
                                 Spacer().frame(height: 130)
@@ -122,9 +114,7 @@ struct SyncedLyricsView: View {
                                 userScrollTimer?.cancel()
                                 userScrollTimer = Task {
                                     try? await Task.sleep(for: .seconds(4.0))
-                                    if !Task.isCancelled {
-                                        isUserScrolling = false
-                                    }
+                                    if !Task.isCancelled { isUserScrolling = false }
                                 }
                             }
                         )
@@ -154,22 +144,13 @@ struct SyncedLyricsView: View {
         .frame(maxWidth: 350)
         .clipped()
         .focusable(false)
-        .onAppear {
-            loadLyricsForCurrentTrack()
-        }
-        .onChange(of: nowPlaying.menuBarTitle) { _, _ in
-            loadLyricsForCurrentTrack()
-        }
+        .onAppear { loadLyricsForCurrentTrack() }
+        .onChange(of: nowPlaying.menuBarTitle) { _, _ in loadLyricsForCurrentTrack() }
     }
 
     private func loadLyricsForCurrentTrack() {
         if case .loaded(let info, _) = nowPlaying.state {
-            lyricsModel.loadLyrics(
-                track: info.track,
-                artist: info.artist,
-                album: info.album,
-                duration: info.duration
-            )
+            lyricsModel.loadLyrics(track: info.track, artist: info.artist, album: info.album, duration: info.duration)
         }
     }
 }
