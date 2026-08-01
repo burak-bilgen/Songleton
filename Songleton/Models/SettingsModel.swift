@@ -34,7 +34,10 @@ final class SettingsModel: ObservableObject {
     }
 
     @Published var menuBarWidth: Double {
-        didSet { defaults.set(menuBarWidth, forKey: "menuBarWidth") }
+        didSet {
+            defaults.set(menuBarWidth, forKey: "menuBarWidth")
+            MenuBarManager.shared.updateWidth()
+        }
     }
 
     @Published var menuBarFont: MenuBarFont {
@@ -69,7 +72,7 @@ final class SettingsModel: ObservableObject {
     private init() {
         defaults.register(defaults: [
             "showArtistInMenuBar": true,
-            "menuBarWidth": 200.0,
+            "menuBarWidth": 240.0,
             "menuBarFont": MenuBarFont.system.rawValue,
             "launchAtLogin": false,
             "panelStyle": PanelStyle.full.rawValue,

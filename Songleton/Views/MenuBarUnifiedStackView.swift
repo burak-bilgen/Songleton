@@ -19,13 +19,13 @@ struct MenuBarUnifiedStackView: View {
     }
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 4) {
             // 1. Önceki Şarkı (Backward)
             Button(action: { model.previousTrack() }) {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.primary)
-                    .frame(width: 16, height: 18)
+                    .frame(width: 20, height: 22)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -37,7 +37,7 @@ struct MenuBarUnifiedStackView: View {
                 model.togglePlayPause()
                 triggerPlayPauseAnimation(wasPlaying: currentIsPlaying)
             }) {
-                HStack(spacing: 5) {
+                HStack(spacing: 6) {
                     // Albüm Kapağı veya Animasyonlu Oynat / Duraklat Göstergesi
                     ZStack {
                         if isAnimatingFeedback {
@@ -83,7 +83,7 @@ struct MenuBarUnifiedStackView: View {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.primary)
-                    .frame(width: 16, height: 18)
+                    .frame(width: 20, height: 22)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -94,13 +94,13 @@ struct MenuBarUnifiedStackView: View {
                 Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.secondary)
-                    .frame(width: 18, height: 18)
+                    .frame(width: 20, height: 22)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .help("Oynatıcı Paneli")
         }
-        .padding(.horizontal, 6)
+        .padding(.horizontal, 4)
         .frame(height: 22)
     }
 

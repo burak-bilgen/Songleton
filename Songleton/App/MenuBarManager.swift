@@ -20,7 +20,7 @@ final class MenuBarManager: NSObject {
 
         // Create NSPopover for PlayerPanelView
         let popover = NSPopover()
-        popover.contentSize = NSSize(width: 320, height: 420)
+        popover.contentSize = NSSize(width: 320, height: 440)
         popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = NSHostingController(
@@ -28,7 +28,7 @@ final class MenuBarManager: NSObject {
         )
         self.popover = popover
 
-        // Create single unified NSStatusItem
+        // Create single unified NSStatusItem with variable length
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         let stackView = MenuBarUnifiedStackView(
@@ -40,28 +40,33 @@ final class MenuBarManager: NSObject {
         )
 
         let hosting = NSHostingView(rootView: stackView)
-        hosting.frame = NSRect(x: 0, y: 0, width: 220, height: 22)
+        // Calculate initial dynamic size
+        let initialWidth = SettingsModel.shared.menuBarWidth + 90
+        hosting.frame = NSRect(x: 0, y: 0, width: initialWidth, height: 22)
         hosting.autoresizingMask = [.width, .height]
 
-        if let button = item.button {
-            button.addSubview(hosting)
-            button.frame = hosting.frame
-        } else {
-            item.view = hosting
-        }
+        // Crucial: Use item.view directly so sub-buttons receive independent click events
+        item.view = hosting
 
         self.hostingView = hosting
         self.statusItem = item
     }
 
+    func updateWidth() {
+        guard let hostingView = hostingView, let statusItem = statusItem else { return }
+        let newWidth = SettingsModel.shared.menuBarWidth + 90
+        hostingView.frame = NSRect(x: 0, y: 0, width: newWidth, height: 22)
+        statusItem.length = newWidth
+    }
+
     func togglePopover() {
-        guard let popover = popover, let button = statusItem?.button else { return }
+        guard let popover = popover, let view = statusItem?.view ?? statusItem?.button else { return }
 
         if popover.isShown {
             popover.performClose(nil)
         } else {
             NSApp.activate(ignoringOtherApps: true)
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
         }
     }
 }
