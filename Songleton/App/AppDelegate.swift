@@ -4,11 +4,10 @@ import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var onboardingWindow: NSWindow?
-    private var menuBarControls: MenuBarControls?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         registerCustomFonts()
-        menuBarControls = MenuBarControls(model: .shared)
+        MenuBarManager.shared.setup()
 
         // Silently check permission status
         NowPlayingModel.shared.checkAutomationPermission(askUser: false)

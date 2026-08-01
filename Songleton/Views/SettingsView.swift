@@ -32,7 +32,6 @@ struct SettingsView: View {
                     Text("Audiowide").tag(SettingsModel.MenuBarFont.audiowide)
                 }
                 Toggle("Sanatçı adını göster", isOn: $settings.showArtistInMenuBar)
-                Toggle("Oynatma kontrollerini göster", isOn: $settings.showMenuBarControls)
                 LabeledContent("Genişlik") {
                     HStack {
                         Slider(value: $settings.menuBarWidth, in: 80...400, step: 10)
