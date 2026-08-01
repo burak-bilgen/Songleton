@@ -33,7 +33,7 @@ struct PlayerPanelView: View {
 
                 Divider()
 
-                // Content View Container (Fixed Height so Top Bar Never Shifts)
+                // Content View Container
                 ZStack {
                     switch selectedTab {
                     case 0:
@@ -49,20 +49,17 @@ struct PlayerPanelView: View {
                     case 1:
                         // Synced Karaoke Lyrics Tab
                         SyncedLyricsView(nowPlaying: model)
-                            .frame(height: 380)
                     case 2:
                         // Spotify Playlists Tab
                         SpotifyPlaylistsView()
-                            .frame(height: 380)
                     case 3:
                         // History Tab
                         recentTracksSheet
-                            .frame(height: 380)
                     default:
                         EmptyView()
                     }
                 }
-                .frame(height: 380)
+                .frame(maxHeight: .infinity)
             }
 
             // Toast Notification Overlay
@@ -262,7 +259,7 @@ struct PlayerPanelView: View {
                 }
             }
         }
-        .frame(width: 175, height: 175)
+        .frame(width: 150, height: 150)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 6)
         .overlay(

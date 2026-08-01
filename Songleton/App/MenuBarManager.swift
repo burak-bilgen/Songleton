@@ -26,7 +26,7 @@ final class MenuBarManager: NSObject {
 
         // 1. Create NSPopover for PlayerPanelView
         let popover = NSPopover()
-        popover.contentSize = NSSize(width: 350, height: 440)
+        popover.contentSize = NSSize(width: 350, height: 460)
         popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = NSHostingController(
