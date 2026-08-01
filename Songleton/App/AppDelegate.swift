@@ -10,17 +10,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         registerCustomFonts()
         menuBarControls = MenuBarControls(model: .shared)
 
-        // Silently check permission status (no dialog yet)
+        // Silently check permission status
         NowPlayingModel.shared.checkAutomationPermission(askUser: false)
 
-        // Show onboarding if:
-        // 1. Never completed before, OR
-        // 2. Completed before but permission was never granted (reset so user can grant)
+        // Show onboarding ONLY if never completed before
         let hasOnboarded = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
-        let hasGranted   = UserDefaults.standard.bool(forKey: "hasGrantedAutomation")
-
-        if !hasOnboarded || !hasGranted {
-            // Small delay so MenuBarExtra is set up first and doesn't compete
+        if !hasOnboarded {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self.showOnboarding()
             }
@@ -55,8 +50,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 540),
-            styleMask: [.titled, .closable],
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 600),
+            styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -65,7 +60,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.center()
         window.isReleasedWhenClosed = false
         window.titlebarAppearsTransparent = true
-        window.isMovableByWindowBackground = true
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = false
         onboardingWindow = window
 
         NSApp.setActivationPolicy(.regular)
@@ -76,7 +72,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func finishOnboarding() {
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
-        // Mark as granted if automation is granted at this point
         if NowPlayingModel.shared.automationStatus == .granted {
             UserDefaults.standard.set(true, forKey: "hasGrantedAutomation")
         }
@@ -85,4 +80,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         onboardingWindow = nil
         NSApp.setActivationPolicy(.accessory)
     }
+
 }

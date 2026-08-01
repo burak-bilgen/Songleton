@@ -104,18 +104,30 @@ final class NowPlayingModel: ObservableObject {
         }
     }
 
-    /// Triggers the macOS "Songleton wants to control X" permission dialog
-    /// by actually executing an AppleScript targeting each player app.
-    /// Triggers the macOS "Songleton wants to control X" permission dialog
-    /// by actually executing an AppleScript targeting each player app.
-    func requestPermissionByScript() {
-        for controller in controllers {
-            let src = """
-            tell application "\(controller.scriptAppName)"
-                get name
-            end tell
-            """
-            guard let script = NSAppleScript(source: src) else { continue }
+    /// Checks status for a specific app bundle identifier
+    func permissionStatus(for bundleID: String, askUser: Bool = false) -> AutomationStatus {
+        let status = AutomationPermission.status(bundleID: bundleID, askUser: askUser)
+        switch status {
+        case noErr: return .granted
+        case OSStatus(errAEEventNotPermitted): return .denied
+        default: return .unknown
+        }
+    }
+
+    /// Triggers macOS permission prompt for a specific player app
+    func requestPermissionFor(bundleID: String) {
+        guard let controller = controllers.first(where: { $0.bundleID == bundleID }) else { return }
+        
+        // Try AEDeterminePermissionToAutomateTarget first with askUser: true
+        _ = AutomationPermission.status(bundleID: bundleID, askUser: true)
+
+        // Fallback: run AppleScript to ensure macOS triggers dialog
+        let src = """
+        tell application "\(controller.scriptAppName)"
+            get name
+        end tell
+        """
+        if let script = NSAppleScript(source: src) {
             var errDict: NSDictionary?
             _ = script.executeAndReturnError(&errDict)
         }
@@ -123,6 +135,17 @@ final class NowPlayingModel: ObservableObject {
         checkAutomationPermission(askUser: false)
         refresh()
     }
+
+    /// Triggers the macOS "Songleton wants to control X" permission dialog
+    /// by actually executing an AppleScript targeting each player app.
+    func requestPermissionByScript() {
+        for controller in controllers {
+            requestPermissionFor(bundleID: controller.bundleID)
+        }
+        checkAutomationPermission(askUser: false)
+        refresh()
+    }
+
 
     /// Copies currently playing track and artist to system pasteboard
     func copyTrackInfo() -> String? {
