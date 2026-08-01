@@ -115,11 +115,21 @@ struct PlayerPanelView: View {
             } else if !isCompact {
                 // Album artwork with glow
                 artworkView
+                    .id(info.track)
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.9).combined(with: .opacity),
+                        removal: .scale(scale: 1.05).combined(with: .opacity)
+                    ))
                     .padding(.top, 16)
                     .padding(.horizontal, 16)
 
                 // Track info
                 trackInfoView(info: info, source: source)
+                    .id(info.track + info.artist)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .move(edge: .bottom).combined(with: .opacity)
+                    ))
                     .padding(.top, 12)
                     .padding(.horizontal, 16)
 
