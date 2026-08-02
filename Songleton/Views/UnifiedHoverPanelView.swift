@@ -399,6 +399,10 @@ struct UnifiedHoverPanelView: View {
             }
             .padding(.top, 2)
 
+            // 🎛️ Embedded App Audio Mixer Card
+            VolumeSliderPanelView()
+                .padding(.top, 4)
+
             // Expanded Lyrics Section (Accordion Container with Smooth Asymmetric Transition)
             if isLyricsExpanded {
                 VStack(spacing: 0) {
