@@ -135,7 +135,8 @@ final class NowPlayingModel: ObservableObject {
         var allGranted = true
         var anyDenied = false
 
-        for controller in controllers {
+        let mainControllers = controllers.filter { !($0 is YouTubeController) }
+        for controller in mainControllers {
             let status = AutomationPermission.status(bundleID: controller.bundleID, askUser: askUser)
             switch status {
             case noErr: continue

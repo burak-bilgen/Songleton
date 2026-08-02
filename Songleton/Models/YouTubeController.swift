@@ -1,97 +1,89 @@
 import AppKit
 
 final class YouTubeController: MediaController {
-    let bundleID = "com.google.Chrome" // General web browser target indicator
+    let bundleID = "com.google.Chrome"
     let displayName = "YouTube"
     var scriptAppName: String { "YouTube" }
 
-    // List of supported web browsers to inspect for YouTube tabs
-    private struct BrowserTarget {
+    private struct BrowserInfo {
         let bundleID: String
         let name: String
-        let kind: BrowserKind
     }
 
-    private enum BrowserKind {
-        case chromeStyle
-        case safariStyle
-    }
-
-    private let supportedBrowsers: [BrowserTarget] = [
-        BrowserTarget(bundleID: "com.google.Chrome", name: "Google Chrome", kind: .chromeStyle),
-        BrowserTarget(bundleID: "company.thebrowser.Browser", name: "Arc", kind: .chromeStyle),
-        BrowserTarget(bundleID: "com.brave.Browser", name: "Brave Browser", kind: .chromeStyle),
-        BrowserTarget(bundleID: "com.microsoft.edgemac", name: "Microsoft Edge", kind: .chromeStyle),
-        BrowserTarget(bundleID: "com.apple.Safari", name: "Safari", kind: .safariStyle)
+    // Supported browsers to scan dynamically
+    private let browserTargets: [BrowserInfo] = [
+        BrowserInfo(bundleID: "com.brave.Browser", name: "Brave"),
+        BrowserInfo(bundleID: "com.google.Chrome", name: "Google Chrome"),
+        BrowserInfo(bundleID: "company.thebrowser.Browser", name: "Arc"),
+        BrowserInfo(bundleID: "com.microsoft.edgemac", name: "Microsoft Edge"),
+        BrowserInfo(bundleID: "com.apple.Safari", name: "Safari")
     ]
 
-    private var activeBrowser: BrowserTarget? {
-        supportedBrowsers.first { target in
+    private var activeRunningBrowser: BrowserInfo? {
+        browserTargets.first { target in
             !NSRunningApplication.runningApplications(withBundleIdentifier: target.bundleID).isEmpty
         }
     }
 
     var isRunning: Bool {
-        activeBrowser != nil
+        activeRunningBrowser != nil
     }
 
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
-        // Attempt to find YouTube tab across running browsers
-        let script = """
-        -- Safari Check
-        if application "Safari" is running then
-            tell application "Safari"
-                repeat with w in windows
-                    repeat with t in tabs of w
-                        if URL of t contains "youtube.com" then
-                            set tabTitle to name of t
-                            set tabUrl to URL of t
-                            return {"Safari", tabTitle, tabUrl}
-                        end if
-                    end repeat
-                end repeat
-            end tell
-        end if
-
-        -- Chrome / Arc / Brave / Edge Check
-        set chromeApps to {"Google Chrome", "Arc", "Brave Browser", "Microsoft Edge"}
-        repeat with appName in chromeApps
-            try
-                if application appName is running then
-                    using terms from application "Google Chrome"
-                        tell application appName
-                            repeat with w in windows
-                                repeat with t in tabs of w
-                                    if URL of t contains "youtube.com" then
-                                        set tabTitle to title of t
-                                        set tabUrl to URL of t
-                                        return {appName, tabTitle, tabUrl}
-                                    end if
-                                end repeat
-                            end repeat
-                        end tell
-                    end using terms from
-                end if
-            end try
-        end repeat
-
-        return {"none", "", ""}
-        """
-
-        let res = try AppleScriptRunner.run(script)
-        guard let browserName = res.atIndex(1)?.stringValue, browserName != "none",
-              let rawTitle = res.atIndex(2)?.stringValue, !rawTitle.isEmpty else {
+        guard let runningBrowser = getRunningBrowser() else {
             throw MediaControllerError.appNotRunning
         }
 
-        // Parse YouTube Title
+        let isSafari = runningBrowser.bundleID == "com.apple.Safari"
+
+        let script: String
+        if isSafari {
+            script = """
+            tell application id "com.apple.Safari"
+                if (count of windows) > 0 then
+                    repeat with w in windows
+                        repeat with t in tabs of w
+                            if URL of t contains "youtube.com" then
+                                set tabTitle to name of t
+                                return tabTitle
+                            end if
+                        end repeat
+                    end repeat
+                end if
+            end tell
+            return ""
+            """
+        } else {
+            // Chromium based (Brave, Chrome, Arc, Edge) using generic AppleScript ID call
+            script = """
+            tell application id "\(runningBrowser.bundleID)"
+                if (count of windows) > 0 then
+                    repeat with w in windows
+                        repeat with t in tabs of w
+                            if URL of t contains "youtube.com" then
+                                set tabTitle to title of t
+                                return tabTitle
+                            end if
+                        end repeat
+                    end repeat
+                end if
+            end tell
+            return ""
+            """
+        }
+
+        let res = try AppleScriptRunner.run(script)
+        guard let rawTitle = res.stringValue, !rawTitle.isEmpty else {
+            throw MediaControllerError.appNotRunning
+        }
+
         let (track, artist) = parseYouTubeTitle(rawTitle)
 
         return NowPlayingInfo(
             track: track,
             artist: artist.isEmpty ? "YouTube" : artist,
-            album: "YouTube Music",
-            isPlaying: true, // Active YouTube stream assumption
+            album: "YouTube",
+            isPlaying: true,
             volume: 80,
             artworkURL: nil,
             artworkData: nil,
@@ -102,10 +94,23 @@ final class YouTubeController: MediaController {
         )
     }
 
+    private nonisolated func getRunningBrowser() -> BrowserInfo? {
+        let targets = [
+            BrowserInfo(bundleID: "com.brave.Browser", name: "Brave"),
+            BrowserInfo(bundleID: "com.google.Chrome", name: "Google Chrome"),
+            BrowserInfo(bundleID: "company.thebrowser.Browser", name: "Arc"),
+            BrowserInfo(bundleID: "com.microsoft.edgemac", name: "Microsoft Edge"),
+            BrowserInfo(bundleID: "com.apple.Safari", name: "Safari")
+        ]
+        return targets.first { target in
+            !NSRunningApplication.runningApplications(withBundleIdentifier: target.bundleID).isEmpty
+        }
+    }
+
     private nonisolated func parseYouTubeTitle(_ rawTitle: String) -> (track: String, artist: String) {
         var cleanTitle = rawTitle
-            .replacingOccurrences(of: " - YouTube Music", with: "")
-            .replacingOccurrences(of: " - YouTube", with: "")
+            .replacingOccurrences(of: "- YouTube Music", with: "")
+            .replacingOccurrences(of: "- YouTube", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Strip notifications count like "(3) Track Name"
@@ -113,7 +118,6 @@ final class YouTubeController: MediaController {
             cleanTitle.removeSubrange(range)
         }
 
-        // If title contains " - ", split artist and track
         let components = cleanTitle.components(separatedBy: " - ")
         if components.count >= 2 {
             let artist = components[0].trimmingCharacters(in: .whitespaces)
@@ -125,44 +129,41 @@ final class YouTubeController: MediaController {
     }
 
     nonisolated func togglePlayPause() throws {
-        try executeJavaScriptInYouTubeTab("var v = document.querySelector('video'); if (v) { v.paused ? v.play() : v.pause(); }")
+        try executeJSInActiveBrowser("var v = document.querySelector('video'); if (v) { v.paused ? v.play() : v.pause(); }")
     }
 
     nonisolated func nextTrack() throws {
-        try executeJavaScriptInYouTubeTab("""
-        var nextBtn = document.querySelector('.ytp-next-button') || document.querySelector('.next-button');
-        if (nextBtn) { nextBtn.click(); }
-        """)
+        try executeJSInActiveBrowser("var btn = document.querySelector('.ytp-next-button') || document.querySelector('.next-button'); if (btn) { btn.click(); }")
     }
 
     nonisolated func previousTrack() throws {
-        try executeJavaScriptInYouTubeTab("""
-        var prevBtn = document.querySelector('.ytp-prev-button') || document.querySelector('.previous-button');
-        if (prevBtn) { prevBtn.click(); } else { history.back(); }
-        """)
+        try executeJSInActiveBrowser("var btn = document.querySelector('.ytp-prev-button') || document.querySelector('.previous-button'); if (btn) { btn.click(); } else { history.back(); }")
     }
 
     nonisolated func restartTrack() throws {
-        try executeJavaScriptInYouTubeTab("var v = document.querySelector('video'); if (v) { v.currentTime = 0; }")
+        try executeJSInActiveBrowser("var v = document.querySelector('video'); if (v) { v.currentTime = 0; }")
     }
 
     nonisolated func setVolume(_ volume: Int) throws {
         let normalized = Double(volume) / 100.0
-        try executeJavaScriptInYouTubeTab("var v = document.querySelector('video'); if (v) { v.volume = \(normalized); }")
+        try executeJSInActiveBrowser("var v = document.querySelector('video'); if (v) { v.volume = \(normalized); }")
     }
 
     nonisolated func seekTo(_ position: Double) throws {
-        try executeJavaScriptInYouTubeTab("var v = document.querySelector('video'); if (v) { v.currentTime = \(position); }")
+        try executeJSInActiveBrowser("var v = document.querySelector('video'); if (v) { v.currentTime = \(position); }")
     }
 
     nonisolated func toggleShuffle() throws {}
     nonisolated func setRepeatMode(_ mode: RepeatMode) throws {}
 
-    private nonisolated func executeJavaScriptInYouTubeTab(_ jsCode: String) throws {
-        let script = """
-        -- Safari
-        if application "Safari" is running then
-            tell application "Safari"
+    private nonisolated func executeJSInActiveBrowser(_ jsCode: String) throws {
+        guard let browser = getRunningBrowser() else { return }
+        let isSafari = browser.bundleID == "com.apple.Safari"
+
+        let script: String
+        if isSafari {
+            script = """
+            tell application id "com.apple.Safari"
                 repeat with w in windows
                     repeat with t in tabs of w
                         if URL of t contains "youtube.com" then
@@ -172,29 +173,21 @@ final class YouTubeController: MediaController {
                     end repeat
                 end repeat
             end tell
-        end if
-
-        -- Chromium Browsers
-        set chromeApps to {"Google Chrome", "Arc", "Brave Browser", "Microsoft Edge"}
-        repeat with appName in chromeApps
-            try
-                if application appName is running then
-                    using terms from application "Google Chrome"
-                        tell application appName
-                            repeat with w in windows
-                                repeat with t in tabs of w
-                                    if URL of t contains "youtube.com" then
-                                        execute t javascript "\(jsCode)"
-                                        return
-                                    end if
-                                end repeat
-                            end repeat
-                        end tell
-                    end using terms from
-                end if
-            end try
-        end repeat
-        """
+            """
+        } else {
+            script = """
+            tell application id "\(browser.bundleID)"
+                repeat with w in windows
+                    repeat with t in tabs of w
+                        if URL of t contains "youtube.com" then
+                            execute t javascript "\(jsCode)"
+                            return
+                        end if
+                    end repeat
+                end repeat
+            end tell
+            """
+        }
         try AppleScriptRunner.run(script)
     }
 }
