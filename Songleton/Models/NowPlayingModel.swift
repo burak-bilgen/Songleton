@@ -217,7 +217,9 @@ final class NowPlayingModel: ObservableObject {
                         let recent = RecentTrack(track: info.track, artist: info.artist, source: src, playedAt: Date())
                         recentTracks.insert(recent, at: 0)
                         if recentTracks.count > 20 { recentTracks = Array(recentTracks.prefix(20)) }
-                        if !MenuBarManager.shared.isHoverPopoverShown {
+                        let srcLower = src.lowercased()
+                        let isDesktopMusicApp = srcLower.contains("spotify") || srcLower.contains("music")
+                        if !MenuBarManager.shared.isHoverPopoverShown && isDesktopMusicApp {
                             HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: self.artwork, source: src)
                         }
                     }
