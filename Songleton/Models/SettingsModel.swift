@@ -17,18 +17,6 @@ final class SettingsModel: ObservableObject {
         }
     }
 
-    enum PanelStyle: String, CaseIterable {
-        case full
-        case compact
-
-        var displayName: String {
-            switch self {
-            case .full: "Tam"
-            case .compact: "Kompakt"
-            }
-        }
-    }
-
     @Published var showArtistInMenuBar: Bool {
         didSet { defaults.set(showArtistInMenuBar, forKey: "showArtistInMenuBar") }
     }
@@ -36,7 +24,9 @@ final class SettingsModel: ObservableObject {
     @Published var menuBarWidth: Double {
         didSet {
             defaults.set(menuBarWidth, forKey: "menuBarWidth")
-            MenuBarManager.shared.updateWidth()
+            Task { @MainActor in
+                MenuBarManager.shared.updateWidth()
+            }
         }
     }
 
@@ -51,10 +41,6 @@ final class SettingsModel: ObservableObject {
         }
     }
 
-    @Published var panelStyle: PanelStyle {
-        didSet { defaults.set(panelStyle.rawValue, forKey: "panelStyle") }
-    }
-
     @Published var showProgressBar: Bool {
         didSet { defaults.set(showProgressBar, forKey: "showProgressBar") }
     }
@@ -63,40 +49,33 @@ final class SettingsModel: ObservableObject {
         didSet { defaults.set(useDynamicColor, forKey: "useDynamicColor") }
     }
 
-    @Published var showMenuBarControls: Bool {
-        didSet { defaults.set(showMenuBarControls, forKey: "showMenuBarControls") }
-    }
-
     @Published var lyricsOffset: Double {
         didSet { defaults.set(lyricsOffset, forKey: "lyricsOffset") }
     }
 
-    private let defaults = UserDefaults.standard
+    let defaults: UserDefaults
 
-    private init() {
-        defaults.register(defaults: [
+    init(userDefaults: UserDefaults = .standard) {
+        self.defaults = userDefaults
+        userDefaults.register(defaults: [
             "showArtistInMenuBar": true,
             "menuBarWidth": 80.0,
             "menuBarFont": MenuBarFont.system.rawValue,
             "launchAtLogin": false,
-            "panelStyle": PanelStyle.full.rawValue,
             "showProgressBar": true,
             "useDynamicColor": true,
-            "showMenuBarControls": true,
             "lyricsOffset": 0.9
         ])
-        showArtistInMenuBar = defaults.bool(forKey: "showArtistInMenuBar")
-        menuBarWidth = defaults.double(forKey: "menuBarWidth")
-        menuBarFont = MenuBarFont(rawValue: defaults.string(forKey: "menuBarFont") ?? "") ?? .system
+        showArtistInMenuBar = userDefaults.bool(forKey: "showArtistInMenuBar")
+        menuBarWidth = userDefaults.double(forKey: "menuBarWidth")
+        menuBarFont = MenuBarFont(rawValue: userDefaults.string(forKey: "menuBarFont") ?? "") ?? .system
         launchAtLogin = SMAppService.mainApp.status == .enabled
-        panelStyle = PanelStyle(rawValue: defaults.string(forKey: "panelStyle") ?? "") ?? .full
-        showProgressBar = defaults.bool(forKey: "showProgressBar")
-        useDynamicColor = defaults.bool(forKey: "useDynamicColor")
-        showMenuBarControls = defaults.bool(forKey: "showMenuBarControls")
-        lyricsOffset = defaults.double(forKey: "lyricsOffset")
+        showProgressBar = userDefaults.bool(forKey: "showProgressBar")
+        useDynamicColor = userDefaults.bool(forKey: "useDynamicColor")
+        lyricsOffset = userDefaults.double(forKey: "lyricsOffset")
     }
 
-    private func applyLaunchAtLogin() {
+    func applyLaunchAtLogin() {
         do {
             if launchAtLogin {
                 try SMAppService.mainApp.register()

@@ -64,10 +64,27 @@ final class NowPlayingModel: ObservableObject {
 
     var menuBarTitle: String? {
         guard case .loaded(let info, _) = state else { return nil }
+        if SettingsModel.shared.showArtistInMenuBar && !info.artist.isEmpty {
+            return "\(info.artist) - \(info.track)"
+        }
         return info.track
     }
 
     var activeBundleID: String? { activeController?.bundleID }
+
+    var platformAccentColor: Color {
+        guard SettingsModel.shared.useDynamicColor else {
+            return .white
+        }
+        guard case .loaded(_, let source) = state else {
+            return Color(red: 29/255, green: 185/255, blue: 84/255)
+        }
+        if source.lowercased().contains("spotify") {
+            return Color(red: 29/255, green: 185/255, blue: 84/255) // Spotify Green #1DB954
+        } else {
+            return Color(red: 250/255, green: 36/255, blue: 60/255) // Apple Music Pink #FA243C
+        }
+    }
 
     func togglePlayPause() { send { try $0.togglePlayPause() } }
     func nextTrack() { send { try $0.nextTrack() } }
@@ -75,6 +92,41 @@ final class NowPlayingModel: ObservableObject {
     func restartTrack() { send { try $0.restartTrack() } }
     func setVolume(_ volume: Int) { send { try $0.setVolume(volume) } }
     func seekTo(_ position: Double) { send { try $0.seekTo(position) } }
+    func toggleShuffle() { send { try $0.toggleShuffle() } }
+    func cycleRepeatMode() {
+        guard case .loaded(let info, let src) = state else { return }
+
+        let isSpotify = src.lowercased().contains("spotify")
+        let nextMode: RepeatMode
+
+        if isSpotify {
+            // Spotify AppleScript only exposes boolean (Off <-> All)
+            nextMode = (info.repeatMode == .off) ? .all : .off
+        } else {
+            // Apple Music AppleScript supports 3 states (Off -> All -> One -> Off)
+            switch info.repeatMode {
+            case .off: nextMode = .all
+            case .all: nextMode = .one
+            case .one: nextMode = .off
+            }
+        }
+
+        let updatedInfo = NowPlayingInfo(
+            track: info.track,
+            artist: info.artist,
+            album: info.album,
+            isPlaying: info.isPlaying,
+            volume: info.volume,
+            artworkURL: info.artworkURL,
+            artworkData: info.artworkData,
+            position: info.position,
+            duration: info.duration,
+            isShuffleEnabled: info.isShuffleEnabled,
+            repeatMode: nextMode
+        )
+        state = .loaded(updatedInfo, source: src)
+        send { try $0.setRepeatMode(nextMode) }
+    }
 
     func checkAutomationPermission(askUser: Bool) {
         var allGranted = true
@@ -149,6 +201,11 @@ final class NowPlayingModel: ObservableObject {
         Task {
             let result = await fetchAll()
             if let result {
+                state = result.state
+                lastFetchTime = Date()
+                activeController = result.active
+                await syncArtwork(with: result.state)
+
                 if case .loaded(let info, let src) = result.state {
                     let key = "\(info.track)|\(info.artist)"
                     if key != lastLoadedKey {
@@ -156,13 +213,11 @@ final class NowPlayingModel: ObservableObject {
                         let recent = RecentTrack(track: info.track, artist: info.artist, source: src, playedAt: Date())
                         recentTracks.insert(recent, at: 0)
                         if recentTracks.count > 20 { recentTracks = Array(recentTracks.prefix(20)) }
-                        HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: artwork, source: src)
+                        if !MenuBarManager.shared.isHoverPopoverShown {
+                            HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: self.artwork, source: src)
+                        }
                     }
                 }
-                state = result.state
-                lastFetchTime = Date()
-                activeController = result.active
-                await syncArtwork(with: result.state)
             }
             isFetching = false
         }
