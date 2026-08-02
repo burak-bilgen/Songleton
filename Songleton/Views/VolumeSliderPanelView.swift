@@ -4,153 +4,200 @@ import Combine
 struct VolumeSliderPanelView: View {
     @ObservedObject var model = NowPlayingModel.shared
 
-    @State private var localVolume: Double = 50.0
-    @State private var isDragging: Bool = false
-    @State private var lastSetTime: Date = .distantPast
-    @State private var volumeSubject = PassthroughSubject<Int, Never>()
-    @State private var cancellables = Set<AnyCancellable>()
-    @State private var isMutePressed = false
-    @State private var appearScale: CGFloat = 0.85
+    @State private var spotifyVol: Double = 50
+    @State private var appleMusicVol: Double = 50
+    @State private var isDraggingSpotify = false
+    @State private var isDraggingMusic = false
+
+    @State private var appearScale: CGFloat = 0.9
     @State private var appearOpacity: Double = 0.0
 
-    private var modelVolume: Double {
-        if case .loaded(let info, _) = model.state {
-            return Double(info.volume)
-        }
-        return 50.0
+    private var isSpotifyRunning: Bool {
+        SpotifyController().isRunning
     }
 
-    private var activeVolume: Double {
-        if isDragging || Date().timeIntervalSince(lastSetTime) < 2.0 {
-            return localVolume
-        }
-        return modelVolume
+    private var isMusicRunning: Bool {
+        AppleMusicController().isRunning
+    }
+
+    private var isYouTubeRunning: Bool {
+        YouTubeController().isRunning
     }
 
     var body: some View {
         ZStack {
-            // Pure Jet Black Clean Background with Subtle Rim
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            // Pure Jet Black Background with Glass Outline
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color.black)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .stroke(
                             LinearGradient(
-                                colors: [.white.opacity(0.28), .white.opacity(0.08)],
+                                colors: [.white.opacity(0.25), .white.opacity(0.08)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
                             lineWidth: 1
                         )
                 )
-                .shadow(color: .black.opacity(0.7), radius: 14, x: 0, y: 6)
+                .shadow(color: .black.opacity(0.8), radius: 16, x: 0, y: 8)
 
-            HStack(spacing: 14) {
-                // Mute / Speaker Icon Button
-                Button {
-                    withAnimation(.spring(response: 0.22, dampingFraction: 0.45)) { isMutePressed = true }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.55)) { isMutePressed = false }
-                    }
-                    toggleMute()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.12))
-                            .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 0.5))
-                            .frame(width: 32, height: 32)
-
-                        Image(systemName: speakerIconName)
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(activeVolume == 0 ? Color.red : Color.white)
-                            .contentTransition(.symbolEffect(.replace))
-                    }
+            VStack(alignment: .leading, spacing: 14) {
+                // Header
+                HStack(spacing: 8) {
+                    Image(systemName: "slider.vertical.3")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Text("SES MİKSERİ")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Spacer()
                 }
-                .buttonStyle(.plain)
-                .scaleEffect(isMutePressed ? 0.82 : 1.0)
+                .padding(.horizontal, 4)
 
-                // Larger Interactive Slider
-                Slider(
-                    value: Binding(
-                        get: { activeVolume },
-                        set: { newVol in
-                            localVolume = newVol
-                            isDragging = true
-                            lastSetTime = Date()
-                            volumeSubject.send(Int(newVol))
+                // 1. Spotify Control Row
+                if isSpotifyRunning {
+                    mixerRow(
+                        iconName: "circle.fill",
+                        iconColor: Color(red: 29/255, green: 185/255, blue: 84/255),
+                        name: "Spotify",
+                        volume: $spotifyVol,
+                        isDragging: $isDraggingSpotify,
+                        onCommit: { newVol in
+                            try? SpotifyController().setVolume(Int(newVol))
                         }
-                    ),
-                    in: 0...100,
-                    onEditingChanged: { editing in
-                        isDragging = editing
-                        if !editing {
-                            lastSetTime = Date()
-                            model.setVolume(Int(localVolume))
+                    )
+                }
+
+                // 2. Apple Music Control Row
+                if isMusicRunning {
+                    mixerRow(
+                        iconName: "music.note",
+                        iconColor: Color(red: 250/255, green: 36/255, blue: 60/255),
+                        name: "Apple Music",
+                        volume: $appleMusicVol,
+                        isDragging: $isDraggingMusic,
+                        onCommit: { newVol in
+                            try? AppleMusicController().setVolume(Int(newVol))
                         }
+                    )
+                }
+
+                // 3. YouTube Browser Media Control Row
+                if isYouTubeRunning {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.red.opacity(0.2))
+                                .frame(width: 28, height: 28)
+                            Image(systemName: "play.tv.fill")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(.red)
+                        }
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("YouTube")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text("Web Oynatıcısı")
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.4))
+                        }
+
+                        Spacer()
+
+                        Button {
+                            try? YouTubeController().togglePlayPause()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "pause.fill")
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("Durdur")
+                                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.white.opacity(0.12), in: Capsule())
+                            .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 0.5))
+                        }
+                        .buttonStyle(.plain)
                     }
-                )
-                .tint(Color.accentColor)
-
-                // Percentage Badge
-                Text("\(Int(activeVolume))%")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.white)
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.white.opacity(0.15), in: Capsule())
-                    .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 0.5))
-                    .frame(width: 48, alignment: .trailing)
+                }
+
+                // Fallback if no specific players active
+                if !isSpotifyRunning && !isMusicRunning && !isYouTubeRunning {
+                    HStack {
+                        Text("Aktif Medya Oynatıcısı Bulunamadı")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.4))
+                        Spacer()
+                    }
+                    .padding(.horizontal, 4)
+                }
             }
-            .padding(.horizontal, 14)
+            .padding(16)
         }
-        .frame(width: 290, height: 54)
+        .frame(width: 310)
         .scaleEffect(appearScale)
         .opacity(appearOpacity)
         .onAppear {
-            localVolume = modelVolume
+            if isSpotifyRunning, let info = try? SpotifyController().fetchNowPlaying() {
+                spotifyVol = Double(info.volume)
+            }
+            if isMusicRunning, let info = try? AppleMusicController().fetchNowPlaying() {
+                appleMusicVol = Double(info.volume)
+            }
 
-            withAnimation(.spring(response: 0.36, dampingFraction: 0.54)) {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
                 appearScale = 1.0
                 appearOpacity = 1.0
             }
-
-            volumeSubject
-                .debounce(for: .milliseconds(60), scheduler: DispatchQueue.main)
-                .removeDuplicates()
-                .sink { newVol in
-                    NowPlayingModel.shared.setVolume(newVol)
-                }
-                .store(in: &cancellables)
         }
-        .onChange(of: modelVolume) { _, newVol in
-            if !isDragging && Date().timeIntervalSince(lastSetTime) >= 2.0 {
-                localVolume = newVol
+    }
+
+    private func mixerRow(
+        iconName: String,
+        iconColor: Color,
+        name: String,
+        volume: Binding<Double>,
+        isDragging: Binding<Bool>,
+        onCommit: @escaping (Double) -> Void
+    ) -> some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.2))
+                    .frame(width: 28, height: 28)
+                Image(systemName: iconName)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(iconColor)
             }
-        }
-    }
 
-    private var speakerIconName: String {
-        let vol = activeVolume
-        if vol == 0 {
-            return "speaker.slash.fill"
-        } else if vol < 33 {
-            return "speaker.wave.1.fill"
-        } else if vol < 66 {
-            return "speaker.wave.2.fill"
-        } else {
-            return "speaker.wave.3.fill"
-        }
-    }
+            Text(name)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(width: 75, alignment: .leading)
 
-    private func toggleMute() {
-        lastSetTime = Date()
-        let current = activeVolume
-        if current > 0 {
-            localVolume = 0
-            model.setVolume(0)
-        } else {
-            localVolume = 50
-            model.setVolume(50)
+            Slider(
+                value: volume,
+                in: 0...100,
+                onEditingChanged: { editing in
+                    isDragging.wrappedValue = editing
+                    if !editing {
+                        onCommit(volume.wrappedValue)
+                    }
+                }
+            )
+            .tint(iconColor)
+
+            Text("\(Int(volume.wrappedValue))%")
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white.opacity(0.5))
+                .frame(width: 32, alignment: .trailing)
         }
+        .padding(.horizontal, 4)
     }
 }
