@@ -7,6 +7,7 @@ final class NowPlayingModelTests {
         await runTest(name: "testPlatformAccentColorDynamicToggle", test: testPlatformAccentColorDynamicToggle)
         await runTest(name: "testShowArtistInMenuBarSetting", test: testShowArtistInMenuBarSetting)
         await runTest(name: "testLyricsOffsetIntegration", test: testLyricsOffsetIntegration)
+        await runTest(name: "testYouTubeControllerIntegration", test: testYouTubeControllerIntegration)
     }
 
     private func runTest(name: String, test: () async -> Void) async {
@@ -45,5 +46,11 @@ final class NowPlayingModelTests {
         let settings = SettingsModel.shared
         settings.lyricsOffset = 1.2
         assertEqual(SettingsModel.shared.lyricsOffset, 1.2)
+    }
+
+    func testYouTubeControllerIntegration() async {
+        let ytController = YouTubeController()
+        assertEqual(ytController.displayName, "YouTube")
+        assertEqual(ytController.scriptAppName, "YouTube")
     }
 }

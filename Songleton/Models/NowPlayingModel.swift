@@ -32,7 +32,7 @@ final class NowPlayingModel: ObservableObject {
     @Published var automationStatus: AutomationStatus = .unknown
     @Published private(set) var recentTracks: [RecentTrack] = []
 
-    let controllers: [any MediaController] = [SpotifyController(), AppleMusicController()]
+    let controllers: [any MediaController] = [SpotifyController(), AppleMusicController(), YouTubeController()]
     private var activeController: (any MediaController)?
     private var isFetching = false
     private var currentArtworkKey: String?
@@ -79,8 +79,11 @@ final class NowPlayingModel: ObservableObject {
         guard case .loaded(_, let source) = state else {
             return Color(red: 29/255, green: 185/255, blue: 84/255)
         }
-        if source.lowercased().contains("spotify") {
+        let src = source.lowercased()
+        if src.contains("spotify") {
             return Color(red: 29/255, green: 185/255, blue: 84/255) // Spotify Green #1DB954
+        } else if src.contains("youtube") {
+            return Color(red: 255/255, green: 0/255, blue: 0/255) // YouTube Red #FF0000
         } else {
             return Color(red: 250/255, green: 36/255, blue: 60/255) // Apple Music Pink #FA243C
         }
