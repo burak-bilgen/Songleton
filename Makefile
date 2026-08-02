@@ -92,5 +92,9 @@ clean:
 	@xcodebuild -project $(PROJECT) -scheme $(SCHEME) clean -quiet
 	@echo "✓ Temiz"
 
-.PHONY: run build-debug fresh kill restart logs dmg build-release clean
+## Unit testleri çalıştır
+test:
+	@chmod +x run_tests.sh && ./run_tests.sh
+
+.PHONY: run build-debug fresh kill restart logs dmg build-release clean test
 .DEFAULT_GOAL := run
