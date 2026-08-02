@@ -20,7 +20,7 @@ final class HUDToastManager: NSObject {
         }
 
         let popover = NSPopover()
-        popover.contentSize = NSSize(width: 290, height: 60)
+        popover.contentSize = NSSize(width: 240, height: 56)
         popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = NSHostingController(

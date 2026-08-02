@@ -1,5 +1,11 @@
 import AppKit
 
+enum RepeatMode: String, Sendable {
+    case off
+    case all
+    case one
+}
+
 struct NowPlayingInfo {
     let track: String
     let artist: String
@@ -10,6 +16,8 @@ struct NowPlayingInfo {
     let artworkData: Data?
     let position: Double
     let duration: Double
+    let isShuffleEnabled: Bool
+    let repeatMode: RepeatMode
 }
 
 enum MediaControllerError: Error {
@@ -56,6 +64,8 @@ protocol MediaController: Sendable {
     nonisolated func restartTrack() throws
     nonisolated func setVolume(_ volume: Int) throws
     nonisolated func seekTo(_ position: Double) throws
+    nonisolated func toggleShuffle() throws
+    nonisolated func setRepeatMode(_ mode: RepeatMode) throws
 }
 
 extension MediaController {
@@ -96,7 +106,9 @@ final class SpotifyController: MediaController {
         set u to artwork url of current track
         set pos to player position
         set dur to duration of current track
-        return {t, a, al, s, v, u, pos, dur}
+        set shuf to shuffling
+        set rep to repeating
+        return {t, a, al, s, v, u, pos, dur, shuf, rep}
         """)
         guard let track = result.atIndex(1)?.stringValue,
               let artist = result.atIndex(2)?.stringValue,
@@ -108,12 +120,25 @@ final class SpotifyController: MediaController {
         let artworkURL = result.atIndex(6)?.stringValue.flatMap { URL(string: $0) }
         let position = result.atIndex(7)?.doubleValue ?? 0
         let duration = (result.atIndex(8)?.doubleValue ?? 0) / 1000.0
+        let isShuffle = result.atIndex(9)?.booleanValue ?? false
+        let isRepeatBool = result.atIndex(10)?.booleanValue ?? false
+
         return NowPlayingInfo(
             track: track, artist: artist, album: album,
             isPlaying: playerState == "playing",
             volume: volume, artworkURL: artworkURL, artworkData: nil,
-            position: position, duration: duration
+            position: position, duration: duration,
+            isShuffleEnabled: isShuffle, repeatMode: isRepeatBool ? .all : .off
         )
+    }
+
+    nonisolated func toggleShuffle() throws {
+        try AppleScriptRunner.run("tell application \"Spotify\" to set shuffling to (not shuffling)")
+    }
+
+    nonisolated func setRepeatMode(_ mode: RepeatMode) throws {
+        let isRep = (mode != .off)
+        try AppleScriptRunner.run("tell application \"Spotify\" to set repeating to \(isRep)")
     }
 }
 
@@ -131,11 +156,13 @@ final class AppleMusicController: MediaController {
         set v to sound volume
         set pos to player position
         set dur to duration of current track
+        set shuf to shuffle enabled
+        set rep to song repeat as string
         set d to missing value
         try
             set d to data of artwork 1 of current track
         end try
-        return {t, a, al, s, v, pos, dur, d}
+        return {t, a, al, s, v, pos, dur, shuf, rep, d}
         """)
         guard let track = result.atIndex(1)?.stringValue,
               let artist = result.atIndex(2)?.stringValue,
@@ -146,13 +173,40 @@ final class AppleMusicController: MediaController {
         let volume = Int(result.atIndex(5)?.int32Value ?? 50)
         let position = result.atIndex(6)?.doubleValue ?? 0
         let duration = result.atIndex(7)?.doubleValue ?? 0
-        let rawData = result.atIndex(8)?.data
+        let isShuffle = result.atIndex(8)?.booleanValue ?? false
+        let repStr = result.atIndex(9)?.stringValue?.lowercased() ?? "off"
+        let rawData = result.atIndex(10)?.data
         let artworkData = (rawData?.isEmpty == false) ? rawData : nil
+
+        let mode: RepeatMode
+        if repStr.contains("one") {
+            mode = .one
+        } else if repStr.contains("all") {
+            mode = .all
+        } else {
+            mode = .off
+        }
+
         return NowPlayingInfo(
             track: track, artist: artist, album: album,
             isPlaying: playerState == "playing",
             volume: volume, artworkURL: nil, artworkData: artworkData,
-            position: position, duration: duration
+            position: position, duration: duration,
+            isShuffleEnabled: isShuffle, repeatMode: mode
         )
+    }
+
+    nonisolated func toggleShuffle() throws {
+        try AppleScriptRunner.run("tell application \"Music\" to set shuffle enabled to (not shuffle enabled)")
+    }
+
+    nonisolated func setRepeatMode(_ mode: RepeatMode) throws {
+        let modeStr: String
+        switch mode {
+        case .off: modeStr = "off"
+        case .all: modeStr = "all"
+        case .one: modeStr = "one"
+        }
+        try AppleScriptRunner.run("tell application \"Music\" to set song repeat to \(modeStr)")
     }
 }

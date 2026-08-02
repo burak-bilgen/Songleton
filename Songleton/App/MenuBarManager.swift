@@ -10,33 +10,37 @@ final class MenuBarManager: NSObject {
     private var mainStatusItem: NSStatusItem?
     private var fwdStatusItem: NSStatusItem?
 
-    private var volTextStatusItem: NSStatusItem?
-    private var volPlusStatusItem: NSStatusItem?
-    private var volMinusStatusItem: NSStatusItem?
-
-    private var popover: NSPopover?
+    private var volumePopover: NSPopover?
     private var cancellables = Set<AnyCancellable>()
-    private var lastPreMuteVolume: Int = 50
+    private var hoverWorkItem: DispatchWorkItem?
+    private var closeWorkItem: DispatchWorkItem?
 
     var mainButton: NSStatusBarButton? { mainStatusItem?.button }
 
-    private override init() {
-        super.init()
+    var isHoverPopoverShown: Bool {
+        volumePopover?.isShown == true
     }
+
+    private override init() { super.init() }
 
     func setup() {
         guard mainStatusItem == nil else { return }
 
-        let popover = NSPopover()
-        popover.contentSize = NSSize(width: 350, height: 460)
-        popover.behavior = .transient
-        popover.animates = true
-        popover.contentViewController = NSHostingController(
-            rootView: PlayerPanelView(model: NowPlayingModel.shared)
+        // Hover ile Açılan Birleşik Modern Detay & Ses Ayar Paneli
+        let volPopover = NSPopover()
+        volPopover.contentSize = NSSize(width: 300, height: 380)
+        volPopover.behavior = .transient
+        volPopover.animates = true
+        volPopover.contentViewController = NSHostingController(
+            rootView: UnifiedHoverPanelView()
         )
-        self.popover = popover
+        self.volumePopover = volPopover
 
-        // 1st: Previous Track (rightmost)
+        // AppKit appends status items from Left to Right.
+        // Desired Screen Layout (Left to Right):
+        // [ ⏮ ]  [ Albüm Kapağı & Şarkı Adı ]  [ ⏭ ]
+
+        // 1st created: Önceki Şarkı (Pos 1 - En Sol)
         let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: nil)
@@ -46,7 +50,7 @@ final class MenuBarManager: NSObject {
         }
         self.bwdStatusItem = bwdItem
 
-        // 2nd: Main Track Info Label
+        // 2nd created: Albüm Kapağı & Şarkı Adı (Pos 2 - Ortada)
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabel = MenuBarMainLabelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
         let hosting = NSHostingView(rootView: mainLabel)
@@ -59,15 +63,23 @@ final class MenuBarManager: NSObject {
             button.frame = hosting.frame
             button.target = self
             button.action = #selector(mainItemClicked)
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-            button.toolTip = NSLocalizedString("Sol Tık: Oynat/Durdur | Sağ Tık: Detay Paneli", comment: "Menu bar tooltip")
-        } else {
-            mainItem.view = hosting
+            button.sendAction(on: [.leftMouseUp])
+            button.toolTip = NSLocalizedString("Tıkla: Oynat/Durdur | Hover: Detay & Ses Paneli", comment: "Menu bar tooltip")
+
+            let trackingView = MenuBarTrackingAreaView(frame: button.bounds)
+            trackingView.autoresizingMask = [.width, .height]
+            trackingView.onMouseEntered = { [weak self] in
+                self?.showVolumePopover()
+            }
+            trackingView.onMouseExited = { [weak self] in
+                self?.scheduleCloseVolumePopover()
+            }
+            button.addSubview(trackingView)
         }
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // 3rd: Next Track
+        // 3rd created: Sonraki Şarkı (Pos 3 - En Sağ)
         let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = fwdItem.button {
             button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
@@ -77,48 +89,19 @@ final class MenuBarManager: NSObject {
         }
         self.fwdStatusItem = fwdItem
 
-        // Volume Group Creation (created Minus -> Plus -> Text)
-        // Screen left-to-right order: [ %50 ] [ + ] [ - ]
-
-        // 4th created: - Button (rightmost of volume group)
-        let minusItem = NSStatusBar.system.statusItem(withLength: 20)
-        if let button = minusItem.button {
-            button.title = "-"
-            button.font = NSFont.systemFont(ofSize: 13, weight: .bold)
-            button.target = self
-            button.action = #selector(volMinusTapped)
-            button.toolTip = NSLocalizedString("Sesi Azalt (-20%)", comment: "Volume Down")
-        }
-        self.volMinusStatusItem = minusItem
-
-        // 5th created: + Button (middle of volume group)
-        let plusItem = NSStatusBar.system.statusItem(withLength: 20)
-        if let button = plusItem.button {
-            button.title = "+"
-            button.font = NSFont.systemFont(ofSize: 13, weight: .bold)
-            button.target = self
-            button.action = #selector(volPlusTapped)
-            button.toolTip = NSLocalizedString("Sesi Artır (+20%)", comment: "Volume Up")
-        }
-        self.volPlusStatusItem = plusItem
-
-        // 6th created: Volume Percentage Text Display (leftmost of volume group)
-        let textItem = NSStatusBar.system.statusItem(withLength: 34)
-        let textHosting = NSHostingView(rootView: VolumePercentTextView())
-        textHosting.frame = NSRect(x: 0, y: 0, width: 34, height: 22)
-        textHosting.autoresizingMask = [.width, .height]
-        if let button = textItem.button {
-            button.addSubview(textHosting)
-            button.frame = textHosting.frame
-            button.target = self
-            button.action = #selector(volTextTapped)
-            button.toolTip = NSLocalizedString("Sesi Kapat / Aç (Sessiz)", comment: "Toggle Mute")
-        } else {
-            textItem.view = textHosting
-        }
-        self.volTextStatusItem = textItem
-
         NowPlayingModel.shared.$state
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                let isNotRunning: Bool
+                if case .notRunning = state { isNotRunning = true } else { isNotRunning = false }
+                self?.mainStatusItem?.isVisible = !isNotRunning
+                self?.bwdStatusItem?.isVisible = !isNotRunning
+                self?.fwdStatusItem?.isVisible = !isNotRunning
+                self?.updateWidth()
+            }
+            .store(in: &cancellables)
+
+        SettingsModel.shared.$menuBarWidth
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updateWidth() }
             .store(in: &cancellables)
@@ -126,8 +109,9 @@ final class MenuBarManager: NSObject {
 
     func updateWidth() {
         guard let mainItem = mainStatusItem, let button = mainItem.button else { return }
-        guard popover?.isShown != true else { return }
+        guard volumePopover?.isShown != true else { return }
         if let hosting = button.subviews.first as? NSHostingView<MenuBarMainLabelView> {
+            hosting.invalidateIntrinsicContentSize()
             let fittingWidth = min(max(50, hosting.fittingSize.width + 4), SettingsModel.shared.menuBarWidth + 16)
             let newFrame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
             hosting.frame = newFrame
@@ -137,50 +121,102 @@ final class MenuBarManager: NSObject {
     }
 
     @objc private func mainItemClicked() {
-        guard let event = NSApp.currentEvent else { togglePopover(); return }
-        if event.type == .rightMouseUp {
-            togglePopover()
-        } else {
-            if let popover = popover, popover.isShown {
-                popover.performClose(nil)
-            } else {
-                NowPlayingModel.shared.togglePlayPause()
+        if let type = NSApp.currentEvent?.type, type == .rightMouseUp || type == .rightMouseDown {
+            return
+        }
+        hoverWorkItem?.cancel()
+        closeWorkItem?.cancel()
+        if let volPopover = volumePopover, volPopover.isShown {
+            volPopover.performClose(nil)
+        }
+        NowPlayingModel.shared.togglePlayPause()
+    }
+
+    @objc private func bwdTapped() {
+        hoverWorkItem?.cancel()
+        closeWorkItem?.cancel()
+        NowPlayingModel.shared.previousTrack()
+    }
+
+    @objc private func fwdTapped() {
+        hoverWorkItem?.cancel()
+        closeWorkItem?.cancel()
+        NowPlayingModel.shared.nextTrack()
+    }
+
+    func showVolumePopover() {
+        guard let volPopover = volumePopover, let button = mainStatusItem?.button else { return }
+        closeWorkItem?.cancel()
+
+        if volPopover.isShown { return }
+
+        hoverWorkItem?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            guard let self, let button = self.mainStatusItem?.button else { return }
+            guard self.volumePopover?.isShown != true else { return }
+            self.volumePopover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        }
+        hoverWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: item)
+    }
+
+    func scheduleCloseVolumePopover() {
+        hoverWorkItem?.cancel()
+        closeWorkItem?.cancel()
+
+        let item = DispatchWorkItem { [weak self] in
+            guard let self, let volPopover = self.volumePopover, volPopover.isShown else { return }
+            let mouseLocation = NSEvent.mouseLocation
+
+            var isInsideButton = false
+            if let button = self.mainStatusItem?.button, let window = button.window {
+                let buttonRect = button.convert(button.bounds, to: nil)
+                let windowRect = window.convertToScreen(buttonRect)
+                isInsideButton = windowRect.contains(mouseLocation)
+            }
+
+            var isInsidePopover = false
+            if let popoverWindow = volPopover.contentViewController?.view.window {
+                let popoverRect = popoverWindow.frame
+                isInsidePopover = popoverRect.contains(mouseLocation)
+            }
+
+            if !isInsideButton && !isInsidePopover {
+                volPopover.performClose(nil)
+            } else if isInsideButton || isInsidePopover {
+                self.scheduleCloseVolumePopover()
             }
         }
+        closeWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45, execute: item)
     }
+}
 
-    @objc private func bwdTapped() { NowPlayingModel.shared.previousTrack() }
-    @objc private func fwdTapped() { NowPlayingModel.shared.nextTrack() }
+// MARK: - MenuBarTrackingAreaView
 
-    @objc private func volMinusTapped() {
-        guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
-        let newVol = max(0, info.volume - 20)
-        NowPlayingModel.shared.setVolume(newVol)
-    }
+final class MenuBarTrackingAreaView: NSView {
+    var onMouseEntered: (() -> Void)?
+    var onMouseExited: (() -> Void)?
 
-    @objc private func volPlusTapped() {
-        guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
-        let newVol = min(100, info.volume + 20)
-        NowPlayingModel.shared.setVolume(newVol)
-    }
-
-    @objc private func volTextTapped() {
-        guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
-        if info.volume > 0 {
-            lastPreMuteVolume = info.volume
-            NowPlayingModel.shared.setVolume(0)
-        } else {
-            NowPlayingModel.shared.setVolume(lastPreMuteVolume > 0 ? lastPreMuteVolume : 50)
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for area in trackingAreas {
+            removeTrackingArea(area)
         }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
     }
 
-    func togglePopover() {
-        guard let popover = popover, let button = mainStatusItem?.button else { return }
-        if popover.isShown {
-            popover.performClose(nil)
-        } else {
-            NSApp.activate(ignoringOtherApps: true)
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        }
+    override func mouseEntered(with event: NSEvent) {
+        onMouseEntered?()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        onMouseExited?()
     }
 }
