@@ -95,7 +95,8 @@ struct UnifiedHoverPanelView: View {
             .padding(.top, 16)
             .padding(.bottom, 21)
         }
-        .frame(width: 300, height: isLyricsExpanded ? 499 : 390)
+        .frame(width: 300)
+        .fixedSize(horizontal: true, vertical: true)
         .scaleEffect(appearScale)
         .opacity(appearOpacity)
         .onAppear {

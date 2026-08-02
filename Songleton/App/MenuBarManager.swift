@@ -28,12 +28,11 @@ final class MenuBarManager: NSObject {
 
         // Hover ile Açılan Birleşik Modern Detay & Ses Ayar Paneli
         let volPopover = NSPopover()
-        volPopover.contentSize = NSSize(width: 300, height: 380)
         volPopover.behavior = .transient
         volPopover.animates = true
-        volPopover.contentViewController = NSHostingController(
-            rootView: UnifiedHoverPanelView()
-        )
+        let hostingController = NSHostingController(rootView: UnifiedHoverPanelView())
+        hostingController.sizingOptions = [.preferredContentSize]
+        volPopover.contentViewController = hostingController
         self.volumePopover = volPopover
 
         // AppKit appends status items from Left to Right.
