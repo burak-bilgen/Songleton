@@ -81,8 +81,8 @@ final class YouTubeController: MediaController {
 
         return NowPlayingInfo(
             track: track,
-            artist: artist.isEmpty ? "YouTube" : artist,
-            album: "YouTube",
+            artist: artist,
+            album: "",
             isPlaying: true,
             volume: 80,
             artworkURL: nil,
@@ -125,7 +125,7 @@ final class YouTubeController: MediaController {
             return (track, artist)
         }
 
-        return (cleanTitle, "YouTube")
+        return (cleanTitle, "")
     }
 
     nonisolated func togglePlayPause() throws {
