@@ -10,7 +10,6 @@ final class YouTubeController: MediaController {
         let name: String
     }
 
-    // Supported browsers to scan dynamically
     private let browserTargets: [BrowserInfo] = [
         BrowserInfo(bundleID: "com.brave.Browser", name: "Brave"),
         BrowserInfo(bundleID: "com.google.Chrome", name: "Google Chrome"),
@@ -20,9 +19,7 @@ final class YouTubeController: MediaController {
     ]
 
     private var activeRunningBrowser: BrowserInfo? {
-        browserTargets.first { target in
-            !NSRunningApplication.runningApplications(withBundleIdentifier: target.bundleID).isEmpty
-        }
+        getRunningBrowser()
     }
 
     var isRunning: Bool {
@@ -54,7 +51,6 @@ final class YouTubeController: MediaController {
             return ""
             """
         } else {
-            // Chromium based (Brave, Chrome, Arc, Edge) using generic AppleScript ID call
             script = """
             tell application id "\(runningBrowser.bundleID)"
                 if (count of windows) > 0 then
@@ -113,7 +109,6 @@ final class YouTubeController: MediaController {
             .replacingOccurrences(of: "- YouTube", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Strip notifications count like "(3) Track Name"
         if let range = cleanTitle.range(of: #"^\(\d+\)\s*"#, options: .regularExpression) {
             cleanTitle.removeSubrange(range)
         }
@@ -129,28 +124,94 @@ final class YouTubeController: MediaController {
     }
 
     nonisolated func togglePlayPause() throws {
-        try executeJSInActiveBrowser("var v = document.querySelector('video'); if (v) { v.paused ? v.play() : v.pause(); }")
+        let js = """
+        (function() {
+            var p = document.getElementById('movie_player');
+            if (p && typeof p.getPlayerState === 'function') {
+                var s = p.getPlayerState();
+                if (s === 1) { p.pauseVideo(); } else { p.playVideo(); }
+            } else {
+                var v = document.querySelector('video');
+                if (v) { v.paused ? v.play() : v.pause(); }
+            }
+        })();
+        """
+        try executeJSInActiveBrowser(js)
     }
 
     nonisolated func nextTrack() throws {
-        try executeJSInActiveBrowser("var btn = document.querySelector('.ytp-next-button') || document.querySelector('.next-button'); if (btn) { btn.click(); }")
+        let js = """
+        (function() {
+            var p = document.getElementById('movie_player');
+            if (p && typeof p.nextVideo === 'function') {
+                p.nextVideo();
+            } else {
+                var btn = document.querySelector('.ytp-next-button') || document.querySelector('.next-button');
+                if (btn) btn.click();
+            }
+        })();
+        """
+        try executeJSInActiveBrowser(js)
     }
 
     nonisolated func previousTrack() throws {
-        try executeJSInActiveBrowser("var btn = document.querySelector('.ytp-prev-button') || document.querySelector('.previous-button'); if (btn) { btn.click(); } else { history.back(); }")
+        let js = """
+        (function() {
+            var p = document.getElementById('movie_player');
+            if (p && typeof p.previousVideo === 'function') {
+                p.previousVideo();
+            } else {
+                var btn = document.querySelector('.ytp-prev-button') || document.querySelector('.previous-button');
+                if (btn) btn.click();
+            }
+        })();
+        """
+        try executeJSInActiveBrowser(js)
     }
 
     nonisolated func restartTrack() throws {
-        try executeJSInActiveBrowser("var v = document.querySelector('video'); if (v) { v.currentTime = 0; }")
+        let js = """
+        (function() {
+            var p = document.getElementById('movie_player');
+            if (p && typeof p.seekTo === 'function') {
+                p.seekTo(0);
+            } else {
+                var v = document.querySelector('video');
+                if (v) v.currentTime = 0;
+            }
+        })();
+        """
+        try executeJSInActiveBrowser(js)
     }
 
     nonisolated func setVolume(_ volume: Int) throws {
-        let normalized = Double(volume) / 100.0
-        try executeJSInActiveBrowser("var v = document.querySelector('video'); if (v) { v.volume = \(normalized); }")
+        let js = """
+        (function() {
+            var p = document.getElementById('movie_player');
+            if (p && typeof p.setVolume === 'function') {
+                p.setVolume(\(volume));
+            } else {
+                var v = document.querySelector('video');
+                if (v) v.volume = \(Double(volume) / 100.0);
+            }
+        })();
+        """
+        try executeJSInActiveBrowser(js)
     }
 
     nonisolated func seekTo(_ position: Double) throws {
-        try executeJSInActiveBrowser("var v = document.querySelector('video'); if (v) { v.currentTime = \(position); }")
+        let js = """
+        (function() {
+            var p = document.getElementById('movie_player');
+            if (p && typeof p.seekTo === 'function') {
+                p.seekTo(\(position));
+            } else {
+                var v = document.querySelector('video');
+                if (v) v.currentTime = \(position);
+            }
+        })();
+        """
+        try executeJSInActiveBrowser(js)
     }
 
     nonisolated func toggleShuffle() throws {}
@@ -160,31 +221,38 @@ final class YouTubeController: MediaController {
         guard let browser = getRunningBrowser() else { return }
         let isSafari = browser.bundleID == "com.apple.Safari"
 
+        // Escaped code for AppleScript string interpolation
+        let escapedJS = jsCode.replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: " ")
+
         let script: String
         if isSafari {
             script = """
             tell application id "com.apple.Safari"
-                repeat with w in windows
-                    repeat with t in tabs of w
-                        if URL of t contains "youtube.com" then
-                            do JavaScript "\(jsCode)" in t
-                            return
-                        end if
+                if (count of windows) > 0 then
+                    repeat with w in windows
+                        repeat with t in tabs of w
+                            if URL of t contains "youtube.com" then
+                                do JavaScript "\(escapedJS)" in t
+                                return
+                            end if
+                        end repeat
                     end repeat
-                end repeat
+                end if
             end tell
             """
         } else {
             script = """
             tell application id "\(browser.bundleID)"
-                repeat with w in windows
-                    repeat with t in tabs of w
-                        if URL of t contains "youtube.com" then
-                            execute t javascript "\(jsCode)"
-                            return
-                        end if
+                if (count of windows) > 0 then
+                    repeat with w in windows
+                        repeat with t in tabs of w
+                            if URL of t contains "youtube.com" then
+                                execute t javascript "\(escapedJS)"
+                                return
+                            end if
+                        end repeat
                     end repeat
-                end repeat
+                end if
             end tell
             """
         }
