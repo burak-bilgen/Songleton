@@ -312,7 +312,7 @@ final class NowPlayingModel: ObservableObject {
         }
         guard let url = info.artworkURL, url.scheme?.lowercased() == "https" else {
             artwork = nil
-            dominantColor = .accentColor
+            dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
             return
         }
         let (image, color) = await Self.downloadArtworkAndColor(from: url)
@@ -323,27 +323,29 @@ final class NowPlayingModel: ObservableObject {
             } else if let image {
                 dominantColor = extractColor(from: image)
             } else {
-                dominantColor = .accentColor
+                dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
             }
         }
     }
 
     private func extractColor(from image: NSImage) -> Color {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            return .accentColor
+            return Color(red: 0.38, green: 0.42, blue: 0.95)
         }
-        let width = 16, height = 16
+        let width = 32, height = 32
         var data = [UInt8](repeating: 0, count: width * height * 4)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         guard let ctx = CGContext(
             data: &data, width: width, height: height,
             bitsPerComponent: 8, bytesPerRow: width * 4,
             space: colorSpace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return .accentColor }
+        ) else { return Color(red: 0.38, green: 0.42, blue: 0.95) }
         ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
-        var totalR: CGFloat = 0, totalG: CGFloat = 0, totalB: CGFloat = 0
-        var validPixelCount: CGFloat = 0
+        var maxVibrancyScore: CGFloat = -1
+        var bestR: CGFloat = 0.38
+        var bestG: CGFloat = 0.42
+        var bestB: CGFloat = 0.95
 
         for i in 0..<(width * height) {
             let r = CGFloat(data[i * 4]) / 255.0
@@ -354,31 +356,40 @@ final class NowPlayingModel: ObservableObject {
 
             let maxC = max(r, max(g, b))
             let minC = min(r, min(g, b))
-            let brightness = (maxC + minC) / 2
-            let saturation = maxC == 0 ? 0 : (maxC - minC) / maxC
+            let delta = maxC - minC
+            let lightness = (maxC + minC) / 2.0
 
-            if brightness > 0.08 && brightness < 0.92 {
-                let weight = 1.0 + saturation * 2.0
-                totalR += r * weight
-                totalG += g * weight
-                totalB += b * weight
-                validPixelCount += weight
+            guard maxC > 0 else { continue }
+            let saturation = delta / maxC
+
+            // Filter out dull muds, grays, near-blacks, and near-whites
+            if lightness > 0.15 && lightness < 0.88 && saturation > 0.18 {
+                // Score favors vibrant, saturated hues over muddy averages
+                let score = saturation * 3.5 + (1.0 - abs(lightness - 0.5)) * 1.5
+                if score > maxVibrancyScore {
+                    maxVibrancyScore = score
+                    bestR = r
+                    bestG = g
+                    bestB = b
+                }
             }
         }
 
-        guard validPixelCount > 0 else { return .accentColor }
+        // Convert best RGB to HSL and boost saturation and brightness so it's NEVER muddy!
+        let nsColor = NSColor(red: bestR, green: bestG, blue: bestB, alpha: 1.0)
+        var hue: CGFloat = 0
+        var sat: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
 
-        var avgR = totalR / validPixelCount
-        var avgG = totalG / validPixelCount
-        var avgB = totalB / validPixelCount
+        nsColor.getHue(&hue, saturation: &sat, brightness: &brightness, alpha: &alpha)
 
-        let avgLuminance = 0.2126 * avgR + 0.7152 * avgG + 0.0722 * avgB
-        let boost: CGFloat = 1.35
-        avgR = min(1.0, max(0.0, avgLuminance + (avgR - avgLuminance) * boost))
-        avgG = min(1.0, max(0.0, avgLuminance + (avgG - avgLuminance) * boost))
-        avgB = min(1.0, max(0.0, avgLuminance + (avgB - avgLuminance) * boost))
+        // Boost saturation to at least 0.70 and normalize brightness to 0.65-0.88
+        sat = max(sat, 0.70)
+        brightness = min(max(brightness, 0.65), 0.88)
 
-        return Color(red: avgR, green: avgG, blue: avgB)
+        let vibrantNSColor = NSColor(hue: hue, saturation: sat, brightness: brightness, alpha: 1.0)
+        return Color(nsColor: vibrantNSColor)
     }
 
     nonisolated private static func downloadArtworkAndColor(from url: URL) async -> (NSImage?, Color?) {
