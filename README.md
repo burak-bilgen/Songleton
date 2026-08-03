@@ -8,11 +8,11 @@
   [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111827?style=for-the-badge&logo=apple&logoColor=white)](https://www.apple.com/macos/)
   [![Swift](https://img.shields.io/badge/Swift-5-orange?style=for-the-badge&logo=swift&logoColor=white)](https://www.swift.org/)
   [![SwiftUI](https://img.shields.io/badge/SwiftUI-native-6D5DFB?style=for-the-badge&logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/)
-  [![Tests](https://img.shields.io/badge/tests-29%20passing-20C997?style=for-the-badge)](Makefile)
+  [![Tests](https://img.shields.io/badge/tests-20%20passing-20C997?style=for-the-badge)](Makefile)
   [![License](https://img.shields.io/badge/license-MIT-38BDF8?style=for-the-badge)](LICENSE)
 </div>
 
-Songleton puts playback status and useful controls one hover away, without replacing Spotify, Apple Music or your browser. It is intentionally small, native and keyboard-friendly.
+Songleton puts playback status and useful controls one hover away, without replacing Spotify or Apple Music. It is intentionally small, native and keyboard-friendly.
 
 ## Download and Install
 
@@ -22,7 +22,7 @@ Songleton puts playback status and useful controls one hover away, without repla
 4. Launch Songleton and complete the Automation permission setup.
 5. Open Settings to choose System, English or Turkish. Language changes apply immediately.
 
-The first launch may ask for Automation access to supported media applications and browsers. Songleton needs this permission because macOS protects Apple Events by default.
+The first launch may ask for Automation access to Spotify and Apple Music. Songleton needs this permission because macOS protects Apple Events by default.
 
 ## What You Get
 
@@ -47,9 +47,7 @@ The first launch may ask for Automation access to supported media applications a
 
 - Spotify desktop application.
 - Apple Music desktop application.
-- YouTube tabs in Safari, Google Chrome, Brave, Arc and Microsoft Edge.
 
-Browser support uses the browser's existing tab and video APIs. Songleton does not install an extension or alter the browser profile.
 
 ### History and Playlists
 
@@ -60,7 +58,7 @@ Browser support uses the browser's existing tab and video APIs. Songleton does n
 ## Privacy and Security
 
 - No analytics, tracking or user account is required.
-- Playback commands and media state are handled locally through macOS Automation and browser scripting.
+- Playback commands and media state are handled locally through macOS Automation.
 - User preferences and saved playlists are stored in local `UserDefaults`.
 - Lyrics lookup is the only optional network feature. Track, artist, album and duration metadata may be sent to [LRCLIB](https://lrclib.net/) to find synchronized lyrics.
 - No audio, authentication token or playlist content is uploaded by Songleton.
@@ -73,7 +71,6 @@ Browser support uses the browser's existing tab and video APIs. Songleton does n
 - macOS 14.0 or newer.
 - Xcode 15 or newer.
 - Spotify or Apple Music for desktop playback controls.
-- A supported browser for YouTube controls.
 
 ### Commands
 
@@ -106,7 +103,7 @@ The release target uses a distribution-safe entitlement set. Notarization requir
 
 - Swift 5 and SwiftUI.
 - AppKit `NSStatusItem` and `NSPopover` for menu bar lifecycle.
-- Apple Events and AppleScript for Spotify, Apple Music and browser control.
+- Apple Events and AppleScript for Spotify and Apple Music control.
 - Swift concurrency with a serialized media command queue.
 - LRCLIB synchronized lyrics API with cancellation-safe track loading.
 - String Catalog localization with System, English and Turkish modes.
@@ -117,7 +114,7 @@ The release target uses a distribution-safe entitlement set. Notarization requir
 ```text
 Songleton/
 ├── App/          App lifecycle, menu bar and toast managers
-├── Controllers/  Media and browser automation controllers
+├── Controllers/  Media application controllers
 ├── Models/       Playback state, settings, playlists and localization
 ├── Services/     Lyrics networking and parsing
 ├── Views/        Menu bar, player, settings, lyrics and playlist UI
