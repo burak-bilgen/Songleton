@@ -1,12 +1,12 @@
 import AppKit
 
-enum RepeatMode: String, Sendable {
+nonisolated enum RepeatMode: String, Sendable {
     case off
     case all
     case one
 }
 
-struct NowPlayingInfo {
+nonisolated struct NowPlayingInfo: Sendable {
     let track: String
     let artist: String
     let album: String
@@ -20,11 +20,47 @@ struct NowPlayingInfo {
     let repeatMode: RepeatMode
 }
 
-enum MediaControllerError: Error {
+nonisolated enum MediaControllerError: Error, Sendable {
     case appNotRunning
     case permissionDenied
     case unsupportedCommand
     case scriptFailed(String)
+}
+
+nonisolated enum MediaControllerResolution {
+    case notRunning
+    case permissionDenied
+    case loaded(NowPlayingInfo, controller: any MediaController)
+}
+
+nonisolated enum MediaControllerResolver {
+    static func resolve(controllers: [any MediaController]) -> MediaControllerResolution {
+        var pausedCandidate: (any MediaController, NowPlayingInfo)?
+        var sawPermissionDenied = false
+
+        for controller in controllers {
+            guard controller.isRunning else { continue }
+
+            do {
+                let info = try controller.fetchNowPlaying()
+                if info.isPlaying {
+                    return .loaded(info, controller: controller)
+                }
+                if pausedCandidate == nil {
+                    pausedCandidate = (controller, info)
+                }
+            } catch MediaControllerError.permissionDenied {
+                sawPermissionDenied = true
+            } catch {
+                continue
+            }
+        }
+
+        if let (controller, info) = pausedCandidate {
+            return .loaded(info, controller: controller)
+        }
+        return sawPermissionDenied ? .permissionDenied : .notRunning
+    }
 }
 
 nonisolated enum MediaValue {

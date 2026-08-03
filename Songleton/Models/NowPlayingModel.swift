@@ -83,9 +83,6 @@ final class NowPlayingModel: ObservableObject {
     }
 
     var platformAccentColor: Color {
-        guard SettingsModel.shared.useDynamicColor else {
-            return .white
-        }
         guard case .loaded(_, let source) = state else {
             return Color(red: 29/255, green: 185/255, blue: 84/255)
         }
@@ -242,6 +239,7 @@ final class NowPlayingModel: ObservableObject {
                         let isDesktopMusicApp = srcLower.contains("spotify") || srcLower.contains("music")
                         if SettingsModel.shared.showTrackNotifications,
                            !MenuBarManager.shared.isHoverPopoverShown,
+                           !AmbientModeManager.shared.isPresented,
                            isDesktopMusicApp {
                             HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: self.artwork)
                         }
@@ -262,30 +260,14 @@ final class NowPlayingModel: ObservableObject {
     }
 
     nonisolated private func fetchAll() async -> FetchResult? {
-        var pausedCandidate: (any MediaController, NowPlayingInfo)?
-        var sawPermissionDenied = false
-        for controller in controllers {
-            guard controller.isRunning else { continue }
-            do {
-                let info = try controller.fetchNowPlaying()
-                if info.isPlaying {
-                    return FetchResult(state: .loaded(info, source: controller.displayName), active: controller)
-                }
-                if pausedCandidate == nil {
-                    pausedCandidate = (controller, info)
-                }
-            } catch MediaControllerError.permissionDenied {
-                sawPermissionDenied = true
-            } catch {
-                continue
-            }
-        }
-
-        if let (controller, info) = pausedCandidate {
+        switch MediaControllerResolver.resolve(controllers: controllers) {
+        case .loaded(let info, let controller):
             return FetchResult(state: .loaded(info, source: controller.displayName), active: controller)
+        case .permissionDenied:
+            return FetchResult(state: .permissionDenied, active: nil)
+        case .notRunning:
+            return FetchResult(state: .notRunning, active: nil)
         }
-        if sawPermissionDenied { return FetchResult(state: .permissionDenied, active: nil) }
-        return FetchResult(state: .notRunning, active: nil)
     }
 
     private func syncArtwork(with state: State) async {
