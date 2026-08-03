@@ -3,96 +3,116 @@
 
   # Songleton ✨
 
-  **Mac'inizde müzik dinleme deneyimini zirveye çıkaran, menü çubuğuna gizli tam ekran görsel şölen!**
+  **A hidden-in-the-menu-bar full-screen visual experience that elevates music listening on your Mac!**
 
   [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111827?style=for-the-badge&logo=apple&logoColor=white)](https://www.apple.com/macos/)
   [![Swift](https://img.shields.io/badge/Swift-5.9-orange?style=for-the-badge&logo=swift&logoColor=white)](https://www.swift.org/)
   [![SwiftUI](https://img.shields.io/badge/SwiftUI-Native-6D5DFB?style=for-the-badge&logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/)
-  [![Tests](https://img.shields.io/badge/tests-20%20passing-20C997?style=for-the-badge)](Makefile)
+  [![Tests](https://img.shields.io/badge/tests-22%20passing-20C997?style=for-the-badge)](Makefile)
   [![License](https://img.shields.io/badge/license-MIT-38BDF8?style=for-the-badge)](LICENSE)
 </div>
 
 ---
 
-### 🔥 Songleton Nedir?
+### 🔥 What is Songleton?
 
-**Songleton**, Spotify veya Apple Music kullanırken arka planda sessizce çalışan, Mac'inizin menü çubuğuna (Menu Bar) yerleşen ve tek tıkla ekranınızı nostaljik bir müzik stüdyosuna dönüştüren **ultra hızlı ve yerel macOS müzik yardımcısıdır.**
+**Songleton** is an **ultra-fast, fully native macOS music companion** that quietly lives in your Mac's menu bar while you use Spotify or Apple Music, and turns your entire screen into a nostalgic music studio with a single click.
 
-Karmaşık ayarlarla uğraşmadan, şarkıyı kimin söylediğini menü çubuğundan anında görün, fare hareketleriyle sesi ayarlayın ya da tam ekrana geçip arkada dönen plağın ve akan şarkı sözlerinin tadını çıkarın!
-
----
-
-### 🎨 Öne Çıkan Havalı Özellikler
-
-#### 💿 Tam Ekran Sinematik Ambient (Ortam) Modu
-Masada çalışırken veya odanızda müzik dinlerken Mac ekranınızı büyüleyici bir müzik çalar ekranına dönüştürür.
-- **Sinematik Açılış & Mercek Efekti**: Ekran 0.82 ölçekten yaylanarak büyür (`.spring`), 24px mercek buğusu (Lens Blur) süzülerek kristal netliğe kavuşur.
-- **Nostaljik CRT TV Efektleri**: Eski tüplü televizyonların gözü yormayan kapanış ışık hüzmesi animasyonları.
-- **3 Farklı Görsel Tema**:
-  - 💿 **Vinil Plak**: Dönüş ışık süzmesi, hız noktaları ve şarkı durduğunda olduğu yerde donan gerçekçi plak gövdesi.
-  - 📼 **Kaset Çalar**: Çift makarası dönen nostaljik 90'lar kaset çalar tasarımı.
-  - 🧊 **Cam (Pure Glass)**: Albüm kapağının derinlik ve cam efektiyle parladığı modern tasarım.
-- **Philips Ambilight Ritim Işığı**: Şarkının ritmine göre arka planda tatlı tatlı parlayan renk aurası.
-- **Uyku Zamanlayıcısı (Sleep Timer)**: Müziği otomatik durdurup ekranı kapatan dahili zamanlayıcı.
-
-#### 🔔 Odak Çalmayan Sağ Üst Bildirimler (Non-Activating Toast)
-- **Yazı Yazmayı Bölmez**: Kod yazarken, mesajlaşırken veya tarayıcıda gezinirken yeni şarkı bildirimi çıktığında **klavye odağınız asla bozulmaz** (`isKeyWindow = false`).
-- **Sağ Üst Yerleşim & Ambilight Aura**: Sağ üst köşede renkli HSL aurası ve cam kaplamasıyla süzülür.
-
-#### 🖱️ Akıllı Fare & Ekran Kenarı Jestleri (Gestures)
-- **Direkt Sağ Tık Kestirmesi**: Menü çubuğu ikonuna **doğrudan Sağ Tık (Right-Click)** yaparak Ambient Mode'a anında geçin! (Option + Sağ Tık: Ayarlar & Çıkış menüsü).
-- **Kapağa Çift Tıklama**: Hover panelindeki albüm kapağına **Çift Tıklayarak (Double-Click)** Ambient Mode'a geçiş yapın.
-- **Sağa / Sola Ekran Vurma**: Fareyi ekranın sol/sağ kenarına vurup 0.5s durarak **Önceki / Sonraki Şarkı**'ya geçin.
-- **Yukarı Ekran Vurma**: Fareyi ekranın en üstüne vurup 0.5s durarak **Müziği Oynatın / Durdurun**.
-- **Sol + Sağ Tık Canlı Ses Ayarı**: İki fare tuşuna aynı anda basarak (veya ⌘ + ⌥) fareyi yukarı/aşağı sürükleyip **Canlı Ses Düzeyini** ayarlayın.
-- **Bağımsız Ayarlar**: İstediğiniz jest grubunu Ayarlar ekranından bağımsız olarak açıp kapatabilirsiniz.
+No complicated settings — see who's singing right from the menu bar, adjust the volume with mouse gestures, or go fullscreen and enjoy a spinning vinyl record with flowing lyrics!
 
 ---
 
-### ⌨️ Klavye Dostu Kısayollar (Ambient Mode)
+### 🎨 Highlight Features
 
-| Kısayol | Ne İşe Yarar? |
+#### 💿 Fullscreen Cinematic Ambient Mode
+While you work at your desk or listen in your room, Songleton transforms your Mac's display into a captivating music player screen.
+- **Cinematic Opening & Lens Effect**: The screen springs in from 0.82 scale (`.spring`) with a 24px lens blur that settles into crystal clarity.
+- **Nostalgic CRT TV Effects**: Retro cathode-ray tube closing animations with a gentle light sweep.
+- **3 Visual Themes**:
+  - 💿 **Vinyl Record**: Realistic record body with rotating light sweep, speed dots, and freeze-on-pause behavior.
+  - 📼 **Cassette Deck**: A nostalgic 90s cassette player design with dual spinning reels.
+  - 🧊 **Pure Glass**: Modern design where the album art glows with depth and glass effects.
+- **Philips Ambilight Rhythm Light**: A color aura that gently pulses with the beat of the song.
+- **Sleep Timer**: Built-in timer that automatically stops the music and dims the screen.
+
+#### 🔔 Non-Activating Toast Notifications
+- **Never Breaks Your Focus**: When a new track notification appears while you're coding, messaging, or browsing, your **keyboard focus is never stolen** (`isKeyWindow = false`).
+- **Top-Right Placement with Ambilight Aura**: Glides in at the top-right corner with a colorful HSL aura and glass coating.
+
+#### 🖱️ Smart Mouse & Gesture Controls
+- **Direct Right-Click Shortcut**: **Right-click** the menu bar icon to instantly enter Ambient Mode! (Option + Right-Click: Settings & Quit menu).
+- **Double-Click the Artwork**: Double-click the album art in the hover panel to enter Ambient Mode.
+- **Rest at the Left / Right Side**: Rest the cursor against the left or right side of the screen for 0.5s to go **Previous / Next track**.
+- **Rest at the Top**: Rest the cursor at the very top of the screen for 0.5s to **Play / Pause**.
+- **Left + Right Click Live Volume**: Press both mouse buttons simultaneously (or ⌘ + ⌥) and drag up/down to adjust **live volume**.
+- **Independent Toggles**: Enable or disable each gesture group independently from the Settings screen.
+
+---
+
+### ⌨️ Keyboard Shortcuts (Ambient Mode)
+
+| Shortcut | Action |
 | :--- | :--- |
-| `Space` | Müziği Çal / Duraklat |
-| `←` / `→` | Önceki / Sonraki Şarkı |
-| `↑` / `↓` | Sesi Artır / Azalt (%10) |
-| `ESC` | Ambient Moddan Çık (CRT Kapanış Animasyonu) |
-| `L` | Canlı Şarkı Sözlerini Aç / Kapat |
-| `T` | Temayı Değiştir (Plak ↔ Kaset ↔ Cam) |
+| `Space` | Play / Pause |
+| `←` / `→` | Previous / Next Track |
+| `↑` / `↓` | Volume Up / Down (10%) |
+| `ESC` | Exit Ambient Mode (CRT closing animation) |
+| `L` | Toggle Live Lyrics |
+| `T` | Cycle Theme (Vinyl ↔ Cassette ↔ Glass) |
 
 ---
 
-### 📱 5 Adımlı İnteraktif Onboarding
-Uygulama ilk kez açıldığında ekranın tam ortasında başlayan ve tüm kestirmeleri, fare hareketlerini, klavye kısayollarını görsellerle anlatan interaktif açılış rehberi.
+### 📱 5-Step Interactive Onboarding
+When the app is launched for the first time, an interactive guide starts right in the center of the screen, walking you through all shortcuts, mouse gestures, and keyboard shortcuts with visuals.
 
 ---
 
-### 🛡️ Gizlilik ve Güvenlik
+### 🛡️ Privacy & Security
 
-- **%100 Yerel ve Güvenli**: Hiçbir üyelik, kayıt veya takip kodu içermez.
-- **Sadece Söz Çekimi**: Sadece canlı şarkı sözlerini bulmak amacıyla şarkı adı ve sanatçı bilgisi açık kaynaklı [LRCLIB](https://lrclib.net/) servisine sorulur.
-- **Kişisel Veri Yüklenmez**: Şifreleriniz, dinleme geçmişiniz veya kişisel verileriniz asla Mac'inizin dışına çıkmaz.
+- **100% Local & Secure**: No membership, registration, or tracking code.
+- **Lyrics Only**: Track name and artist are sent to the open-source [LRCLIB](https://lrclib.net/) service solely to fetch live lyrics.
+- **No Personal Data Uploaded**: Your passwords, listening history, or personal data never leave your Mac.
 
 ---
 
-### 🚀 Kurulum & Kaynak Koddan Derleme
+### 🚀 Installation & Building from Source
 
 ```bash
-git clone https://github.com/your-repo/Songleton.git
+git clone <repository-url>
 cd Songleton
 
-# Derle ve Uygulamayı Başlat
+# Build and launch the app
 make run
 
-# Testleri Çalıştır
+# Run the tests
 make test
 
-# Release DMG Paketle
+# Package a release DMG
 make dmg
 ```
 
+### ✅ Quality Checks
+
+```bash
+# Unit tests
+make test
+
+# Test coverage report
+make coverage
+
+# Local debug build without code signing
+xcodebuild -project Songleton.xcodeproj -scheme Songleton -configuration Debug build CODE_SIGNING_ALLOWED=NO
+
+# Tests + warnings-as-errors quality gate
+make quality
+```
+
+GitHub Actions runs these tests and a debug build on every `main` update and pull request.
+
+For distribution, use `make archive` with `DEVELOPER_IDENTITY` to create a signed Xcode archive, `make dmg` to create the DMG, and `make notarize` for Apple notarization. See [RELEASING.md](RELEASING.md) for the full flow.
+
 ---
 
-### 📄 Lisans
+### 📄 License
 
-Songleton, **MIT Lisansı** altında özgürce dağıtılmaktadır. Detaylar için [LICENSE](LICENSE) dosyasına göz atabilirsiniz.
+Songleton is freely distributed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
