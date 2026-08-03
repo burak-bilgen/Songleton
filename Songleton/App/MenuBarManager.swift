@@ -14,6 +14,7 @@ final class MenuBarManager: NSObject {
     private var cancellables = Set<AnyCancellable>()
     private var hoverWorkItem: DispatchWorkItem?
     private var closeWorkItem: DispatchWorkItem?
+    private var globalClickMonitor: Any? = nil
 
     var mainButton: NSStatusBarButton? { mainStatusItem?.button }
 
@@ -128,7 +129,6 @@ final class MenuBarManager: NSObject {
     }
 
     private func updateStatusItemVisibility(for state: NowPlayingModel.State) {
-        // ALWAYS keep menu bar status items active and visible so Songleton never disappears
         setStatusItemsVisible(true)
     }
 
@@ -141,48 +141,42 @@ final class MenuBarManager: NSObject {
 
     @objc private func mainItemClicked() {
         if let event = NSApp.currentEvent, (event.type == .rightMouseUp || event.type == .rightMouseDown) {
-            hoverWorkItem?.cancel()
-            closeWorkItem?.cancel()
-            volumePopover?.performClose(nil)
+            closeVolumePopoverImmediately()
 
-            let menu = NSMenu()
-            let ambientItem = NSMenuItem(title: "Ambient Mode ✨", action: #selector(openAmbientMode), keyEquivalent: "")
-            ambientItem.target = self
-            menu.addItem(ambientItem)
+            // Option/Alt key held -> Show Context Menu (Settings, Quit)
+            if event.modifierFlags.contains(.option) {
+                let menu = NSMenu()
+                let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettingsMenu), keyEquivalent: ",")
+                settingsItem.target = self
+                menu.addItem(settingsItem)
 
-            menu.addItem(NSMenuItem.separator())
+                menu.addItem(NSMenuItem.separator())
 
-            let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettingsMenu), keyEquivalent: ",")
-            settingsItem.target = self
-            menu.addItem(settingsItem)
+                let quitItem = NSMenuItem(title: "Quit Songleton", action: #selector(quitApp), keyEquivalent: "q")
+                quitItem.target = self
+                menu.addItem(quitItem)
 
-            menu.addItem(NSMenuItem.separator())
-
-            let quitItem = NSMenuItem(title: "Quit Songleton", action: #selector(quitApp), keyEquivalent: "q")
-            quitItem.target = self
-            menu.addItem(quitItem)
-
-            if let button = mainStatusItem?.button {
-                NSMenu.popUpContextMenu(menu, with: event, for: button)
+                if let button = mainStatusItem?.button {
+                    NSMenu.popUpContextMenu(menu, with: event, for: button)
+                }
+                return
             }
+
+            // Direct Right-Click -> Instant Ambient Mode launch!
+            AmbientModeManager.shared.show()
             return
         }
-        hoverWorkItem?.cancel()
-        closeWorkItem?.cancel()
-        if let volPopover = volumePopover, volPopover.isShown {
-            volPopover.performClose(nil)
-            updateWidth()
-        }
+        closeVolumePopoverImmediately()
         NowPlayingModel.shared.togglePlayPause()
     }
 
     @objc private func openAmbientMode() {
-        volumePopover?.performClose(nil)
+        closeVolumePopoverImmediately()
         AmbientModeManager.shared.show()
     }
 
     @objc private func openSettingsMenu() {
-        volumePopover?.performClose(nil)
+        closeVolumePopoverImmediately()
         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -192,14 +186,12 @@ final class MenuBarManager: NSObject {
     }
 
     @objc private func bwdTapped() {
-        hoverWorkItem?.cancel()
-        closeWorkItem?.cancel()
+        closeVolumePopoverImmediately()
         NowPlayingModel.shared.previousTrack()
     }
 
     @objc private func fwdTapped() {
-        hoverWorkItem?.cancel()
-        closeWorkItem?.cancel()
+        closeVolumePopoverImmediately()
         NowPlayingModel.shared.nextTrack()
     }
 
@@ -214,9 +206,10 @@ final class MenuBarManager: NSObject {
             guard let self, let button = self.mainStatusItem?.button else { return }
             guard self.volumePopover?.isShown != true else { return }
             self.volumePopover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            self.setupGlobalClickMonitor()
         }
         hoverWorkItem = item
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: item)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: item)
     }
 
     func scheduleCloseVolumePopover() {
@@ -241,14 +234,37 @@ final class MenuBarManager: NSObject {
             }
 
             if !isInsideButton && !isInsidePopover {
-                volPopover.performClose(nil)
-                self.updateWidth()
-            } else if isInsideButton || isInsidePopover {
-                self.scheduleCloseVolumePopover()
+                self.closeVolumePopoverImmediately()
             }
         }
         closeWorkItem = item
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: item)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: item)
+    }
+
+    func closeVolumePopoverImmediately() {
+        hoverWorkItem?.cancel()
+        closeWorkItem?.cancel()
+        removeGlobalClickMonitor()
+        if let volPopover = volumePopover, volPopover.isShown {
+            volPopover.performClose(nil)
+            updateWidth()
+        }
+    }
+
+    private func setupGlobalClickMonitor() {
+        removeGlobalClickMonitor()
+        globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            Task { @MainActor in
+                self?.closeVolumePopoverImmediately()
+            }
+        }
+    }
+
+    private func removeGlobalClickMonitor() {
+        if let monitor = globalClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalClickMonitor = nil
+        }
     }
 }
 

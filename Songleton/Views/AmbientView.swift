@@ -107,6 +107,11 @@ struct AmbientView: View {
     @State private var crtState: CRTState = .off
     @State private var isClosing: Bool = false
 
+    // Cinematic Opening Entrance Animation State
+    @State private var openingScale: CGFloat = 0.82
+    @State private var openingOpacity: Double = 0.0
+    @State private var openingBlur: CGFloat = 24.0
+
     // Heartbeat Aura Pulse State
     @State private var auraPulse: Bool = false
 
@@ -116,9 +121,6 @@ struct AmbientView: View {
     // Sleep Timer State (minutes: 0, 15, 30, 45, 60)
     @State private var sleepTimerMinutes: Int = 0
     @State private var sleepSecondsRemaining: Int = 0
-
-    // Local NSEvent Keyboard Monitor State for 100% Rock-Solid Shortcuts
-    @State private var keyMonitor: Any? = nil
 
     // High-Contrast Theme Color
     private var themeColor: Color {
@@ -494,8 +496,9 @@ struct AmbientView: View {
                 .animation(.easeInOut(duration: 0.4), value: showControls)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
-            .scaleEffect(x: crtScaleX, y: crtScaleY, anchor: .center)
-            .opacity(crtOpacity)
+            .scaleEffect(openingScale * crtScaleX, anchor: .center)
+            .opacity(openingOpacity * crtOpacity)
+            .blur(radius: openingBlur)
         }
         .ignoresSafeArea()
         .onContinuousHover { _ in
@@ -511,11 +514,9 @@ struct AmbientView: View {
             }
             triggerLyricsFetch()
             startCRTTurnOnAnimation()
-            setupKeyMonitor()
         }
         .onDisappear {
             stopContinuousRotationTimer()
-            removeKeyMonitor()
         }
         .onReceive(clockTimer) { _ in
             updateClock()
@@ -523,6 +524,13 @@ struct AmbientView: View {
         }
         .onChange(of: currentTrackId) { _, _ in
             triggerLyricsFetch()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ambientKeyDown"))) { notif in
+            if let userInfo = notif.userInfo,
+               let keyCode = userInfo["keyCode"] as? UInt16 {
+                let chars = userInfo["chars"] as? String ?? ""
+                handleKeyEvent(keyCode: keyCode, chars: chars)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("triggerAmbientCloseAnimation"))) { _ in
             triggerCRTTurnOffAndClose()
@@ -836,65 +844,44 @@ struct AmbientView: View {
         .shadow(color: .black.opacity(0.6), radius: 30)
     }
 
-    // MARK: - Local Keyboard Event Monitor (100% Rock-Solid Shortcuts)
+    // MARK: - Key Event Handling
 
-    private func setupKeyMonitor() {
-        guard keyMonitor == nil else { return }
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            switch event.keyCode {
-            case 49: // Spacebar -> Play / Pause
-                model.togglePlayPause()
-                registerUserActivity()
-                return nil
-            case 124: // Right Arrow -> Next Track
-                slideDirection = .next
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                    model.nextTrack()
-                }
-                registerUserActivity()
-                return nil
-            case 123: // Left Arrow -> Previous Track
-                slideDirection = .previous
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                    model.previousTrack()
-                }
-                registerUserActivity()
-                return nil
-            case 126: // Up Arrow -> Volume Up
-                model.setVolume(min(100, Int(localVolume) + 10))
-                registerUserActivity()
-                return nil
-            case 125: // Down Arrow -> Volume Down
-                model.setVolume(max(0, Int(localVolume) - 10))
-                registerUserActivity()
-                return nil
-            case 53: // ESC -> Exit Ambient Mode
-                triggerCRTTurnOffAndClose()
-                return nil
-            default:
-                if let chars = event.charactersIgnoringModifiers?.lowercased() {
-                    if chars == "l" {
-                        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                            showLyrics.toggle()
-                            if showLyrics { triggerLyricsFetch() }
-                        }
-                        registerUserActivity()
-                        return nil
-                    } else if chars == "t" {
-                        cycleThemeMode()
-                        registerUserActivity()
-                        return nil
-                    }
-                }
+    private func handleKeyEvent(keyCode: UInt16, chars: String) {
+        switch keyCode {
+        case 49: // Spacebar -> Play / Pause
+            model.togglePlayPause()
+            registerUserActivity()
+        case 124: // Right Arrow -> Next Track
+            slideDirection = .next
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                model.nextTrack()
             }
-            return event
-        }
-    }
-
-    private func removeKeyMonitor() {
-        if let monitor = keyMonitor {
-            NSEvent.removeMonitor(monitor)
-            keyMonitor = nil
+            registerUserActivity()
+        case 123: // Left Arrow -> Previous Track
+            slideDirection = .previous
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                model.previousTrack()
+            }
+            registerUserActivity()
+        case 126: // Up Arrow -> Volume Up
+            model.setVolume(min(100, Int(localVolume) + 10))
+            registerUserActivity()
+        case 125: // Down Arrow -> Volume Down
+            model.setVolume(max(0, Int(localVolume) - 10))
+            registerUserActivity()
+        case 53: // ESC -> Exit Ambient Mode
+            triggerCRTTurnOffAndClose()
+        default:
+            if chars == "l" {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                    showLyrics.toggle()
+                    if showLyrics { triggerLyricsFetch() }
+                }
+                registerUserActivity()
+            } else if chars == "t" {
+                cycleThemeMode()
+                registerUserActivity()
+            }
         }
     }
 
@@ -963,12 +950,18 @@ struct AmbientView: View {
     }
 
     private func startCRTTurnOnAnimation() {
+        openingScale = 0.82
+        openingOpacity = 0.0
+        openingBlur = 24.0
         crtState = .off
-        // Gentle eye-friendly fade-in and scale expansion without any harsh flash
-        withAnimation(.easeOut(duration: 0.45)) {
+
+        withAnimation(.spring(response: 0.58, dampingFraction: 0.76)) {
+            openingScale = 1.0
+            openingOpacity = 1.0
+            openingBlur = 0.0
             crtState = .turningOn
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.58) {
             crtState = .active
         }
     }

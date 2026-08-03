@@ -8,11 +8,9 @@ final class AmbientModeManager: ObservableObject {
 
     @Published private(set) var isPresented = false
     private var window: NSWindow?
-    private var localEventMonitor: Any?
+    private var keyMonitor: Any?
 
-    private init() {
-        setupGlobalShortcutMonitor()
-    }
+    private init() {}
 
     func toggle() {
         if isPresented {
@@ -39,6 +37,7 @@ final class AmbientModeManager: ObservableObject {
             defer: false,
             screen: screen
         )
+        window.isReleasedWhenClosed = false
         window.level = .screenSaver
         window.backgroundColor = .black
         window.isOpaque = true
@@ -51,35 +50,60 @@ final class AmbientModeManager: ObservableObject {
         self.window = window
         self.isPresented = true
 
-        NSApp.setActivationPolicy(.regular)
+        // Smooth window alpha fade-in entrance
+        window.alphaValue = 0.0
         window.makeKeyAndOrderFront(nil)
         window.makeFirstResponder(window.contentView)
         NSApp.activate(ignoringOtherApps: true)
 
-        // Local monitor for ESC key to exit via smooth CRT closing animation
-        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if event.keyCode == 53 { // ESC
-                NotificationCenter.default.post(name: Notification.Name("triggerAmbientCloseAnimation"), object: nil)
-                return nil
-            }
-            return event
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.45
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().alphaValue = 1.0
         }
+
+        setupKeyMonitor()
     }
 
     func dismiss() {
         guard isPresented else { return }
-        if let monitor = localEventMonitor {
-            NSEvent.removeMonitor(monitor)
-            localEventMonitor = nil
-        }
-        window?.close()
-        window = nil
         isPresented = false
-        NSApp.setActivationPolicy(.accessory)
+
+        removeKeyMonitor()
+
+        if let win = window {
+            win.orderOut(nil)
+            win.contentView = nil
+            win.close()
+        }
+        window = nil
+
         MenuBarManager.shared.setStatusItemsVisible(true)
     }
 
-    private func setupGlobalShortcutMonitor() {
-        // Shortcut monitor removed per user preference. Ambient Mode is accessed via Menu Bar and Hover Panel.
+    private func setupKeyMonitor() {
+        removeKeyMonitor()
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            let code = event.keyCode
+            let chars = event.charactersIgnoringModifiers?.lowercased() ?? ""
+
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: Notification.Name("ambientKeyDown"),
+                    object: nil,
+                    userInfo: ["keyCode": code, "chars": chars]
+                )
+            }
+            return nil
+        }
+    }
+
+    private func removeKeyMonitor() {
+        if let monitor = keyMonitor {
+            keyMonitor = nil
+            DispatchQueue.main.async {
+                NSEvent.removeMonitor(monitor)
+            }
+        }
     }
 }

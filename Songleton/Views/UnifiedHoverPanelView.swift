@@ -41,8 +41,9 @@ struct UnifiedHoverPanelView: View {
     @State private var appearScale: CGFloat = 0.88
     @State private var appearOpacity: Double = 0.0
 
+    // Dynamic Vibrant HSL Theme Color matching Ambient Mode
     private var themeColor: Color {
-        model.platformAccentColor
+        model.dominantColor
     }
 
     private var modelVolume: Double {
@@ -61,20 +62,54 @@ struct UnifiedHoverPanelView: View {
 
     var body: some View {
         ZStack {
-            // Pure Jet Black Background with Specular Glass Rim (Clean, No Colored Glow)
+            // 1. Pure Jet Black Background
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(SongletonTheme.panelGradient)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(SongletonTheme.borderGradient, lineWidth: 1)
-                )
-                .shadow(color: SongletonTheme.violet.opacity(0.16), radius: 22, x: 0, y: 10)
 
+            // 2. Ambient Artwork Aura Glow Layer (Fills 100% of parent panel dynamically with ZERO gaps!)
+            GeometryReader { geo in
+                if let artwork = model.artwork {
+                    Image(nsImage: artwork)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .blur(radius: 65)
+                        .saturation(1.8)
+                        .opacity(0.38)
+                        .clipped()
+                        .id(artwork)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.8), value: model.artwork)
+                } else {
+                    Circle()
+                        .fill(themeColor.opacity(0.25))
+                        .frame(width: max(geo.size.width, geo.size.height) * 1.2)
+                        .blur(radius: 70)
+                        .position(x: geo.size.width / 2, y: geo.size.height / 2)
+                        .animation(.easeInOut(duration: 0.8), value: themeColor)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .animation(.easeInOut(duration: 0.8), value: themeColor)
+
+            // 3. Specular Glass Rim Overlay with Dynamic Theme Glow Shadow
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [.white.opacity(0.28), .white.opacity(0.08)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+                .shadow(color: themeColor.opacity(0.35), radius: 24, x: 0, y: 10)
+                .animation(.easeInOut(duration: 0.8), value: themeColor)
+
+            // 4. Panel Content
             VStack(spacing: 12) {
-                // 1. Top Section: Volume Slider Row
+                // Top Section: Volume Slider Row
                 volumeRow
 
-                // 2. Center Section: Track Info & Controls
+                // Center Section: Track Info & Controls
                 switch model.state {
                 case .loaded(let info, let source):
                     nowPlayingView(info: info, source: source)
@@ -145,7 +180,7 @@ struct UnifiedHoverPanelView: View {
             .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
             .onHover { isHovered in hoveredButtonID = isHovered ? "mute" : nil }
 
-            Slider(
+            CustomSliderView(
                 value: Binding(
                     get: { activeVolume },
                     set: { newVol in
@@ -155,16 +190,16 @@ struct UnifiedHoverPanelView: View {
                         volumeSubject.send(Int(newVol))
                     }
                 ),
-                in: 0...100,
+                range: 0...100,
                 onEditingChanged: { editing in
                     isDraggingVolume = editing
                     if !editing {
                         lastVolumeSetTime = Date()
                         model.setVolume(Int(localVolume))
                     }
-                }
+                },
+                barColor: themeColor
             )
-            .tint(themeColor)
 
             // %100 Label Fixed Width (52px)
             Text("\(Int(activeVolume))%")
@@ -200,7 +235,7 @@ struct UnifiedHoverPanelView: View {
                                     lineWidth: 1
                                 )
                         )
-                        .shadow(color: .black.opacity(0.45), radius: 10, x: 0, y: 5)
+                        .shadow(color: themeColor.opacity(0.40), radius: 14, x: 0, y: 6)
                         .scaleEffect(info.isPlaying && isArtworkBreathing ? 1.025 : 1.0)
                         .animation(
                             info.isPlaying
@@ -209,6 +244,9 @@ struct UnifiedHoverPanelView: View {
                             value: isArtworkBreathing
                         )
                         .onAppear { isArtworkBreathing = true }
+                        .onTapGesture(count: 2) {
+                            AmbientModeManager.shared.show()
+                        }
                 } else {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.white.opacity(0.08))
@@ -221,7 +259,7 @@ struct UnifiedHoverPanelView: View {
                 }
             }
 
-            // Track & Artist Meta with Media Source Badge
+            // Track & Artist Meta
             VStack(spacing: 3) {
                 Text(info.track)
                     .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -236,21 +274,6 @@ struct UnifiedHoverPanelView: View {
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(1)
                 }
-
-                // Active Source Badge
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(themeColor)
-                        .frame(width: 6, height: 6)
-                    Text(source)
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.6))
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 2)
-                .background(Color.white.opacity(0.08), in: Capsule())
-                .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 0.5))
-                .padding(.top, 2)
             }
 
             // Progress Bar
@@ -343,7 +366,7 @@ struct UnifiedHoverPanelView: View {
                     ZStack {
                         Circle()
                             .fill(themeColor)
-                            .shadow(color: themeColor.opacity(0.55), radius: 10, x: 0, y: 4)
+                            .shadow(color: themeColor.opacity(0.65), radius: 12, x: 0, y: 5)
                             .frame(width: 46, height: 46)
 
                         Image(systemName: info.isPlaying ? "pause.fill" : "play.fill")
