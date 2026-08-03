@@ -32,9 +32,8 @@ final class LyricsServiceTests {
     private func testLRCFiltersMetadataAndMalformedLines() {
         let lrc = "[ar:Artist]\n[ti:Title]\nnot a lyric\n[01:99]Invalid seconds?\n[01:05]Valid"
         let lines = LyricsService.parseLRC(lrc)
-        assertEqual(lines.count, 2)
+        assertEqual(lines.count, 1)
         assertEqual(lines[0].text, "Valid")
-        assertEqual(lines[1].text, "Invalid seconds?")
     }
 
     private func testPlainLyricsParsing() {

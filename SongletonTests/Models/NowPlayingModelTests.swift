@@ -4,13 +4,15 @@ import SwiftUI
 @MainActor
 final class NowPlayingModelTests {
     func runAllTests() async {
-        await runTest(name: "testPlatformAccentColorDynamicToggle", test: testPlatformAccentColorDynamicToggle)
         await runTest(name: "testShowArtistInMenuBarSetting", test: testShowArtistInMenuBarSetting)
         await runTest(name: "testLyricsOffsetIntegration", test: testLyricsOffsetIntegration)
         await runTest(name: "testLyricsActiveLineSelection", test: testLyricsActiveLineSelection)
         await runTest(name: "testLanguageSelection", test: testLanguageSelection)
         await runTest(name: "testMediaValueSanitization", test: testMediaValueSanitization)
         await runTest(name: "testMediaValueBoundaries", test: testMediaValueBoundaries)
+        await runTest(name: "testResolverPrefersPlayingController", test: testResolverPrefersPlayingController)
+        await runTest(name: "testResolverUsesPausedControllerAsFallback", test: testResolverUsesPausedControllerAsFallback)
+        await runTest(name: "testResolverReportsPermissionDenied", test: testResolverReportsPermissionDenied)
         await runTest(name: "testLyricsActiveLineBoundaries", test: testLyricsActiveLineBoundaries)
     }
 
@@ -18,19 +20,6 @@ final class NowPlayingModelTests {
         TestObserver.shared.totalCount += 1
         print("  • \(name)...")
         await test()
-    }
-
-    func testPlatformAccentColorDynamicToggle() async {
-        let settings = SettingsModel.shared
-
-        settings.useDynamicColor = true
-        assertTrue(settings.useDynamicColor)
-
-        settings.useDynamicColor = false
-        assertEqual(NowPlayingModel.shared.platformAccentColor, .white)
-
-        // Reset
-        settings.useDynamicColor = true
     }
 
     func testShowArtistInMenuBarSetting() async {
@@ -96,6 +85,40 @@ final class NowPlayingModelTests {
         assertEqual(MediaValue.volume(120.0), 100)
     }
 
+    func testResolverPrefersPlayingController() async {
+        let paused = StubMediaController(name: "Paused", response: .success(makeInfo(isPlaying: false)))
+        let playing = StubMediaController(name: "Playing", response: .success(makeInfo(isPlaying: true)))
+
+        guard case .loaded(let info, let controller) = MediaControllerResolver.resolve(controllers: [paused, playing]) else {
+            assertTrue(false, "Expected a loaded controller")
+            return
+        }
+        assertTrue(info.isPlaying)
+        assertEqual(controller.displayName, "Playing")
+    }
+
+    func testResolverUsesPausedControllerAsFallback() async {
+        let paused = StubMediaController(name: "Paused", response: .success(makeInfo(isPlaying: false)))
+        let notRunning = StubMediaController(name: "Not running", isRunning: false, response: .success(makeInfo(isPlaying: true)))
+
+        guard case .loaded(let info, let controller) = MediaControllerResolver.resolve(controllers: [paused, notRunning]) else {
+            assertTrue(false, "Expected paused fallback")
+            return
+        }
+        assertFalse(info.isPlaying)
+        assertEqual(controller.displayName, "Paused")
+    }
+
+    func testResolverReportsPermissionDenied() async {
+        let denied = StubMediaController(name: "Denied", response: .failure(.permissionDenied))
+        let result = MediaControllerResolver.resolve(controllers: [denied])
+        if case .permissionDenied = result {
+            assertTrue(true)
+        } else {
+            assertTrue(false, "Expected a permission-denied result")
+        }
+    }
+
     func testLyricsActiveLineBoundaries() async {
         let settings = SettingsModel.shared
         let oldOffset = settings.lyricsOffset
@@ -114,4 +137,46 @@ final class NowPlayingModelTests {
         assertEqual(lyrics.activeLineIndex(for: 10), nil)
         settings.lyricsOffset = oldOffset
     }
+}
+
+private struct StubMediaController: MediaController {
+    let bundleID = "com.songleton.tests"
+    let displayName: String
+    let scriptAppName = "SongletonTests"
+    let isRunning: Bool
+    let response: Result<NowPlayingInfo, MediaControllerError>
+
+    init(name: String, isRunning: Bool = true, response: Result<NowPlayingInfo, MediaControllerError>) {
+        displayName = name
+        self.isRunning = isRunning
+        self.response = response
+    }
+
+    func fetchNowPlaying() throws -> NowPlayingInfo {
+        try response.get()
+    }
+
+    func togglePlayPause() throws {}
+    func nextTrack() throws {}
+    func previousTrack() throws {}
+    func setVolume(_ volume: Int) throws {}
+    func seekTo(_ position: Double) throws {}
+    func toggleShuffle() throws {}
+    func setRepeatMode(_ mode: RepeatMode) throws {}
+}
+
+private func makeInfo(isPlaying: Bool) -> NowPlayingInfo {
+    NowPlayingInfo(
+        track: "Track",
+        artist: "Artist",
+        album: "Album",
+        isPlaying: isPlaying,
+        volume: 50,
+        artworkURL: nil,
+        artworkData: nil,
+        position: 0,
+        duration: 180,
+        isShuffleEnabled: false,
+        repeatMode: .off
+    )
 }

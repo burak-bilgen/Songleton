@@ -36,10 +36,9 @@ final class SettingsModelTests {
         assertTrue(settings.showArtistInMenuBar, "showArtistInMenuBar should default to true")
         assertEqual(settings.menuBarWidth, 80.0, "menuBarWidth should default to 80.0")
         assertEqual(settings.menuBarFont, .system, "menuBarFont should default to .system")
-        assertTrue(settings.showProgressBar, "showProgressBar should default to true")
         assertTrue(settings.showTrackNotifications, "showTrackNotifications should default to true")
-        assertTrue(settings.circularGesturesEnabled, "circularGesturesEnabled should default to true")
-        assertTrue(settings.useDynamicColor, "useDynamicColor should default to true")
+        assertTrue(settings.horizontalGesturesEnabled, "horizontalGesturesEnabled should default to true")
+        assertTrue(settings.verticalGesturesEnabled, "verticalGesturesEnabled should default to true")
         assertAccuracy(settings.lyricsOffset, 0.9, accuracy: 0.001, "lyricsOffset should default to 0.9")
     }
 
@@ -47,19 +46,17 @@ final class SettingsModelTests {
         settings.showArtistInMenuBar = false
         settings.menuBarWidth = 150.0
         settings.menuBarFont = .audiowide
-        settings.showProgressBar = false
         settings.showTrackNotifications = false
-        settings.circularGesturesEnabled = false
-        settings.useDynamicColor = false
+        settings.horizontalGesturesEnabled = false
+        settings.verticalGesturesEnabled = false
         settings.lyricsOffset = 1.5
 
         assertFalse(userDefaults.bool(forKey: "showArtistInMenuBar"))
         assertEqual(userDefaults.double(forKey: "menuBarWidth"), 150.0)
         assertEqual(userDefaults.string(forKey: "menuBarFont"), "audiowide")
-        assertFalse(userDefaults.bool(forKey: "showProgressBar"))
         assertFalse(userDefaults.bool(forKey: "showTrackNotifications"))
-        assertFalse(userDefaults.bool(forKey: "circularGesturesEnabled"))
-        assertFalse(userDefaults.bool(forKey: "useDynamicColor"))
+        assertFalse(userDefaults.bool(forKey: "horizontalGesturesEnabled"))
+        assertFalse(userDefaults.bool(forKey: "verticalGesturesEnabled"))
         assertAccuracy(userDefaults.double(forKey: "lyricsOffset"), 1.5, accuracy: 0.001)
 
         // Create new instance with same userDefaults
@@ -67,9 +64,9 @@ final class SettingsModelTests {
         assertFalse(newSettings.showArtistInMenuBar)
         assertEqual(newSettings.menuBarWidth, 150.0)
         assertEqual(newSettings.menuBarFont, .audiowide)
-        assertFalse(newSettings.showProgressBar)
         assertFalse(newSettings.showTrackNotifications)
-        assertFalse(newSettings.useDynamicColor)
+        assertFalse(newSettings.horizontalGesturesEnabled)
+        assertFalse(newSettings.verticalGesturesEnabled)
         assertAccuracy(newSettings.lyricsOffset, 1.5, accuracy: 0.001)
     }
 
