@@ -228,11 +228,11 @@ final class MouseGestureManager: ObservableObject {
         let view = panel.contentView
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.22
+            context.duration = 0.20
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             context.allowsImplicitAnimation = true
             panel.animator().alphaValue = 0
-            view?.layer?.setAffineTransform(CGAffineTransform(scaleX: 0.7, y: 0.7))
+            view?.layer?.setAffineTransform(CGAffineTransform(translationX: 0, y: 18))
         } completionHandler: { [weak self, weak panel] in
             panel?.orderOut(nil)
             self?.volumeGestureWindow = nil
@@ -272,16 +272,14 @@ final class MouseGestureManager: ObservableObject {
         panel.alphaValue = 0
         panel.orderFrontRegardless()
 
-        // Bouncy spring entrance: scale up from 0.6 + fade in
+        // Top-to-bottom slide entrance (+18 -> 0) with gentle spring bounce
         let view = panel.contentView!
         view.wantsLayer = true
-        view.layer?.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        view.layer?.position = CGPoint(x: hudSize.width / 2, y: hudSize.height / 2)
-        view.layer?.setAffineTransform(CGAffineTransform(scaleX: 0.6, y: 0.6))
+        view.layer?.setAffineTransform(CGAffineTransform(translationX: 0, y: 18))
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.45
-            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.175, 0.885, 0.32, 1.5)
+            context.duration = 0.35
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.175, 0.885, 0.32, 1.25)
             context.allowsImplicitAnimation = true
             panel.animator().alphaValue = 1
             view.layer?.setAffineTransform(.identity)
