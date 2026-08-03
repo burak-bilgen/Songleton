@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct SyncedLyricsView: View {
-    private static let maximumHeight: CGFloat = 240
+    var maxHeight: CGFloat = 240
+    var isAmbientMode: Bool = false
     @ObservedObject var nowPlaying: NowPlayingModel
     @StateObject private var lyricsModel = LyricsModel.shared
     @ObservedObject private var localization = LocalizationManager.shared
@@ -15,57 +16,57 @@ struct SyncedLyricsView: View {
         VStack(spacing: 0) {
             if lyricsModel.isLoading {
                 VStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
+                    ProgressView().controlSize(isAmbientMode ? .regular : .small)
                     Text(localization.string("lyrics.loading"))
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .font(.system(size: isAmbientMode ? 14 : 11, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.6))
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if lyricsModel.lines.isEmpty {
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     Image(systemName: "quote.bubble.fill")
-                        .font(.system(size: 24, weight: .ultraLight))
+                        .font(.system(size: isAmbientMode ? 36 : 24, weight: .ultraLight))
                         .foregroundStyle(.white.opacity(0.4))
                     Text(localization.string("lyrics.not_found"))
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .font(.system(size: isAmbientMode ? 16 : 12, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                     Text(localization.string("lyrics.no_match"))
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .font(.system(size: isAmbientMode ? 13 : 10, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 let activeIndex = lyricsModel.activeLineIndex(for: playbackPosition)
 
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: isAmbientMode ? 14 : 8) {
                             ForEach(Array(lyricsModel.lines.enumerated()), id: \.element.id) { index, line in
                                 let isActive = index == activeIndex
 
                                 HStack(spacing: 0) {
                                     Text(line.text)
                                         .font(.system(
-                                            size: isActive ? 13 : 11,
+                                            size: isAmbientMode ? (isActive ? 22 : 16) : (isActive ? 13 : 11),
                                             weight: isActive ? .bold : .medium,
                                             design: .rounded
                                         ))
-                                        .foregroundStyle(isActive ? Color.white : Color.white.opacity(0.45))
+                                        .foregroundStyle(isActive ? Color.white : Color.white.opacity(0.40))
                                         .lineLimit(nil)
                                         .multilineTextAlignment(.leading)
                                         .fixedSize(horizontal: false, vertical: true)
-                                        .lineSpacing(2)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, isActive ? 5 : 3)
+                                        .lineSpacing(4)
+                                        .padding(.horizontal, isAmbientMode ? 14 : 8)
+                                        .padding(.vertical, isActive ? (isAmbientMode ? 8 : 5) : (isAmbientMode ? 5 : 3))
                                         .background(
                                             Group {
                                                 if isActive {
-                                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                                        .fill(Color.white.opacity(0.12))
+                                                    RoundedRectangle(cornerRadius: isAmbientMode ? 12 : 8, style: .continuous)
+                                                        .fill(Color.white.opacity(0.14))
                                                         .overlay(
-                                                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                                                .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                                                            RoundedRectangle(cornerRadius: isAmbientMode ? 12 : 8, style: .continuous)
+                                                                .stroke(Color.white.opacity(0.25), lineWidth: 0.5)
                                                         )
                                                 }
                                             }
@@ -79,8 +80,8 @@ struct SyncedLyricsView: View {
                                 .onTapGesture { nowPlaying.seekTo(line.timestamp) }
                             }
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, isAmbientMode ? 16 : 10)
+                        .padding(.vertical, isAmbientMode ? 16 : 8)
                     }
                     .focusable(false)
                     .simultaneousGesture(
@@ -109,7 +110,7 @@ struct SyncedLyricsView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(maxHeight: Self.maximumHeight)
+        .frame(maxHeight: maxHeight)
         .clipped()
         .focusable(false)
         .onAppear { loadLyricsForCurrentTrack() }

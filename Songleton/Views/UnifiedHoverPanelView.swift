@@ -479,7 +479,7 @@ struct UnifiedHoverPanelView: View {
                 .scaleEffect(hoveredButtonID == "ambient" ? 1.1 : ambientButtonScale)
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                 .onHover { isHovered in hoveredButtonID = isHovered ? "ambient" : nil }
-                .help("Ambient Mode (⌥⌘⇧)")
+                .help("Ambient Mode ✨")
 
                 Spacer()
 
