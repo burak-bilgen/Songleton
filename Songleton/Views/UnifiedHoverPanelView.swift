@@ -73,9 +73,6 @@ struct UnifiedHoverPanelView: View {
                 // 1. Top Section: Volume Slider Row
                 volumeRow
 
-                Divider()
-                    .overlay(SongletonTheme.borderGradient.opacity(0.45))
-
                 // 2. Center Section: Track Info & Controls
                 switch model.state {
                 case .loaded(let info, let source):
@@ -89,18 +86,6 @@ struct UnifiedHoverPanelView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 21)
-            .background(
-                CircularMouseGestureView { direction in
-                    guard settings.circularGesturesEnabled else { return }
-                    switch direction {
-                    case .clockwise:
-                        model.nextTrack()
-                    case .counterClockwise:
-                        model.previousTrack()
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            )
         }
         .frame(width: 360)
         .fixedSize(horizontal: true, vertical: true)

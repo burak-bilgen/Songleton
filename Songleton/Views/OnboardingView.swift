@@ -15,25 +15,24 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            // Modern gradient backdrop
             LinearGradient(
                 colors: [
-                    SongletonTheme.background,
-                    SongletonTheme.violet.opacity(0.16),
-                    SongletonTheme.panelTop
+                    Color.black,
+                    SongletonTheme.panelTop,
+                    Color.black
                 ],
                 startPoint: .topLeading, endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
 
             Circle()
-                .fill(SongletonTheme.cyan.opacity(0.1))
+                .fill(SongletonTheme.cyan.opacity(0.035))
                 .frame(width: 280, height: 280)
                 .blur(radius: 70)
                 .offset(x: -170, y: -260)
 
             Circle()
-                .fill(SongletonTheme.violet.opacity(0.12))
+                .fill(SongletonTheme.violet.opacity(0.04))
                 .frame(width: 260, height: 260)
                 .blur(radius: 80)
                 .offset(x: 180, y: 260)

@@ -12,13 +12,6 @@ struct SettingsView: View {
     var body: some View {
         ZStack {
             SongletonTheme.background.ignoresSafeArea()
-            LinearGradient(
-                colors: [SongletonTheme.cyan.opacity(0.07), .clear, SongletonTheme.violet.opacity(0.08)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 18) {
                     headerSection

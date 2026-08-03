@@ -223,7 +223,7 @@ final class MenuBarManager: NSObject {
             }
         }
         closeWorkItem = item
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45, execute: item)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: item)
     }
 }
 
