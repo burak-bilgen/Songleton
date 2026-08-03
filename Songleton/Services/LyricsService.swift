@@ -79,7 +79,7 @@ final class LyricsService {
                     }
                 }
 
-                if let minutes = Double(minStr), let seconds = Double(secStr) {
+                if let minutes = Double(minStr), let seconds = Double(secStr), seconds < 60 {
                     let totalSeconds = minutes * 60.0 + seconds + msSeconds
                     lines.append(LyricLine(timestamp: totalSeconds, text: lyricText))
                 }
