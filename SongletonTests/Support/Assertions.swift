@@ -22,7 +22,7 @@ func assertFalse(_ condition: Bool, _ message: String = "", file: String = #file
 }
 
 func assertAccuracy(_ a: Double, _ b: Double, accuracy: Double, _ message: String = "", file: String = #file, line: Int = #line) {
-    if abs(a - b) > accuracy {
+    if !a.isFinite || !b.isFinite || abs(a - b) > accuracy {
         print("  ❌ Assertion Failed: \(a) is not within \(accuracy) of \(b). \(message) (\(URL(fileURLWithPath: file).lastPathComponent):\(line))")
         TestObserver.shared.failedCount += 1
     }

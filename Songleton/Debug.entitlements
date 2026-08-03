@@ -2,11 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Hardened Runtime: Allows sending Apple Events to other apps.
-	     Without this, macOS blocks ALL AppleScript/Apple Events silently
-	     and never shows the Automation permission dialog to the user. -->
 	<key>com.apple.security.automation.apple-events</key>
 	<true/>
-
+	<key>com.apple.security.get-task-allow</key>
+	<true/>
 </dict>
 </plist>

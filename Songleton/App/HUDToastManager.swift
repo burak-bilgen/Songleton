@@ -12,7 +12,7 @@ final class HUDToastManager: NSObject {
         super.init()
     }
 
-    func show(track: String, artist: String, artwork: NSImage?, source: String) {
+    func show(track: String, artist: String, artwork: NSImage?) {
         dismissTask?.cancel()
 
         if let popover, popover.isShown {
@@ -24,7 +24,7 @@ final class HUDToastManager: NSObject {
         popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = NSHostingController(
-            rootView: HUDToastView(track: track, artist: artist, artwork: artwork, source: source)
+            rootView: HUDToastView(track: track, artist: artist, artwork: artwork)
         )
         self.popover = popover
 

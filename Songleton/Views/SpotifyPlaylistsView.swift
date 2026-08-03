@@ -4,6 +4,7 @@ private let spotifyGreen = Color(red: 0.11, green: 0.73, blue: 0.33)
 
 struct SpotifyPlaylistsView: View {
     @StateObject private var model = SpotifyPlaylistModel.shared
+    @ObservedObject private var localization = LocalizationManager.shared
 
     @State private var showAddSheet = false
     @State private var newName = ""
@@ -17,7 +18,7 @@ struct SpotifyPlaylistsView: View {
                     Image(systemName: "music.note.list")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(spotifyGreen)
-                    Text(NSLocalizedString("Spotify Listeleri", comment: "Spotify Playlists heading"))
+                        Text(localization.string("playlists.title"))
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                 }
 
@@ -28,7 +29,7 @@ struct SpotifyPlaylistsView: View {
                 } label: {
                     HStack(spacing: 3) {
                         Image(systemName: "plus").font(.system(size: 10, weight: .bold))
-                        Text(NSLocalizedString("Ekle", comment: "Add playlist button"))
+                        Text(localization.string("common.add"))
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
                     }
                     .padding(.horizontal, 10)
@@ -37,7 +38,7 @@ struct SpotifyPlaylistsView: View {
                     .foregroundStyle(spotifyGreen)
                 }
                 .buttonStyle(.plain)
-                .help(NSLocalizedString("Spotify bağlantısı ile playlist ekle", comment: "Add playlist tooltip"))
+                .help(localization.string("playlists.add_hint"))
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
@@ -64,16 +65,16 @@ struct SpotifyPlaylistsView: View {
 
     private var addPlaylistSheet: some View {
         VStack(spacing: 16) {
-            Text(NSLocalizedString("Playlist Ekle", comment: "Add Playlist sheet title"))
+            Text(localization.string("playlists.add_title"))
                 .font(.system(size: 15, weight: .bold, design: .rounded))
 
             VStack(alignment: .leading, spacing: 8) {
-                fieldLabel(NSLocalizedString("Playlist Adı", comment: "Playlist name label"))
-                TextField(NSLocalizedString("Örn: Favori Şarkılarım", comment: "Playlist name placeholder"), text: $newName)
+                fieldLabel(localization.string("playlists.name"))
+                TextField(localization.string("playlists.name_placeholder"), text: $newName)
                     .textFieldStyle(.roundedBorder)
 
-                fieldLabel(NSLocalizedString("Spotify Bağlantısı veya URI", comment: "Spotify URL label"))
-                TextField("https://open.spotify.com/playlist/…", text: $newUrl)
+                fieldLabel(localization.string("playlists.url"))
+                TextField(localization.string("playlists.url_placeholder"), text: $newUrl)
                     .textFieldStyle(.roundedBorder)
             }
 
@@ -84,18 +85,18 @@ struct SpotifyPlaylistsView: View {
             }
 
             HStack(spacing: 12) {
-                Button(NSLocalizedString("İptal", comment: "Cancel")) {
+                Button(localization.string("common.cancel")) {
                     showAddSheet = false
                     errorMessage = nil
                 }
                 .buttonStyle(.bordered)
 
-                Button(NSLocalizedString("Ekle", comment: "Add")) {
+                Button(localization.string("common.add")) {
                     if model.addPlaylist(name: newName, urlOrUri: newUrl) {
                         newName = ""; newUrl = ""; errorMessage = nil
                         showAddSheet = false
                     } else {
-                        errorMessage = NSLocalizedString("Geçersiz Spotify playlist bağlantısı.", comment: "Invalid URL error")
+                        errorMessage = localization.string("playlists.invalid_url")
                     }
                 }
                 .buttonStyle(.borderedProminent)
@@ -117,6 +118,7 @@ struct PlaylistRowView: View {
     let playlist: SpotifyPlaylist
     let onPlay: () -> Void
     let onDelete: () -> Void
+    @ObservedObject private var localization = LocalizationManager.shared
 
     @State private var isHovered = false
 
@@ -135,10 +137,10 @@ struct PlaylistRowView: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(playlist.name)
+                Text(displayText(playlist.name))
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .lineLimit(1)
-                Text(playlist.description)
+                Text(displayText(playlist.description))
                     .font(.system(size: 10, weight: .regular, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -173,5 +175,9 @@ struct PlaylistRowView: View {
         )
         .animation(.easeInOut(duration: 0.15), value: isHovered)
         .onHover { isHovered = $0 }
+    }
+
+    private func displayText(_ value: String) -> String {
+        value.hasPrefix("playlist.") ? localization.string(value) : value
     }
 }

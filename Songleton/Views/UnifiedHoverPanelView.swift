@@ -4,6 +4,7 @@ import Combine
 struct UnifiedHoverPanelView: View {
     @ObservedObject var model = NowPlayingModel.shared
     @ObservedObject var settings = SettingsModel.shared
+    @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.openSettings) private var openSettings
 
     // Local Volume Slider State
@@ -12,6 +13,7 @@ struct UnifiedHoverPanelView: View {
     @State private var lastVolumeSetTime: Date = .distantPast
     @State private var volumeSubject = PassthroughSubject<Int, Never>()
     @State private var cancellables = Set<AnyCancellable>()
+    @State private var hasConfiguredVolume = false
 
     // Track Position Slider State
     @State private var sliderPosition: Double = 0
@@ -60,26 +62,19 @@ struct UnifiedHoverPanelView: View {
         ZStack {
             // Pure Jet Black Background with Specular Glass Rim (Clean, No Colored Glow)
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.black)
+                .fill(SongletonTheme.panelGradient)
                 .overlay(
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(
-                            LinearGradient(
-                                colors: [.white.opacity(0.32), .white.opacity(0.08)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
+                        .stroke(SongletonTheme.borderGradient, lineWidth: 1)
                 )
-                .shadow(color: .black.opacity(0.75), radius: 18, x: 0, y: 8)
+                .shadow(color: SongletonTheme.violet.opacity(0.16), radius: 22, x: 0, y: 10)
 
             VStack(spacing: 12) {
                 // 1. Top Section: Volume Slider Row
                 volumeRow
 
                 Divider()
-                    .background(Color.white.opacity(0.12))
+                    .overlay(SongletonTheme.borderGradient.opacity(0.45))
 
                 // 2. Center Section: Track Info & Controls
                 switch model.state {
@@ -94,8 +89,20 @@ struct UnifiedHoverPanelView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 21)
+            .background(
+                CircularMouseGestureView { direction in
+                    guard settings.circularGesturesEnabled else { return }
+                    switch direction {
+                    case .clockwise:
+                        model.nextTrack()
+                    case .counterClockwise:
+                        model.previousTrack()
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            )
         }
-        .frame(width: 300)
+        .frame(width: 360)
         .fixedSize(horizontal: true, vertical: true)
         .scaleEffect(appearScale)
         .opacity(appearOpacity)
@@ -106,13 +113,16 @@ struct UnifiedHoverPanelView: View {
                 appearOpacity = 1.0
             }
 
-            volumeSubject
-                .debounce(for: .milliseconds(60), scheduler: DispatchQueue.main)
-                .removeDuplicates()
-                .sink { newVol in
-                    NowPlayingModel.shared.setVolume(newVol)
-                }
-                .store(in: &cancellables)
+            if !hasConfiguredVolume {
+                hasConfiguredVolume = true
+                volumeSubject
+                    .debounce(for: .milliseconds(60), scheduler: DispatchQueue.main)
+                    .removeDuplicates()
+                    .sink { newVol in
+                        NowPlayingModel.shared.setVolume(newVol)
+                    }
+                    .store(in: &cancellables)
+            }
         }
         .onChange(of: modelVolume) { _, newVol in
             if !isDraggingVolume && Date().timeIntervalSince(lastVolumeSetTime) >= 2.0 {
@@ -225,8 +235,8 @@ struct UnifiedHoverPanelView: View {
                 }
             }
 
-            // Track & Artist Meta with Smooth Spring Transition
-            VStack(spacing: 2) {
+            // Track & Artist Meta with Media Source Badge
+            VStack(spacing: 3) {
                 Text(info.track)
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
@@ -234,10 +244,27 @@ struct UnifiedHoverPanelView: View {
                     .lineLimit(1)
                     .contentTransition(.numericText())
 
-                Text(info.artist)
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.7))
-                    .lineLimit(1)
+                if !info.artist.isEmpty {
+                    Text(info.artist)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
+                }
+
+                // Active Source Badge
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(themeColor)
+                        .frame(width: 6, height: 6)
+                    Text(source)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 2)
+                .background(Color.white.opacity(0.08), in: Capsule())
+                .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 0.5))
+                .padding(.top, 2)
             }
 
             // Progress Bar
@@ -292,7 +319,7 @@ struct UnifiedHoverPanelView: View {
                 .scaleEffect(hoveredButtonID == "shuffle" ? 1.1 : shuffleButtonScale)
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                 .onHover { isHovered in hoveredButtonID = isHovered ? "shuffle" : nil }
-                .help(NSLocalizedString("Karıştır", comment: "Shuffle"))
+                .help(localization.string("control.shuffle"))
 
                 // Backward Button
                 Button {
@@ -317,7 +344,7 @@ struct UnifiedHoverPanelView: View {
                 .scaleEffect(hoveredButtonID == "prev" ? 1.1 : prevButtonScale)
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                 .onHover { isHovered in hoveredButtonID = isHovered ? "prev" : nil }
-                .help(NSLocalizedString("Önceki şarkı", comment: "Previous track"))
+                .help(localization.string("menu.previous_track"))
 
                 // Play / Pause Button (The ONLY element with Platform Glow Effect & Bouncy Micro-Animations!)
                 Button {
@@ -344,7 +371,7 @@ struct UnifiedHoverPanelView: View {
                 .scaleEffect(hoveredButtonID == "play" ? 1.12 : playButtonScale)
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                 .onHover { isHovered in hoveredButtonID = isHovered ? "play" : nil }
-                .help(info.isPlaying ? NSLocalizedString("Duraklat", comment: "Pause") : NSLocalizedString("Oynat", comment: "Play"))
+                .help(info.isPlaying ? localization.string("control.pause") : localization.string("control.play"))
 
                 // Forward Button
                 Button {
@@ -369,7 +396,7 @@ struct UnifiedHoverPanelView: View {
                 .scaleEffect(hoveredButtonID == "next" ? 1.1 : nextButtonScale)
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                 .onHover { isHovered in hoveredButtonID = isHovered ? "next" : nil }
-                .help(NSLocalizedString("Sonraki şarkı", comment: "Next track"))
+                .help(localization.string("menu.next_track"))
 
                 // Repeat Button (3 States: Off, All, One)
                 Button {
@@ -396,19 +423,15 @@ struct UnifiedHoverPanelView: View {
                 .scaleEffect(hoveredButtonID == "repeat" ? 1.1 : repeatButtonScale)
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                 .onHover { isHovered in hoveredButtonID = isHovered ? "repeat" : nil }
-                .help(NSLocalizedString("Tekrarla (Kapalı / Tüm Liste / Tek Şarkı)", comment: "Repeat"))
+                .help(localization.string("control.repeat"))
             }
             .padding(.top, 2)
-
-            // 🎛️ Embedded App Audio Mixer Card
-            VolumeSliderPanelView()
-                .padding(.top, 4)
 
             // Expanded Lyrics Section (Accordion Container with Smooth Asymmetric Transition)
             if isLyricsExpanded {
                 VStack(spacing: 0) {
                     SyncedLyricsView(nowPlaying: model)
-                        .frame(height: 150)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.white.opacity(0.12), lineWidth: 0.5))
@@ -445,7 +468,7 @@ struct UnifiedHoverPanelView: View {
                 .scaleEffect(hoveredButtonID == "lyrics" ? 1.1 : lyricsButtonScale)
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                 .onHover { isHovered in hoveredButtonID = isHovered ? "lyrics" : nil }
-                .help(NSLocalizedString("Şarkı Sözleri", comment: "Lyrics"))
+                .help(localization.string("lyrics.title"))
 
                 Spacer()
 
@@ -473,7 +496,7 @@ struct UnifiedHoverPanelView: View {
                 .scaleEffect(hoveredButtonID == "settings" ? 1.1 : settingsButtonScale)
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                 .onHover { isHovered in hoveredButtonID = isHovered ? "settings" : nil }
-                .help(NSLocalizedString("Ayarlar", comment: "Settings"))
+                .help(localization.string("settings.title"))
             }
             .padding(.top, 2)
         }
@@ -486,10 +509,10 @@ struct UnifiedHoverPanelView: View {
             Image(systemName: "headphones")
                 .font(.system(size: 36, weight: .ultraLight))
                 .foregroundStyle(.white.opacity(0.5))
-            Text(NSLocalizedString("Müzik Çalmıyor", comment: "Not playing"))
+            Text(localization.string("player.not_playing"))
                 .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-            Text(NSLocalizedString("Spotify veya Apple Music'i başlatın", comment: "Launch Music"))
+            Text(localization.string("player.launch_hint"))
                 .font(.system(size: 11, weight: .regular, design: .rounded))
                 .foregroundStyle(.white.opacity(0.6))
         }
@@ -503,7 +526,7 @@ struct UnifiedHoverPanelView: View {
             Image(systemName: "lock.shield")
                 .font(.system(size: 36, weight: .ultraLight))
                 .foregroundStyle(.orange)
-            Text(NSLocalizedString("İzin Gerekli", comment: "Permission Required"))
+            Text(localization.string("permission.required"))
                 .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
         }

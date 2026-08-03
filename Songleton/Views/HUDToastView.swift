@@ -4,7 +4,6 @@ struct HUDToastView: View {
     let track: String
     let artist: String
     let artwork: NSImage?
-    let source: String
 
     @ObservedObject private var model = NowPlayingModel.shared
     @State private var appearScale: CGFloat = 0.85
@@ -18,12 +17,12 @@ struct HUDToastView: View {
         ZStack {
             // Pure Jet Black Background with Clean Specular Glass Rim (No Glow)
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.black)
+                .fill(SongletonTheme.panelGradient)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(
                             LinearGradient(
-                                colors: [.white.opacity(0.32), .white.opacity(0.08)],
+                                colors: [SongletonTheme.cyan.opacity(0.4), SongletonTheme.violet.opacity(0.14)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),

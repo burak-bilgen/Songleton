@@ -3,39 +3,45 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var settings: SettingsModel
     @ObservedObject private var model = NowPlayingModel.shared
+    @ObservedObject private var localization = LocalizationManager.shared
 
     @State private var appearScale: CGFloat = 0.95
     @State private var appearOpacity: Double = 0.0
     @State private var hoveredSection: String? = nil
 
-    // Neutral monochrome accent — no platform colors
-    private let accent = Color.white.opacity(0.85)
-    private let subtleAccent = Color.white.opacity(0.12)
-
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            SongletonTheme.background.ignoresSafeArea()
+            LinearGradient(
+                colors: [SongletonTheme.cyan.opacity(0.07), .clear, SongletonTheme.violet.opacity(0.08)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
 
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 20) {
+                VStack(spacing: 18) {
                     headerSection
                     generalSection
+                    languageSection
                     appearanceSection
                     menuBarSection
                     lyricsSection
                     permissionsSection
                     footerSection
                 }
-                .padding(28)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 22)
             }
         }
-        .frame(width: 480, height: 620)
+        .frame(width: 500, height: 680)
         .scaleEffect(appearScale)
         .opacity(appearOpacity)
         .onAppear {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
             model.checkAutomationPermission(askUser: false)
+            centerWindow()
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 appearScale = 1.0
                 appearOpacity = 1.0
@@ -46,57 +52,124 @@ struct SettingsView: View {
         }
     }
 
+    private func centerWindow() {
+        DispatchQueue.main.async {
+            NSApp.keyWindow?.center()
+        }
+    }
+
     // MARK: - Header
 
     private var headerSection: some View {
         HStack(spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.1))
-                    .frame(width: 52, height: 52)
+                    .fill(SongletonTheme.accentGradient)
+                    .frame(width: 58, height: 58)
+                    .shadow(color: SongletonTheme.cyan.opacity(0.18), radius: 12, y: 5)
 
-                Image(systemName: "music.note.list")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(.white)
+                if let appIcon = NSImage(named: NSImage.applicationIconName) {
+                    Image(nsImage: appIcon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 42, height: 42)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                } else {
+                    Image(systemName: "music.note.list")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.78))
+                }
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Songleton")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                Text(localization.string("app.name"))
+                    .font(.custom("Audiowide", size: 22))
                     .foregroundStyle(.white)
 
-                Text(NSLocalizedString("Menü Çubuğu Müzik Kontrolcüsü", comment: "App subtitle"))
+                Text(localization.string("app.subtitle"))
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.45))
+                    .foregroundStyle(SongletonTheme.secondaryText)
             }
 
             Spacer()
         }
-        .padding(.bottom, 4)
+        .padding(16)
+        .background(SongletonTheme.panelGradient, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(SongletonTheme.borderGradient, lineWidth: 1)
+        )
+        .shadow(color: SongletonTheme.violet.opacity(0.1), radius: 18, y: 8)
     }
 
     // MARK: - General Section
 
     private var generalSection: some View {
-        settingsCard(title: NSLocalizedString("Genel", comment: "General"), icon: "gearshape.fill", sectionID: "general") {
-            settingsToggleRow(
-                icon: "power",
-                title: NSLocalizedString("Oturum açıldığında başlat", comment: "Launch at login"),
-                subtitle: NSLocalizedString("Mac başladığında otomatik çalışır", comment: "Launch at login description"),
-                isOn: $settings.launchAtLogin
-            )
+            settingsCard(title: localization.string("settings.general"), icon: "gearshape.fill", sectionID: "general") {
+                settingsToggleRow(
+                    icon: "power",
+                    title: localization.string("settings.launch_at_login"),
+                    subtitle: localization.string("settings.launch_at_login_hint"),
+                    isOn: $settings.launchAtLogin
+                )
+
+                sectionDivider
+
+                settingsToggleRow(
+                    icon: "bell.fill",
+                    title: localization.string("settings.track_notifications"),
+                    subtitle: localization.string("settings.track_notifications_hint"),
+                    isOn: $settings.showTrackNotifications
+                )
+
+                sectionDivider
+
+                settingsToggleRow(
+                    icon: "arrow.triangle.2.circlepath",
+                    title: localization.string("settings.circular_gestures"),
+                    subtitle: localization.string("settings.circular_gestures_hint"),
+                    isOn: $settings.circularGesturesEnabled
+                )
+            }
+        }
+
+    private var languageSection: some View {
+        settingsCard(title: localization.string("settings.language"), icon: "globe", sectionID: "language") {
+            HStack(spacing: 12) {
+                iconBadge(systemName: "character.bubble")
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(localization.string("settings.language"))
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text(localization.string("settings.language_hint"))
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.35))
+                }
+                Spacer()
+                Picker("", selection: $localization.language) {
+                    Text(localization.string("language.system")).tag(LocalizationManager.Language.system)
+                    Text(localization.string("language.english")).tag(LocalizationManager.Language.english)
+                    Text(localization.string("language.turkish")).tag(LocalizationManager.Language.turkish)
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .tint(SongletonTheme.cyan)
+                .frame(width: 150, alignment: .trailing)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
         }
     }
 
     // MARK: - Appearance Section
 
     private var appearanceSection: some View {
-        settingsCard(title: NSLocalizedString("Görünüm", comment: "Appearance"), icon: "paintbrush.fill", sectionID: "appearance") {
+        settingsCard(title: localization.string("settings.appearance"), icon: "paintbrush.fill", sectionID: "appearance") {
             VStack(spacing: 0) {
                 settingsToggleRow(
                     icon: "sparkles",
-                    title: NSLocalizedString("Dinamik renk teması", comment: "Dynamic color theme"),
-                    subtitle: NSLocalizedString("Platforma göre renk değişir", comment: "Dynamic color description"),
+                    title: localization.string("settings.dynamic_color"),
+                    subtitle: localization.string("settings.dynamic_color_hint"),
                     isOn: $settings.useDynamicColor
                 )
 
@@ -104,8 +177,8 @@ struct SettingsView: View {
 
                 settingsToggleRow(
                     icon: "chart.bar.fill",
-                    title: NSLocalizedString("İlerleme çubuğu", comment: "Progress bar"),
-                    subtitle: NSLocalizedString("Şarkı ilerleme barını göster", comment: "Progress bar description"),
+                    title: localization.string("settings.progress_bar"),
+                    subtitle: localization.string("settings.progress_bar_hint"),
                     isOn: $settings.showProgressBar
                 )
             }
@@ -115,12 +188,12 @@ struct SettingsView: View {
     // MARK: - Menu Bar Section
 
     private var menuBarSection: some View {
-        settingsCard(title: NSLocalizedString("Menü Çubuğu", comment: "Menu Bar"), icon: "menubar.rectangle", sectionID: "menubar") {
+        settingsCard(title: localization.string("settings.menu_bar"), icon: "menubar.rectangle", sectionID: "menubar") {
             VStack(spacing: 0) {
                 settingsToggleRow(
                     icon: "person.fill",
-                    title: NSLocalizedString("Sanatçı adını göster", comment: "Show artist name"),
-                    subtitle: NSLocalizedString("Menü çubuğunda sanatçı adı", comment: "Show artist description"),
+                    title: localization.string("settings.show_artist"),
+                    subtitle: localization.string("settings.show_artist_hint"),
                     isOn: $settings.showArtistInMenuBar
                 )
 
@@ -128,12 +201,12 @@ struct SettingsView: View {
 
                 // Font Picker Row
                 settingsPickerRow(icon: "textformat",
-                    title: NSLocalizedString("Yazı tipi", comment: "Font"),
-                    subtitle: NSLocalizedString("Menü çubuğu fontu", comment: "Font description")
+                    title: localization.string("settings.font"),
+                    subtitle: localization.string("settings.font_hint")
                 ) {
                     Picker("", selection: $settings.menuBarFont) {
-                        Text(NSLocalizedString("Sistem", comment: "System font")).tag(SettingsModel.MenuBarFont.system)
-                        Text("Audiowide").tag(SettingsModel.MenuBarFont.audiowide)
+                        Text(localization.string("settings.system_font")).tag(SettingsModel.MenuBarFont.system)
+                        Text(localization.string("settings.audiowide_font")).tag(SettingsModel.MenuBarFont.audiowide)
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 150)
@@ -143,11 +216,11 @@ struct SettingsView: View {
 
                 // Width Slider Row
                 settingsPickerRow(icon: "arrow.left.and.right",
-                    title: NSLocalizedString("Genişlik", comment: "Width"),
-                    subtitle: NSLocalizedString("Metin alanı genişliği", comment: "Width description")
+                    title: localization.string("settings.width"),
+                    subtitle: localization.string("settings.width_hint")
                 ) {
                     Slider(value: $settings.menuBarWidth, in: 80...300, step: 10)
-                        .tint(.white.opacity(0.5))
+                        .tint(SongletonTheme.cyan)
                         .frame(width: 110)
 
                     Text("\(Int(settings.menuBarWidth))")
@@ -163,14 +236,14 @@ struct SettingsView: View {
     // MARK: - Lyrics Section
 
     private var lyricsSection: some View {
-        settingsCard(title: NSLocalizedString("Şarkı Sözleri", comment: "Lyrics"), icon: "quote.bubble.fill", sectionID: "lyrics") {
+        settingsCard(title: localization.string("lyrics.title"), icon: "quote.bubble.fill", sectionID: "lyrics") {
             settingsPickerRow(icon: "timer",
-                title: NSLocalizedString("Gecikme Düzeltme", comment: "Lyrics offset"),
-                subtitle: NSLocalizedString("Sözler geride kalıyorsa (+), önde gidiyorsa (-)", comment: "Offset description"),
+                title: localization.string("settings.lyrics_offset"),
+                subtitle: localization.string("settings.lyrics_offset_hint"),
                 subtitleSize: 10
             ) {
                 Slider(value: $settings.lyricsOffset, in: -3.0...3.0, step: 0.1)
-                    .tint(.white.opacity(0.5))
+                    .tint(SongletonTheme.cyan)
                     .frame(width: 100)
 
                 Text(String(format: "%+.1fs", settings.lyricsOffset))
@@ -184,14 +257,14 @@ struct SettingsView: View {
     // MARK: - Permissions Section
 
     private var permissionsSection: some View {
-        settingsCard(title: NSLocalizedString("İzinler", comment: "Permissions"), icon: "lock.shield.fill", sectionID: "permissions") {
+        settingsCard(title: localization.string("settings.permissions"), icon: "lock.shield.fill", sectionID: "permissions") {
             VStack(spacing: 0) {
                 // Automation Status Row
                 HStack(spacing: 12) {
                     iconBadge(systemName: automationStatusIcon, color: automationStatusColor)
 
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(NSLocalizedString("Otomasyon İzni", comment: "Automation permission"))
+                        Text(localization.string("permission.automation"))
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white)
                         Text(automationStatusText)
@@ -204,7 +277,7 @@ struct SettingsView: View {
                     Button {
                         model.checkAutomationPermission(askUser: true)
                     } label: {
-                        Text(NSLocalizedString("Kontrol Et", comment: "Check"))
+                        Text(localization.string("common.check"))
                             .font(.system(size: 11, weight: .bold, design: .rounded))
                             .foregroundStyle(.black)
                             .padding(.horizontal, 12)
@@ -227,7 +300,7 @@ struct SettingsView: View {
                     HStack(spacing: 12) {
                         iconBadge(systemName: "arrow.up.forward.app.fill")
 
-                        Text(NSLocalizedString("Gizlilik Ayarlarını Aç", comment: "Open privacy settings"))
+                            Text(localization.string("permission.open_settings"))
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white)
 
@@ -242,6 +315,49 @@ struct SettingsView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+
+                sectionDivider
+
+                Button {
+                    MouseGestureManager.shared.requestAccessibilityAccess()
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                        NSWorkspace.shared.open(url)
+                    }
+                } label: {
+                    HStack(spacing: 12) {
+                        iconBadge(
+                            systemName: MouseGestureManager.shared.isAccessibilityTrusted
+                                ? "checkmark.circle.fill"
+                                : "hand.raised.fill",
+                            color: MouseGestureManager.shared.isAccessibilityTrusted
+                                ? SongletonTheme.cyan
+                                : SongletonTheme.violet
+                        )
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(localization.string("permission.accessibility"))
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text(MouseGestureManager.shared.isAccessibilityTrusted
+                                ? localization.string("permission.granted")
+                                : localization.string("permission.not_granted"))
+                                .font(.system(size: 11, weight: .medium, design: .rounded))
+                                .foregroundStyle(MouseGestureManager.shared.isAccessibilityTrusted
+                                    ? SongletonTheme.cyan
+                                    : SongletonTheme.violet)
+                        }
+
+                        Spacer()
+
+                        Text(localization.string("permission.open_accessibility"))
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .foregroundStyle(SongletonTheme.cyan)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -250,13 +366,13 @@ struct SettingsView: View {
 
     private var footerSection: some View {
         HStack {
-            Text("v1.0")
+            Text("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
                 .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.2))
 
             Spacer()
 
-            Text(NSLocalizedString("Sevgiyle yapıldı ♥", comment: "Made with love"))
+            Text(localization.string("app.made_with_love"))
                 .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.2))
         }
@@ -266,8 +382,11 @@ struct SettingsView: View {
     // MARK: - Reusable Components
 
     private var sectionDivider: some View {
-        Rectangle()
-            .fill(Color.white.opacity(0.06))
+        LinearGradient(
+            colors: [.clear, Color.white.opacity(0.1), .clear],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
             .frame(height: 1)
             .padding(.horizontal, 16)
     }
@@ -275,7 +394,11 @@ struct SettingsView: View {
     private func iconBadge(systemName: String, color: Color = .white.opacity(0.7)) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(color.opacity(0.12))
+                .fill(color.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(color.opacity(0.18), lineWidth: 0.5)
+                )
                 .frame(width: 32, height: 32)
             Image(systemName: systemName)
                 .font(.system(size: 14, weight: .bold))
@@ -289,7 +412,7 @@ struct SettingsView: View {
             HStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(SongletonTheme.secondaryText)
                 Text(title)
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.4))
@@ -301,19 +424,17 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 content()
             }
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color.white.opacity(0.04))
-            )
+            .background(SongletonTheme.card.opacity(0.78), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(
                         hoveredSection == sectionID
-                            ? Color.white.opacity(0.12)
-                            : Color.white.opacity(0.06),
+                            ? SongletonTheme.cyan.opacity(0.38)
+                            : Color.white.opacity(0.09),
                         lineWidth: 1
                     )
             )
+            .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
             .onHover { isHovered in
                 withAnimation(.easeInOut(duration: 0.2)) {
                     hoveredSection = isHovered ? sectionID : nil
@@ -339,7 +460,7 @@ struct SettingsView: View {
 
             Toggle("", isOn: isOn)
                 .toggleStyle(.switch)
-                .tint(.white.opacity(0.6))
+                .tint(SongletonTheme.cyan)
                 .labelsHidden()
         }
         .padding(.horizontal, 16)
@@ -373,7 +494,7 @@ struct SettingsView: View {
         switch model.automationStatus {
         case .granted: return Color(hue: 0.35, saturation: 0.5, brightness: 0.7)  // muted sage
         case .denied: return Color(hue: 0.0, saturation: 0.45, brightness: 0.7)   // muted coral
-        case .unknown: return .white.opacity(0.45)
+        case .notDetermined: return SongletonTheme.violet.opacity(0.8)
         }
     }
 
@@ -381,15 +502,15 @@ struct SettingsView: View {
         switch model.automationStatus {
         case .granted: return "checkmark.shield.fill"
         case .denied: return "xmark.shield.fill"
-        case .unknown: return "questionmark.circle"
+        case .notDetermined: return "shield.lefthalf.filled"
         }
     }
 
     private var automationStatusText: String {
         switch model.automationStatus {
-        case .granted: return NSLocalizedString("İzin Verildi", comment: "Permission granted")
-        case .denied: return NSLocalizedString("Reddedildi", comment: "Permission denied")
-        case .unknown: return NSLocalizedString("Bilinmiyor", comment: "Permission unknown")
+        case .granted: return localization.string("permission.granted")
+        case .denied: return localization.string("permission.denied")
+        case .notDetermined: return localization.string("permission.not_granted")
         }
     }
 }

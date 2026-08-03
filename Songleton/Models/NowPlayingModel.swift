@@ -10,6 +10,14 @@ struct RecentTrack: Identifiable {
     let playedAt: Date
 }
 
+private actor MediaCommandQueue {
+    func execute(_ action: @escaping @Sendable () throws -> Void) async throws {
+        try Task.checkCancellation()
+        try action()
+        try await Task.sleep(for: .milliseconds(300))
+    }
+}
+
 @MainActor
 final class NowPlayingModel: ObservableObject {
     static let shared = NowPlayingModel()
@@ -21,7 +29,7 @@ final class NowPlayingModel: ObservableObject {
     }
 
     enum AutomationStatus {
-        case unknown
+        case notDetermined
         case granted
         case denied
     }
@@ -29,7 +37,7 @@ final class NowPlayingModel: ObservableObject {
     @Published private(set) var state: State = .notRunning
     @Published private(set) var artwork: NSImage?
     @Published private(set) var dominantColor: Color = .accentColor
-    @Published var automationStatus: AutomationStatus = .unknown
+    @Published var automationStatus: AutomationStatus = .notDetermined
     @Published private(set) var recentTracks: [RecentTrack] = []
 
     let controllers: [any MediaController] = [SpotifyController(), AppleMusicController(), YouTubeController()]
@@ -40,14 +48,18 @@ final class NowPlayingModel: ObservableObject {
     private var lastLoadedKey: String?
     private var lastFetchTime: Date = Date()
     private var timerCancellable: AnyCancellable?
+    private let commandQueue = MediaCommandQueue()
+    private var volumeTask: Task<Void, Never>?
 
     var currentPosition: Double {
         guard case .loaded(let info, _) = state else { return 0 }
         if info.isPlaying {
             let elapsed = Date().timeIntervalSince(lastFetchTime)
-            return min(info.duration > 0 ? info.duration : Double.infinity, info.position + elapsed)
+            let position = info.position.isFinite ? max(0, info.position) : 0
+            let safeElapsed = elapsed.isFinite ? max(0, elapsed) : 0
+            return min(info.duration > 0 ? info.duration : Double.infinity, position + safeElapsed)
         }
-        return info.position
+        return info.position.isFinite ? max(0, info.position) : 0
     }
 
     private init() {
@@ -70,11 +82,14 @@ final class NowPlayingModel: ObservableObject {
         return info.track
     }
 
-    var activeBundleID: String? { activeController?.bundleID }
+    var activeBundleID: String? { activeController?.activeBundleID }
 
     var platformAccentColor: Color {
         guard SettingsModel.shared.useDynamicColor else {
             return .white
+        }
+        if activeController is YouTubeController {
+            return Color(red: 255 / 255, green: 0 / 255, blue: 0 / 255)
         }
         guard case .loaded(_, let source) = state else {
             return Color(red: 29/255, green: 185/255, blue: 84/255)
@@ -92,10 +107,24 @@ final class NowPlayingModel: ObservableObject {
     func togglePlayPause() { send { try $0.togglePlayPause() } }
     func nextTrack() { send { try $0.nextTrack() } }
     func previousTrack() { send { try $0.previousTrack() } }
-    func restartTrack() { send { try $0.restartTrack() } }
-    func setVolume(_ volume: Int) { send { try $0.setVolume(volume) } }
+    func setVolume(_ volume: Int) {
+        volumeTask?.cancel()
+        let safeVolume = min(max(0, volume), 100)
+        guard let controller = activeController else { return }
+        volumeTask = Task { [weak self] in
+            do {
+                try await self?.commandQueue.execute { try controller.setVolume(safeVolume) }
+            } catch is CancellationError {
+                return
+            } catch {
+                print("Media command failed: \(error)")
+            }
+            self?.refresh()
+        }
+    }
     func seekTo(_ position: Double) { send { try $0.seekTo(position) } }
     func toggleShuffle() { send { try $0.toggleShuffle() } }
+
     func cycleRepeatMode() {
         guard case .loaded(let info, let src) = state else { return }
 
@@ -148,7 +177,7 @@ final class NowPlayingModel: ObservableObject {
             }
         }
 
-        let result: AutomationStatus = allGranted ? .granted : (anyDenied ? .denied : .unknown)
+        let result: AutomationStatus = allGranted ? .granted : (anyDenied ? .denied : .notDetermined)
         automationStatus = result
         if result == .granted {
             UserDefaults.standard.set(true, forKey: "hasGrantedAutomation")
@@ -160,7 +189,7 @@ final class NowPlayingModel: ObservableObject {
         switch status {
         case noErr: return .granted
         case OSStatus(errAEEventNotPermitted): return .denied
-        default: return .unknown
+        default: return .notDetermined
         }
     }
 
@@ -183,7 +212,7 @@ final class NowPlayingModel: ObservableObject {
     }
 
     func requestPermissionByScript() {
-        for controller in controllers {
+        for controller in controllers where !(controller is YouTubeController) {
             requestPermissionFor(bundleID: controller.bundleID)
         }
         checkAutomationPermission(askUser: false)
@@ -192,7 +221,7 @@ final class NowPlayingModel: ObservableObject {
 
     func copyTrackInfo() -> String? {
         guard case .loaded(let info, _) = state else { return nil }
-        let text = "\(info.track) - \(info.artist)"
+        let text = info.artist.isEmpty ? info.track : "\(info.artist) - \(info.track)"
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
@@ -211,7 +240,7 @@ final class NowPlayingModel: ObservableObject {
                 await syncArtwork(with: result.state)
 
                 if case .loaded(let info, let src) = result.state {
-                    let key = "\(info.track)|\(info.artist)"
+                    let key = "\(src)|\(info.track)|\(info.artist)"
                     if key != lastLoadedKey {
                         lastLoadedKey = key
                         let recent = RecentTrack(track: info.track, artist: info.artist, source: src, playedAt: Date())
@@ -219,11 +248,17 @@ final class NowPlayingModel: ObservableObject {
                         if recentTracks.count > 20 { recentTracks = Array(recentTracks.prefix(20)) }
                         let srcLower = src.lowercased()
                         let isDesktopMusicApp = srcLower.contains("spotify") || srcLower.contains("music")
-                        if !MenuBarManager.shared.isHoverPopoverShown && isDesktopMusicApp {
-                            HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: self.artwork, source: src)
+                        if SettingsModel.shared.showTrackNotifications,
+                           !MenuBarManager.shared.isHoverPopoverShown,
+                           isDesktopMusicApp {
+                            HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: self.artwork)
                         }
                     }
                 }
+            } else {
+                state = .notRunning
+                activeController = nil
+                await syncArtwork(with: .notRunning)
             }
             isFetching = false
         }
@@ -237,11 +272,8 @@ final class NowPlayingModel: ObservableObject {
     nonisolated private func fetchAll() async -> FetchResult? {
         var pausedCandidate: (any MediaController, NowPlayingInfo)?
         var sawPermissionDenied = false
-        var anyRunning = false
-
         for controller in controllers {
             guard controller.isRunning else { continue }
-            anyRunning = true
             do {
                 let info = try controller.fetchNowPlaying()
                 if info.isPlaying {
@@ -261,8 +293,7 @@ final class NowPlayingModel: ObservableObject {
             return FetchResult(state: .loaded(info, source: controller.displayName), active: controller)
         }
         if sawPermissionDenied { return FetchResult(state: .permissionDenied, active: nil) }
-        if !anyRunning { return FetchResult(state: .notRunning, active: nil) }
-        return nil
+        return FetchResult(state: .notRunning, active: nil)
     }
 
     private func syncArtwork(with state: State) async {
@@ -274,7 +305,11 @@ final class NowPlayingModel: ObservableObject {
             }
             return
         }
-        let key = info.artworkURL?.absoluteString ?? "\(info.track)|\(info.artist)"
+        let source = switch state {
+        case .loaded(_, let source): source
+        case .notRunning, .permissionDenied: ""
+        }
+        let key = "\(source)|\(info.artworkURL?.absoluteString ?? "\(info.track)|\(info.artist)|\(info.album)")"
         guard key != currentArtworkKey else { return }
         currentArtworkKey = key
 
@@ -283,7 +318,7 @@ final class NowPlayingModel: ObservableObject {
             dominantColor = extractColor(from: image)
             return
         }
-        guard let url = info.artworkURL else {
+        guard let url = info.artworkURL, url.scheme?.lowercased() == "https" else {
             artwork = nil
             dominantColor = .accentColor
             return
@@ -291,7 +326,13 @@ final class NowPlayingModel: ObservableObject {
         let (image, color) = await Self.downloadArtworkAndColor(from: url)
         if currentArtworkKey == key {
             artwork = image
-            dominantColor = color ?? (image != nil ? extractColor(from: image!) : .accentColor)
+            if let color {
+                dominantColor = color
+            } else if let image {
+                dominantColor = extractColor(from: image)
+            } else {
+                dominantColor = .accentColor
+            }
         }
     }
 
@@ -349,17 +390,29 @@ final class NowPlayingModel: ObservableObject {
     }
 
     nonisolated private static func downloadArtworkAndColor(from url: URL) async -> (NSImage?, Color?) {
-        guard let (data, _) = try? await URLSession.shared.data(from: url),
+        guard let (data, response) = try? await URLSession.shared.data(from: url),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              data.count <= 10 * 1024 * 1024,
               let image = NSImage(data: data) else { return (nil, nil) }
         return (image, nil)
     }
 
     private func send(_ action: @escaping @Sendable (any MediaController) throws -> Void) {
         guard let controller = activeController else { return }
-        Task.detached {
-            try? action(controller)
-            try? await Task.sleep(for: .milliseconds(300))
-            await self.refresh()
+        enqueue(action, on: controller)
+    }
+
+    private func enqueue(
+        _ action: @escaping @Sendable (any MediaController) throws -> Void,
+        on controller: any MediaController
+    ) {
+        Task { [weak self] in
+            do {
+                try await self?.commandQueue.execute { try action(controller) }
+            } catch {
+                print("Media command failed: \(error)")
+            }
+            self?.refresh()
         }
     }
 }

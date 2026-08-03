@@ -15,27 +15,32 @@ final class LyricsModel: ObservableObject {
     @Published var isLoading = false
     @Published var currentTrackKey: String = ""
 
+    private var loadTask: Task<Void, Never>?
+
     private init() {}
 
-    func loadLyrics(track: String, artist: String, album: String? = nil, duration: Double? = nil) {
-        let key = "\(track)|\(artist)"
+    func loadLyrics(track: String, artist: String, album: String? = nil, duration: Double? = nil, source: String = "") {
+        let key = "\(source)|\(track)|\(artist)|\(album ?? "")"
         guard key != currentTrackKey else { return }
 
+        loadTask?.cancel()
         currentTrackKey = key
         lines = []
         isLoading = true
 
-        Task {
-            if let fetched = await LyricsService.shared.fetchSyncedLyrics(
+        loadTask = Task { [weak self] in
+            let fetched = await LyricsService.shared.fetchSyncedLyrics(
                 track: track,
                 artist: artist,
                 album: album,
                 duration: duration
-            ) {
-                self.lines = fetched
-            } else {
-                self.lines = []
+            )
+
+            guard !Task.isCancelled, let self, self.currentTrackKey == key else {
+                return
             }
+
+            self.lines = fetched ?? []
             self.isLoading = false
         }
     }
@@ -43,6 +48,7 @@ final class LyricsModel: ObservableObject {
     func activeLineIndex(for position: Double) -> Int? {
         guard !lines.isEmpty else { return nil }
         let effectivePosition = position + SettingsModel.shared.lyricsOffset
+        guard effectivePosition >= lines[0].timestamp else { return nil }
         for (index, line) in lines.enumerated().reversed() {
             if effectivePosition >= line.timestamp {
                 return index

@@ -4,6 +4,7 @@ import SwiftUI
 struct PlayerPanelView: View {
     @ObservedObject var model: NowPlayingModel
     @ObservedObject private var settings = SettingsModel.shared
+    @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.openSettings) private var openSettings
 
     @State private var selectedTab = 0
@@ -88,10 +89,10 @@ struct PlayerPanelView: View {
 
     private var topTabBar: some View {
         HStack(spacing: 4) {
-            tabButton(icon: "music.note", label: NSLocalizedString("Oynatıcı", comment: "Now Playing Tab"), index: 0)
-            tabButton(icon: "quote.bubble.fill", label: NSLocalizedString("Sözler", comment: "Lyrics Tab"), index: 1)
-            tabButton(icon: "music.note.list", label: NSLocalizedString("Listeler", comment: "Playlists Tab"), index: 2)
-            tabButton(icon: "clock.fill", label: NSLocalizedString("Geçmiş", comment: "History Tab"), index: 3)
+            tabButton(icon: "music.note", label: localization.string("tab.player"), index: 0)
+            tabButton(icon: "quote.bubble.fill", label: localization.string("tab.lyrics"), index: 1)
+            tabButton(icon: "music.note.list", label: localization.string("tab.playlists"), index: 2)
+            tabButton(icon: "clock.fill", label: localization.string("tab.history"), index: 3)
         }
         .padding(4)
         .background(
@@ -144,18 +145,18 @@ struct PlayerPanelView: View {
     private var liquidBackgroundView: some View {
         ZStack {
             Rectangle()
-                .fill(.ultraThinMaterial)
+                .fill(SongletonTheme.panelGradient)
 
             if settings.useDynamicColor, case .loaded = model.state {
                 model.dominantColor
-                    .opacity(0.28)
+                .opacity(0.2)
                     .blur(radius: 50)
                     .animation(.spring(response: 0.8, dampingFraction: 0.8), value: model.dominantColor.description)
             }
 
             // Glass specular gradient highlight
             LinearGradient(
-                colors: [.white.opacity(0.18), .clear, .black.opacity(0.08)],
+                colors: [SongletonTheme.cyan.opacity(0.12), .clear, SongletonTheme.violet.opacity(0.12)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -285,7 +286,7 @@ struct PlayerPanelView: View {
         }
         .frame(height: 182)
         .onTapGesture { activateActivePlayer() }
-        .help(NSLocalizedString("Çalan uygulamayı ön plana getirmek için tıklayın", comment: "Bring app to front"))
+        .help(localization.string("player.bring_to_front"))
     }
 
     // MARK: - Track Meta
@@ -300,10 +301,10 @@ struct PlayerPanelView: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     if let copied = model.copyTrackInfo() {
-                        triggerToast(NSLocalizedString("Kopyalandı", comment: "Copied") + ": " + copied)
+                        triggerToast(localization.string("common.copied") + ": " + copied)
                     }
                 }
-                .help(NSLocalizedString("Tıklayarak şarkı ve sanatçı adını kopyalayın", comment: "Copy track info"))
+                .help(localization.string("player.copy_track_hint"))
 
             Text(info.artist)
                 .font(.system(size: 13, weight: .medium, design: .rounded))
@@ -311,7 +312,7 @@ struct PlayerPanelView: View {
                 .lineLimit(1)
 
             HStack(spacing: 4) {
-                Image(systemName: source == "Spotify" ? "music.note.list" : "music.note")
+                Image(systemName: source == localization.string("source.spotify") ? "music.note.list" : source == localization.string("source.apple_music") ? "music.note" : "play.tv.fill")
                     .font(.system(size: 9, weight: .semibold))
                 Text(source)
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
@@ -380,7 +381,7 @@ struct PlayerPanelView: View {
             }
             .buttonStyle(.plain)
             .scaleEffect(prevButtonScale)
-            .help(NSLocalizedString("Önceki şarkı", comment: "Previous track"))
+            .help(localization.string("menu.previous_track"))
 
             Spacer()
 
@@ -417,7 +418,7 @@ struct PlayerPanelView: View {
             }
             .buttonStyle(.plain)
             .scaleEffect(playButtonScale)
-            .help(info.isPlaying ? NSLocalizedString("Duraklat", comment: "Pause") : NSLocalizedString("Oynat", comment: "Play"))
+            .help(info.isPlaying ? localization.string("control.pause") : localization.string("control.play"))
 
             Spacer()
 
@@ -442,7 +443,7 @@ struct PlayerPanelView: View {
             }
             .buttonStyle(.plain)
             .scaleEffect(nextButtonScale)
-            .help(NSLocalizedString("Sonraki şarkı", comment: "Next track"))
+            .help(localization.string("menu.next_track"))
 
             Spacer()
         }
@@ -497,7 +498,7 @@ struct PlayerPanelView: View {
     private var recentTracksView: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Label(NSLocalizedString("Son Çalınanlar", comment: "Recent Tracks"), systemImage: "clock.fill")
+                    Label(localization.string("history.title"), systemImage: "clock.fill")
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                 Spacer()
             }
@@ -510,7 +511,7 @@ struct PlayerPanelView: View {
                     Image(systemName: "clock.badge.questionmark")
                         .font(.system(size: 32, weight: .ultraLight))
                         .foregroundStyle(.tertiary)
-                    Text(NSLocalizedString("Henüz geçmiş yok", comment: "No history yet"))
+                        Text(localization.string("history.empty"))
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
@@ -528,7 +529,7 @@ struct PlayerPanelView: View {
 
     private func recentRow(_ item: RecentTrack) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: item.source == "Spotify" ? "music.note.list" : "music.note")
+            Image(systemName: item.source == localization.string("source.spotify") ? "music.note.list" : item.source == localization.string("source.apple_music") ? "music.note" : "play.tv.fill")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .frame(width: 28, height: 28)
@@ -549,15 +550,16 @@ struct PlayerPanelView: View {
 
             Button {
                 NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString("\(item.track) - \(item.artist)", forType: .string)
-                triggerToast(NSLocalizedString("Kopyalandı", comment: "Copied"))
+                let copied = item.artist.isEmpty ? item.track : "\(item.artist) - \(item.track)"
+                NSPasteboard.general.setString(copied, forType: .string)
+                triggerToast(localization.string("common.copied"))
             } label: {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 10))
                     .foregroundStyle(.tertiary)
             }
             .buttonStyle(.plain)
-            .help(NSLocalizedString("Kopyala", comment: "Copy"))
+                .help(localization.string("common.copy"))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
@@ -585,17 +587,17 @@ struct PlayerPanelView: View {
                 }
 
                 VStack(spacing: 5) {
-                    Text(NSLocalizedString("Müzik Çalmıyor", comment: "Not playing"))
+                    Text(localization.string("player.not_playing"))
                         .font(.system(size: 16, weight: .bold, design: .rounded))
-                    Text(NSLocalizedString("Spotify veya Apple Music'i başlatın", comment: "Launch Spotify or Music"))
+                    Text(localization.string("player.launch_hint"))
                         .font(.system(size: 12, weight: .regular, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
 
                 HStack(spacing: 10) {
-                    launchButton("Spotify", icon: "music.note.list", bundleID: "com.spotify.client")
-                    launchButton("Apple Music", icon: "music.note", bundleID: "com.apple.Music")
+                    launchButton(localization.string("source.spotify"), icon: "music.note.list", bundleID: "com.spotify.client")
+                    launchButton(localization.string("source.apple_music"), icon: "music.note", bundleID: "com.apple.Music")
                 }
             }
             .padding(.horizontal, 24)
@@ -636,9 +638,9 @@ struct PlayerPanelView: View {
                 }
 
                 VStack(spacing: 5) {
-                    Text(NSLocalizedString("İzin Gerekli", comment: "Permission Required"))
+                        Text(localization.string("permission.required"))
                         .font(.system(size: 16, weight: .bold, design: .rounded))
-                    Text(NSLocalizedString("Songleton, müzik uygulamalarına erişmek için Otomasyon iznine ihtiyaç duyuyor.", comment: "Permission explanation"))
+                        Text(localization.string("permission.explanation"))
                         .font(.system(size: 12, weight: .regular, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -652,7 +654,7 @@ struct PlayerPanelView: View {
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "gear")
-                            Text(NSLocalizedString("Gizlilik Ayarlarını Aç", comment: "Open Privacy Settings"))
+                            Text(localization.string("permission.open_settings"))
                         }
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .frame(maxWidth: .infinity)
@@ -666,7 +668,7 @@ struct PlayerPanelView: View {
                     Button {
                         model.requestPermissionByScript()
                     } label: {
-                        Text(NSLocalizedString("Tekrar Dene", comment: "Try Again"))
+                        Text(localization.string("common.try_again"))
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(.secondary)
                     }
@@ -685,7 +687,7 @@ struct PlayerPanelView: View {
         VStack(spacing: 0) {
             Divider().opacity(0.3)
             HStack {
-                Button(NSLocalizedString("Ayarlar…", comment: "Settings")) {
+                    Button(localization.string("settings.title")) {
                     openSettings()
                     NSApp.activate(ignoringOtherApps: true)
                 }
@@ -696,7 +698,7 @@ struct PlayerPanelView: View {
 
                 Spacer()
 
-                Button(NSLocalizedString("Çıkış", comment: "Quit")) {
+                Button(localization.string("common.quit")) {
                     NSApplication.shared.terminate(nil)
                 }
                 .buttonStyle(.plain)

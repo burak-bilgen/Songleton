@@ -1,135 +1,135 @@
 <div align="center">
-
-  <img src="Songleton/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png" width="128" height="128" alt="Songleton Icon" style="border-radius: 28px; box-shadow: 0 12px 32px rgba(0,0,0,0.5);" />
+  <img src="Songleton/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png" width="128" height="128" alt="Songleton app icon" />
 
   # Songleton
-  **The Ultimate Native macOS Menu Bar Companion for Spotify & Apple Music**
 
-  [![macOS 14.0+](https://img.shields.io/badge/macOS-14.0%2B-blue?style=for-the-badge&logo=apple&logoColor=white)](https://apple.com)
-  [![Swift 5.9](https://img.shields.io/badge/Swift-5.9-orange?style=for-the-badge&logo=swift&logoColor=white)](https://swift.org)
-  [![SwiftUI](https://img.shields.io/badge/SwiftUI-Liquid%20Glass-purple?style=for-the-badge&logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/)
-  [![License MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-  [![Build & Test](https://img.shields.io/badge/Tests-6%2F6%20Passed-brightgreen?style=for-the-badge&logo=github-actions&logoColor=white)](Makefile)
+  **A focused, native macOS menu bar companion for the music you already use.**
 
-  <p align="center">
-    <b>Songleton</b> brings your music directly to your macOS Menu Bar with a breathtaking Liquid Glass interface, synchronized real-time lyrics, instant volume control, dynamic platform accent themes, and zero footprint.
-  </p>
-
+  [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111827?style=for-the-badge&logo=apple&logoColor=white)](https://www.apple.com/macos/)
+  [![Swift](https://img.shields.io/badge/Swift-5-orange?style=for-the-badge&logo=swift&logoColor=white)](https://www.swift.org/)
+  [![SwiftUI](https://img.shields.io/badge/SwiftUI-native-6D5DFB?style=for-the-badge&logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/)
+  [![Tests](https://img.shields.io/badge/tests-29%20passing-20C997?style=for-the-badge)](Makefile)
+  [![License](https://img.shields.io/badge/license-MIT-38BDF8?style=for-the-badge)](LICENSE)
 </div>
 
----
+Songleton puts playback status and useful controls one hover away, without replacing Spotify, Apple Music or your browser. It is intentionally small, native and keyboard-friendly.
 
-## ✨ Features at a Glance
+## Download and Install
 
-### 🎵 Pure Native Menu Bar Integration
-- **Live Track Marquee:** Real-time track name and artist scrolling right in your menu bar.
-- **Sleep Mode (`zZz`):** Automatically hides or displays a minimalist sleeping state when Spotify/Apple Music is closed.
-- **Click-to-Copy:** Click any track label to instantly copy `"Artist - Track Name"` to your clipboard.
+1. Open the [latest release](../../releases/latest).
+2. Download `Songleton-1.0.dmg`.
+3. Open the disk image and drag Songleton to Applications.
+4. Launch Songleton and complete the Automation permission setup.
+5. Open Settings to choose System, English or Turkish. Language changes apply immediately.
 
-### 🍷 Liquid Glass Hover Panel
-- **Zero-Click Peek:** Hover over the menu bar icon to instantly reveal album cover, track progress, volume controls, and playback actions.
-- **Pure Jet Black Aesthetics:** Designed specifically for modern OLED and Retina displays with silky smooth Apple `.spring` physics.
-- **Accordion Synced Lyrics:** Expand real-time synchronized karaoke-style lyrics with dynamic offset compensation.
+The first launch may ask for Automation access to supported media applications and browsers. Songleton needs this permission because macOS protects Apple Events by default.
 
-### 🎚️ Smart Popovers & Gestures
-- **Discrete Volume Slider:** Dedicated volume popover for smooth volume adjustment without opening full music apps.
-- **Smart Toast Notifications (HUD):** Non-intrusive HUD notifications on song changes that automatically suppress themselves when the hover menu is open to prevent UI collision.
+## What You Get
 
-### 🖤 Minimalist OLED Settings Window
-- **Fixed & Centered Panel:** Beautiful, fixed-size centered settings dialog following pure OLED monochrome design principles.
-- **Full Customizability:**
-  - **Launch at Login:** Native `SMAppService` integration for instant launch when your Mac boots up.
-  - **Show Artist in Menu Bar:** Toggle between full `"Artist - Song"` or clean `"Song Name"` display.
-  - **Dynamic Color Theme:** Seamlessly switch accents between Spotify Green (`#1DB954`) and Apple Music Pink (`#FA243C`).
-  - **Progress Bar Toggle:** Show or hide live playback seek bars.
-  - **Lyrics Offset Sync:** Calibrate real-time lyrics delay from `-3.0s` to `+3.0s`.
+### Native Menu Bar Player
 
----
+- Live track title, artist and album artwork.
+- Play, pause, previous and next controls.
+- Click-to-copy track information in `Artist - Track` format.
+- Marquee text for long titles with a compact sleeping state when no player is available.
+- Configurable menu bar width, font and artist visibility.
 
-## 🎨 Design Principles
+### Hover Control Panel
 
-- **Liquid Glass & OLED Jet Black:** Dark-mode native controls with high-contrast typography and subtle glassmorphic borders.
-- **Spring Animations:** Native macOS fluid response times with natural inertia and zero lag.
-- **Localization First:** Full bilingual support for **English** and **Turkish** out of the box (`Localizable.xcstrings`).
+- Album artwork with a subtle breathing animation while playing.
+- Progress and seek controls where the player exposes duration.
+- Volume control for the active source.
+- Shuffle and repeat controls for Spotify and Apple Music.
+- Dynamic accent colors based on the active source or artwork.
+- Lyrics accordion with synchronized scrolling and manual timing offset.
 
----
+### Supported Sources
 
-## 🚀 Getting Started
+- Spotify desktop application.
+- Apple Music desktop application.
+- YouTube tabs in Safari, Google Chrome, Brave, Arc and Microsoft Edge.
 
-### Prerequisites
-- macOS 14.0 (Sonoma) or newer.
-- Xcode 15.0+ (if building from source).
-- Spotify or Apple Music desktop client.
+Browser support uses the browser's existing tab and video APIs. Songleton does not install an extension or alter the browser profile.
 
-### Building & Running from Source
+### History and Playlists
+
+- Keep the last 20 detected tracks in the local history view.
+- Copy any history entry instantly.
+- Save Spotify playlist links or URIs locally and launch them from the playlist view.
+
+## Privacy and Security
+
+- No analytics, tracking or user account is required.
+- Playback commands and media state are handled locally through macOS Automation and browser scripting.
+- User preferences and saved playlists are stored in local `UserDefaults`.
+- Lyrics lookup is the only optional network feature. Track, artist, album and duration metadata may be sent to [LRCLIB](https://lrclib.net/) to find synchronized lyrics.
+- No audio, authentication token or playlist content is uploaded by Songleton.
+- Release builds use the hardened runtime and do not include the debugger entitlement.
+
+## Build from Source
+
+### Requirements
+
+- macOS 14.0 or newer.
+- Xcode 15 or newer.
+- Spotify or Apple Music for desktop playback controls.
+- A supported browser for YouTube controls.
+
+### Commands
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/Songleton.git
+git clone <repository-url>
 cd Songleton
 
-# Build and run the app immediately
+# Build and launch the debug app
 make run
-```
 
-### Running Unit Tests
-
-Songleton includes a lightweight, zero-dependency native Swift unit testing suite:
-
-```bash
-# Run unit tests
+# Run the native test runner
 make test
+
+# Run tests and print the LLVM coverage report for core code
+make coverage
+
+# Build and verify a release app
+make build-release
+
+# Build a DMG
+make dmg
+
+# Submit a DMG for notarization
+make notarize APPLE_ID=you@example.com TEAM_ID=XXXXXXXXXX APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
 ```
 
-### Build Targets in Makefile
+The release target uses a distribution-safe entitlement set. Notarization requires your own Apple Developer credentials and is intentionally not attempted by the regular `dmg` target.
 
-| Command | Description |
-| :--- | :--- |
-| `make run` | Compiles and launches the debug application |
-| `make test` | Executes the 6-suite Unit Test runner |
-| `make fresh` | Cleans `UserDefaults`, resets TCC automation permissions, and launches fresh |
-| `make dmg` | Generates a clean production release `.dmg` installer in `build/` |
-| `make clean` | Cleans Xcode build artifacts and temporary data |
+## Technology
 
----
+- Swift 5 and SwiftUI.
+- AppKit `NSStatusItem` and `NSPopover` for menu bar lifecycle.
+- Apple Events and AppleScript for Spotify, Apple Music and browser control.
+- Swift concurrency with a serialized media command queue.
+- LRCLIB synchronized lyrics API with cancellation-safe track loading.
+- String Catalog localization with System, English and Turkish modes.
+- Hardened runtime code signing for release builds.
 
-## 🔒 Permissions & Security
+## Project Layout
 
-Songleton uses macOS AppleScript Automation permissions (`NSAppleEventsUsageDescription`) to communicate locally with Spotify and Apple Music.
-
-- **Zero Cloud Tracking:** All data is processed 100% locally on your Mac.
-- **No Background Battery Drain:** Listens only when media players are active.
-
----
-
-## 🛠️ Architecture
-
-```
+```text
 Songleton/
-├── App/
-│   ├── SongletonApp.swift         # SwiftUI App Entry point
-│   ├── MenuBarManager.swift       # NSStatusItem & Popover Lifecycle
-│   └── HUDToastManager.swift      # Toast notification manager
-├── Models/
-│   ├── NowPlayingModel.swift      # Central state store & playback engine
-│   ├── SettingsModel.swift        # User preferences & persistence
-│   ├── MediaController.swift      # Spotify / Apple Music AppleScript drivers
-│   └── LyricsModel.swift          # LrcLib real-time lyrics parser
-├── Views/
-│   ├── UnifiedHoverPanelView.swift# Main Liquid Glass hover interface
-│   ├── SettingsView.swift         # OLED Minimalist preferences window
-│   ├── SyncedLyricsView.swift     # Synchronized karaoke lyrics component
-│   └── MenuBarMainLabelView.swift # Status bar label & animation
-└── SongletonTests/                # Native Swift unit test suite
+├── App/          App lifecycle, menu bar and toast managers
+├── Controllers/  Media and browser automation controllers
+├── Models/       Playback state, settings, playlists and localization
+├── Services/     Lyrics networking and parsing
+├── Views/        Menu bar, player, settings, lyrics and playlist UI
+└── Assets.xcassets
+
+SongletonTests/
+├── Controllers/  Controller parsing and automation helpers
+├── Models/       Model and persistence tests
+├── Services/     Lyrics parsing and networking tests
+└── Support/      Assertions and test infrastructure
 ```
 
----
+## License
 
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-<div align="center">
-  <br/>
-  Crafted with ♥ for macOS power users.
-</div>
+Songleton is distributed under the MIT License. See [LICENSE](LICENSE).

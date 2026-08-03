@@ -41,6 +41,14 @@ final class SettingsModel: ObservableObject {
         }
     }
 
+    @Published var showTrackNotifications: Bool {
+        didSet { defaults.set(showTrackNotifications, forKey: "showTrackNotifications") }
+    }
+
+    @Published var circularGesturesEnabled: Bool {
+        didSet { defaults.set(circularGesturesEnabled, forKey: "circularGesturesEnabled") }
+    }
+
     @Published var showProgressBar: Bool {
         didSet { defaults.set(showProgressBar, forKey: "showProgressBar") }
     }
@@ -62,17 +70,21 @@ final class SettingsModel: ObservableObject {
             "menuBarWidth": 80.0,
             "menuBarFont": MenuBarFont.system.rawValue,
             "launchAtLogin": false,
+            "showTrackNotifications": true,
+            "circularGesturesEnabled": true,
             "showProgressBar": true,
             "useDynamicColor": true,
             "lyricsOffset": 0.9
         ])
         showArtistInMenuBar = userDefaults.bool(forKey: "showArtistInMenuBar")
-        menuBarWidth = userDefaults.double(forKey: "menuBarWidth")
+        menuBarWidth = min(300, max(80, userDefaults.double(forKey: "menuBarWidth")))
         menuBarFont = MenuBarFont(rawValue: userDefaults.string(forKey: "menuBarFont") ?? "") ?? .system
         launchAtLogin = SMAppService.mainApp.status == .enabled
+        showTrackNotifications = userDefaults.bool(forKey: "showTrackNotifications")
+        circularGesturesEnabled = userDefaults.bool(forKey: "circularGesturesEnabled")
         showProgressBar = userDefaults.bool(forKey: "showProgressBar")
         useDynamicColor = userDefaults.bool(forKey: "useDynamicColor")
-        lyricsOffset = userDefaults.double(forKey: "lyricsOffset")
+        lyricsOffset = min(3, max(-3, userDefaults.double(forKey: "lyricsOffset")))
     }
 
     func applyLaunchAtLogin() {
@@ -83,7 +95,11 @@ final class SettingsModel: ObservableObject {
                 try SMAppService.mainApp.unregister()
             }
         } catch {
-            launchAtLogin = SMAppService.mainApp.status == .enabled
+            let actualValue = SMAppService.mainApp.status == .enabled
+            defaults.set(actualValue, forKey: "launchAtLogin")
+            if launchAtLogin != actualValue {
+                launchAtLogin = actualValue
+            }
         }
     }
 }

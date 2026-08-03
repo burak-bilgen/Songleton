@@ -14,6 +14,7 @@ final class MenuBarManager: NSObject {
     private var cancellables = Set<AnyCancellable>()
     private var hoverWorkItem: DispatchWorkItem?
     private var closeWorkItem: DispatchWorkItem?
+    private var hideStatusItemsWorkItem: DispatchWorkItem?
 
     var mainButton: NSStatusBarButton? { mainStatusItem?.button }
 
@@ -25,8 +26,9 @@ final class MenuBarManager: NSObject {
 
     func setup() {
         guard mainStatusItem == nil else { return }
+        MouseGestureManager.shared.start()
 
-        // Hover ile Açılan Birleşik Modern Detay & Ses Ayar Paneli
+        // Unified detail and volume panel opened on hover.
         let volPopover = NSPopover()
         volPopover.behavior = .transient
         volPopover.animates = true
@@ -35,21 +37,19 @@ final class MenuBarManager: NSObject {
         volPopover.contentViewController = hostingController
         self.volumePopover = volPopover
 
-        // AppKit appends status items from Left to Right.
-        // Desired Screen Layout (Left to Right):
-        // [ ⏮ ]  [ Albüm Kapağı & Şarkı Adı ]  [ ⏭ ]
+        // AppKit appends status items from left to right.
 
-        // 1st created: Önceki Şarkı (Pos 1 - En Sol)
+        // Previous track item.
         let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: nil)
             button.target = self
             button.action = #selector(bwdTapped)
-            button.toolTip = NSLocalizedString("Önceki Şarkı", comment: "Previous track")
+            button.toolTip = LocalizationManager.shared.string("menu.previous_track")
         }
         self.bwdStatusItem = bwdItem
 
-        // 2nd created: Albüm Kapağı & Şarkı Adı (Pos 2 - Ortada)
+        // Album artwork and track label item.
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabel = MenuBarMainLabelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
         let hosting = NSHostingView(rootView: mainLabel)
@@ -63,7 +63,7 @@ final class MenuBarManager: NSObject {
             button.target = self
             button.action = #selector(mainItemClicked)
             button.sendAction(on: [.leftMouseUp])
-            button.toolTip = NSLocalizedString("Tıkla: Oynat/Durdur | Hover: Detay & Ses Paneli", comment: "Menu bar tooltip")
+            button.toolTip = LocalizationManager.shared.string("menu.main_item_tooltip")
 
             let trackingView = MenuBarTrackingAreaView(frame: button.bounds)
             trackingView.autoresizingMask = [.width, .height]
@@ -78,25 +78,20 @@ final class MenuBarManager: NSObject {
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // 3rd created: Sonraki Şarkı (Pos 3 - En Sağ)
+        // Next track item.
         let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = fwdItem.button {
             button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
             button.target = self
             button.action = #selector(fwdTapped)
-            button.toolTip = NSLocalizedString("Sonraki Şarkı", comment: "Next track")
+            button.toolTip = LocalizationManager.shared.string("menu.next_track")
         }
         self.fwdStatusItem = fwdItem
 
         NowPlayingModel.shared.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
-                let isNotRunning: Bool
-                if case .notRunning = state { isNotRunning = true } else { isNotRunning = false }
-                self?.mainStatusItem?.isVisible = !isNotRunning
-                self?.bwdStatusItem?.isVisible = !isNotRunning
-                self?.fwdStatusItem?.isVisible = !isNotRunning
-                self?.updateWidth()
+                self?.updateStatusItemVisibility(for: state)
             }
             .store(in: &cancellables)
 
@@ -104,6 +99,17 @@ final class MenuBarManager: NSObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updateWidth() }
             .store(in: &cancellables)
+
+        LocalizationManager.shared.$language
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updateTooltips() }
+            .store(in: &cancellables)
+    }
+
+    private func updateTooltips() {
+        bwdStatusItem?.button?.toolTip = LocalizationManager.shared.string("menu.previous_track")
+        mainStatusItem?.button?.toolTip = LocalizationManager.shared.string("menu.main_item_tooltip")
+        fwdStatusItem?.button?.toolTip = LocalizationManager.shared.string("menu.next_track")
     }
 
     func updateWidth() {
@@ -119,6 +125,34 @@ final class MenuBarManager: NSObject {
         }
     }
 
+    private func updateStatusItemVisibility(for state: NowPlayingModel.State) {
+        switch state {
+        case .loaded, .permissionDenied:
+            hideStatusItemsWorkItem?.cancel()
+            hideStatusItemsWorkItem = nil
+            setStatusItemsVisible(true)
+
+        case .notRunning:
+            // A failed poll should not make the menu bar flicker. Only hide
+            // after the source has been unavailable for a short grace period.
+            guard hideStatusItemsWorkItem == nil else { return }
+            let workItem = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                self.setStatusItemsVisible(false)
+                self.hideStatusItemsWorkItem = nil
+            }
+            hideStatusItemsWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
+        }
+    }
+
+    private func setStatusItemsVisible(_ isVisible: Bool) {
+        mainStatusItem?.isVisible = isVisible
+        bwdStatusItem?.isVisible = isVisible
+        fwdStatusItem?.isVisible = isVisible
+        if isVisible { updateWidth() }
+    }
+
     @objc private func mainItemClicked() {
         if let type = NSApp.currentEvent?.type, type == .rightMouseUp || type == .rightMouseDown {
             return
@@ -127,6 +161,7 @@ final class MenuBarManager: NSObject {
         closeWorkItem?.cancel()
         if let volPopover = volumePopover, volPopover.isShown {
             volPopover.performClose(nil)
+            updateWidth()
         }
         NowPlayingModel.shared.togglePlayPause()
     }
@@ -144,7 +179,7 @@ final class MenuBarManager: NSObject {
     }
 
     func showVolumePopover() {
-        guard let volPopover = volumePopover, let button = mainStatusItem?.button else { return }
+        guard let volPopover = volumePopover, mainStatusItem?.button != nil else { return }
         closeWorkItem?.cancel()
 
         if volPopover.isShown { return }
@@ -182,6 +217,7 @@ final class MenuBarManager: NSObject {
 
             if !isInsideButton && !isInsidePopover {
                 volPopover.performClose(nil)
+                self.updateWidth()
             } else if isInsideButton || isInsidePopover {
                 self.scheduleCloseVolumePopover()
             }

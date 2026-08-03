@@ -15,40 +15,40 @@ struct SpotifyPlaylist: Identifiable, Codable, Equatable {
     static let defaults: [SpotifyPlaylist] = [
         SpotifyPlaylist(
             id: "liked-songs",
-            name: "Beğenilen Şarkılar",
-            description: "Spotify Kitaplığın",
+            name: "playlist.liked_songs",
+            description: "playlist.library",
             uri: "spotify:user:spotify:collection",
             iconName: "heart.fill",
             isUserAdded: false
         ),
         SpotifyPlaylist(
             id: "todays-top-hits",
-            name: "Today's Top Hits",
-            description: "Dünya Çapında Popüler",
+            name: "playlist.top_hits",
+            description: "playlist.popular_worldwide",
             uri: "spotify:playlist:37i9dQZF1DXcBWIGoYBM5M",
             iconName: "flame.fill",
             isUserAdded: false
         ),
         SpotifyPlaylist(
             id: "deep-focus",
-            name: "Deep Focus",
-            description: "Odaklanma & Çalışma",
+            name: "playlist.deep_focus",
+            description: "playlist.focus",
             uri: "spotify:playlist:37i9dQZF1DWZEtxA0PvYk2",
             iconName: "brain.head.profile",
             isUserAdded: false
         ),
         SpotifyPlaylist(
             id: "lofi-beats",
-            name: "Lofi Beats",
-            description: "Sakin & Chill Ritmler",
+            name: "playlist.lofi_beats",
+            description: "playlist.chill",
             uri: "spotify:playlist:37i9dQZF1DWWQRwWYiJsv0",
             iconName: "headphones",
             isUserAdded: false
         ),
         SpotifyPlaylist(
             id: "discover-weekly",
-            name: "Haftalık Keşif",
-            description: "Sana Özel Şarkılar",
+            name: "playlist.discover_weekly",
+            description: "playlist.personalized",
             uri: "spotify:playlist:37i9dQZF1DXWj21xecL95e",
             iconName: "sparkles",
             isUserAdded: false
@@ -63,16 +63,24 @@ final class SpotifyPlaylistModel: ObservableObject {
 
     @Published var playlists: [SpotifyPlaylist] = []
 
+    private let defaults: UserDefaults
     private let defaultsKey = "savedSpotifyPlaylists"
 
-    private init() {
+    init(userDefaults: UserDefaults = .standard) {
+        defaults = userDefaults
         loadPlaylists()
     }
 
     func loadPlaylists() {
-        if let data = UserDefaults.standard.data(forKey: defaultsKey),
+        if let data = defaults.data(forKey: defaultsKey),
            let saved = try? JSONDecoder().decode([SpotifyPlaylist].self, from: data) {
-            playlists = saved
+            playlists = saved.map { playlist in
+                guard !playlist.isUserAdded,
+                      let localizedDefault = SpotifyPlaylist.defaults.first(where: { $0.id == playlist.id }) else {
+                    return playlist
+                }
+                return localizedDefault
+            }
         } else {
             playlists = SpotifyPlaylist.defaults
             savePlaylists()
@@ -81,7 +89,7 @@ final class SpotifyPlaylistModel: ObservableObject {
 
     func savePlaylists() {
         if let data = try? JSONEncoder().encode(playlists) {
-            UserDefaults.standard.set(data, forKey: defaultsKey)
+            defaults.set(data, forKey: defaultsKey)
         }
     }
 
@@ -91,8 +99,8 @@ final class SpotifyPlaylistModel: ObservableObject {
 
         let newPlaylist = SpotifyPlaylist(
             id: UUID().uuidString,
-            name: name.isEmpty ? "Çalma Listesi" : name,
-            description: "Eklenen Playlist",
+            name: name.isEmpty ? "playlist.custom_name" : name,
+            description: "playlist.added",
             uri: uri,
             iconName: "music.note.list",
             isUserAdded: true
@@ -109,28 +117,51 @@ final class SpotifyPlaylistModel: ObservableObject {
     }
 
     func play(playlist: SpotifyPlaylist) {
+        let escapedURI = playlist.uri
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\r", with: " ")
         let script = """
         tell application "Spotify"
             if it is running then
-                play track "\(playlist.uri)"
+                play track "\(escapedURI)"
             end if
         end tell
         """
-        var error: NSDictionary?
-        if let appleScript = NSAppleScript(source: script) {
-            appleScript.executeAndReturnError(&error)
+        Task.detached {
+            do {
+                try AppleScriptRunner.run(script)
+            } catch {
+                print("Playlist playback failed: \(error)")
+            }
         }
     }
 
     private func parseURI(from input: String) -> String {
+        Self.normalizedURI(from: input)
+    }
+
+    static func normalizedURI(from input: String) -> String {
         let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.hasPrefix("spotify:playlist:") || trimmed.hasPrefix("spotify:user:") {
+        if trimmed.hasPrefix("spotify:playlist:") {
+            let id = String(trimmed.dropFirst("spotify:playlist:".count))
+            guard id.range(of: #"^[A-Za-z0-9]+$"#, options: .regularExpression) != nil else { return "" }
+            return "spotify:playlist:\(id)"
+        }
+        if trimmed.hasPrefix("spotify:user:") {
+            let parts = trimmed.split(separator: ":")
+            guard parts.count == 4, parts[1] == "user", parts[3] == "collection",
+                  parts[2].range(of: #"^[A-Za-z0-9_]+$"#, options: .regularExpression) != nil else { return "" }
             return trimmed
         }
-        if let url = URL(string: trimmed), url.host?.contains("spotify.com") == true {
-            let pathComponents = url.pathComponents
-            if let index = pathComponents.firstIndex(of: "playlist"), index + 1 < pathComponents.count {
-                let playlistID = pathComponents[index + 1]
+        if let components = URLComponents(string: trimmed),
+           components.scheme == "https",
+           ["open.spotify.com", "play.spotify.com"].contains(components.host?.lowercased()) {
+            let pathParts = components.path.split(separator: "/")
+            if let index = pathParts.firstIndex(of: "playlist"), index + 1 < pathParts.count {
+                let playlistID = String(pathParts[index + 1])
+                guard playlistID.range(of: #"^[A-Za-z0-9]+$"#, options: .regularExpression) != nil else { return "" }
                 return "spotify:playlist:\(playlistID)"
             }
         }

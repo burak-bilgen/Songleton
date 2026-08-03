@@ -6,20 +6,19 @@ final class LyricsService {
     private init() {}
 
     func fetchSyncedLyrics(track: String, artist: String, album: String? = nil, duration: Double? = nil) async -> [LyricLine]? {
-        guard let encodedTrack = track.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedArtist = artist.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return nil
+        var components = URLComponents(string: "https://lrclib.net/api/get")
+        var queryItems = [
+            URLQueryItem(name: "track_name", value: track),
+            URLQueryItem(name: "artist_name", value: artist)
+        ]
+        if let album, !album.isEmpty {
+            queryItems.append(URLQueryItem(name: "album_name", value: album))
         }
-
-        var urlString = "https://lrclib.net/api/get?track_name=\(encodedTrack)&artist_name=\(encodedArtist)"
-        if let album, let encodedAlbum = album.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed), !album.isEmpty {
-            urlString += "&album_name=\(encodedAlbum)"
+        if let duration, duration.isFinite, duration > 0 {
+            queryItems.append(URLQueryItem(name: "duration", value: String(Int(min(duration, 7 * 24 * 60 * 60)))))
         }
-        if let duration, duration > 0 {
-            urlString += "&duration=\(Int(duration))"
-        }
-
-        guard let url = URL(string: urlString) else { return nil }
+        components?.queryItems = queryItems
+        guard let url = components?.url else { return nil }
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -34,9 +33,9 @@ final class LyricsService {
 
             let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
             if let syncedLrc = json?["syncedLyrics"] as? String, !syncedLrc.isEmpty {
-                return parseLRC(syncedLrc)
+                return Self.parseLRC(syncedLrc)
             } else if let plainLrc = json?["plainLyrics"] as? String, !plainLrc.isEmpty {
-                return parsePlainLyrics(plainLrc)
+                return Self.parsePlainLyrics(plainLrc)
             }
         } catch {
             return nil
@@ -44,7 +43,7 @@ final class LyricsService {
         return nil
     }
 
-    private func parseLRC(_ lrcString: String) -> [LyricLine] {
+    static func parseLRC(_ lrcString: String) -> [LyricLine] {
         var lines: [LyricLine] = []
 
         let tagPattern = "\\[(\\d{1,2}):(\\d{2})(?:[\\.\\:](\\d{1,3}))?\\]"
@@ -61,7 +60,7 @@ final class LyricsService {
             let matches = tagRegex.matches(in: trimmed, range: NSRange(location: 0, length: nsString.length))
             if matches.isEmpty { continue }
 
-            let lastMatch = matches.last!
+            guard let lastMatch = matches.last else { continue }
             let textStartIndex = lastMatch.range.location + lastMatch.range.length
             let lyricText = nsString.substring(from: textStartIndex).trimmingCharacters(in: .whitespaces)
             if lyricText.isEmpty { continue }
@@ -90,7 +89,7 @@ final class LyricsService {
         return lines.sorted { $0.timestamp < $1.timestamp }
     }
 
-    private func parsePlainLyrics(_ plainString: String) -> [LyricLine] {
+    static func parsePlainLyrics(_ plainString: String) -> [LyricLine] {
         var lines: [LyricLine] = []
         var dummyTime = 0.0
         for line in plainString.components(separatedBy: .newlines) {

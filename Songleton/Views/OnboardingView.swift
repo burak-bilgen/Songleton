@@ -4,6 +4,7 @@ import SwiftUI
 
 struct OnboardingView: View {
     @ObservedObject var model: NowPlayingModel
+    @ObservedObject private var localization = LocalizationManager.shared
     let onFinish: () -> Void
 
     @State private var step: Step = .welcome
@@ -17,13 +18,25 @@ struct OnboardingView: View {
             // Modern gradient backdrop
             LinearGradient(
                 colors: [
-                    Color(nsColor: .windowBackgroundColor),
-                    Color.accentColor.opacity(0.06),
-                    Color(nsColor: .controlBackgroundColor)
+                    SongletonTheme.background,
+                    SongletonTheme.violet.opacity(0.16),
+                    SongletonTheme.panelTop
                 ],
                 startPoint: .topLeading, endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
+
+            Circle()
+                .fill(SongletonTheme.cyan.opacity(0.1))
+                .frame(width: 280, height: 280)
+                .blur(radius: 70)
+                .offset(x: -170, y: -260)
+
+            Circle()
+                .fill(SongletonTheme.violet.opacity(0.12))
+                .frame(width: 260, height: 260)
+                .blur(radius: 80)
+                .offset(x: 180, y: 260)
 
             VStack(spacing: 0) {
                 // Header drag area & step indicator
@@ -61,7 +74,7 @@ struct OnboardingView: View {
                 Spacer(minLength: 12)
             }
         }
-        .frame(width: 460, height: 600)
+        .frame(width: 520, height: 660)
         .onAppear {
             model.checkAutomationPermission(askUser: false)
             withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
@@ -92,7 +105,7 @@ struct OnboardingView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 11, weight: .bold))
-                            Text("Geri")
+                            Text(localization.string("common.back"))
                                 .font(.system(size: 12, weight: .medium))
                         }
                         .foregroundStyle(.secondary)
@@ -114,7 +127,7 @@ struct OnboardingView: View {
             HStack(spacing: 8) {
                 ForEach(0..<3, id: \.self) { i in
                     Capsule()
-                        .fill(stepIndex >= i ? Color.accentColor : Color.primary.opacity(0.12))
+                        .fill(stepIndex >= i ? SongletonTheme.accentGradient : LinearGradient(colors: [Color.white.opacity(0.1)], startPoint: .leading, endPoint: .trailing))
                         .frame(height: 4)
                         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: stepIndex)
                 }
@@ -129,7 +142,7 @@ struct OnboardingView: View {
             // Hero Icon
             ZStack {
                 Circle()
-                    .fill(Color.accentColor.opacity(0.15))
+                    .fill(SongletonTheme.violet.opacity(0.18))
                     .frame(width: 96, height: 96)
                     .scaleEffect(animateIcon ? 1.06 : 0.96)
 
@@ -137,7 +150,7 @@ struct OnboardingView: View {
                     Image(nsImage: icon)
                         .resizable()
                         .frame(width: 80, height: 80)
-                        .shadow(color: Color.accentColor.opacity(0.3), radius: 12, y: 6)
+                        .shadow(color: SongletonTheme.cyan.opacity(0.35), radius: 14, y: 6)
                 } else {
                     Image(systemName: "music.note")
                         .font(.system(size: 44, weight: .semibold))
@@ -147,12 +160,12 @@ struct OnboardingView: View {
 
             // Title & Description (No Overflow)
             VStack(spacing: 8) {
-                Text("Songleton'a Hoş Geldiniz")
+                Text(localization.string("onboarding.welcome"))
                     .font(.system(size: 22, weight: .bold))
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Menü çubuğunuzda çalan parçayı anlık görüntüleyin. Spotify ve Apple Music'i doğrudan kontrol edin.")
+                Text(localization.string("onboarding.welcome_hint"))
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -165,30 +178,30 @@ struct OnboardingView: View {
                 featureCard(
                     id: 1,
                     icon: "music.note.house.fill",
-                    color: .pink,
-                    title: "Menü Çubuğunda Canlı Bilgi",
-                    desc: "Şarkı ve sanatçı adı menü çubuğunda yumuşak animasyonla akar."
+                    color: SongletonTheme.pink,
+                    title: localization.string("onboarding.feature_live_title"),
+                    desc: localization.string("onboarding.feature_live_hint")
                 )
                 featureCard(
                     id: 2,
                     icon: "playpause.circle.fill",
-                    color: .blue,
-                    title: "Hızlı Medya Kontrolleri",
-                    desc: "Oynat, durdur, parça değiştir ve ses ayarını tek tıkla yapın."
+                    color: SongletonTheme.cyan,
+                    title: localization.string("onboarding.feature_control_title"),
+                    desc: localization.string("onboarding.feature_control_hint")
                 )
                 featureCard(
                     id: 3,
-                    icon: "sparkles",
-                    color: .purple,
-                    title: "Dinamik Tema & Akıllı Geçmiş",
-                    desc: "Albüm kapağına göre değişen renkler ve son çalınan şarkı geçmişi."
+                    icon: "quote.bubble.fill",
+                    color: SongletonTheme.violet,
+                    title: localization.string("onboarding.feature_lyrics_title"),
+                    desc: localization.string("onboarding.feature_lyrics_hint")
                 )
             }
 
             Spacer(minLength: 4)
 
             // Primary Button
-            actionButton(title: "Devam Et →", color: .accentColor) {
+            actionButton(title: localization.string("common.continue"), color: .accentColor) {
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
                     step = .permission
                 }
@@ -222,11 +235,11 @@ struct OnboardingView: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(.primary.opacity(hoveredCard == id ? 0.07 : 0.04))
+                .fill(SongletonTheme.card.opacity(hoveredCard == id ? 0.9 : 0.68))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(.primary.opacity(hoveredCard == id ? 0.12 : 0.05), lineWidth: 1)
+                .stroke(hoveredCard == id ? color.opacity(0.38) : Color.white.opacity(0.08), lineWidth: 1)
         )
         .onHover { isHovered in
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -250,16 +263,23 @@ struct OnboardingView: View {
             }
 
             VStack(spacing: 8) {
-                Text("Otomasyon İzni")
+                Text(localization.string("permission.automation"))
                     .font(.system(size: 20, weight: .bold))
 
-                Text("Songleton'ın çalan şarkıyı okuyabilmesi ve müzik çaları kontrol edebilmesi için macOS Otomasyon izni gereklidir.")
+             Text(localization.string("permission.onboarding_explanation"))
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
+                     .fixedSize(horizontal: false, vertical: true)
+
+                Text(localization.string("permission.onboarding_privacy"))
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.48))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
-            }
+             }
 
             // Per-Player Permission List
             VStack(spacing: 10) {
@@ -279,17 +299,17 @@ struct OnboardingView: View {
             }
 
             // Global System Settings Link
-            if model.automationStatus == .denied {
+            if model.automationStatus != .granted {
                 Button(action: { openAutomationSettings() }) {
                     HStack(spacing: 6) {
                         Image(systemName: "gearshape.fill")
-                        Text("Sistem Ayarları → Gizlilik ve Güvenlik → Otomasyon")
+                        Text(localization.string("permission.settings_path"))
                     }
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(SongletonTheme.cyan)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(.orange.opacity(0.12), in: Capsule())
+                    .background(SongletonTheme.cyan.opacity(0.12), in: Capsule())
                 }
                 .buttonStyle(.plain)
             }
@@ -299,7 +319,7 @@ struct OnboardingView: View {
             // Bottom Actions
             VStack(spacing: 8) {
                 actionButton(
-                    title: model.automationStatus == .granted ? "Devam Et →" : "Tüm İzinleri İste",
+                    title: model.automationStatus == .granted ? localization.string("common.continue") : localization.string("permission.request_all"),
                     color: .accentColor
                 ) {
                     if model.automationStatus == .granted {
@@ -313,7 +333,7 @@ struct OnboardingView: View {
                     Button(action: {
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) { step = .ready }
                     }) {
-                        Text("Şimdilik Atla (Daha sonra ayarlayabilirsiniz)")
+                        Text(localization.string("permission.skip"))
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -356,7 +376,7 @@ struct OnboardingView: View {
                 Button(action: {
                     model.requestPermissionFor(bundleID: bundleID)
                 }) {
-                    Text("İzin Ver")
+                    Text(localization.string("permission.grant"))
                         .font(.system(size: 12, weight: .semibold))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
@@ -367,7 +387,7 @@ struct OnboardingView: View {
             }
         }
         .padding(12)
-        .background(.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
+                    .background(SongletonTheme.card.opacity(0.68), in: RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(.primary.opacity(0.06), lineWidth: 1)
@@ -388,10 +408,10 @@ struct OnboardingView: View {
             }
 
             VStack(spacing: 8) {
-                Text("Her Şey Hazır!")
+                Text(localization.string("onboarding.ready"))
                     .font(.system(size: 22, weight: .bold))
 
-                Text("Songleton menü çubuğunuzda aktif hale geldi. Müzik başladığında menü çubuğundan anlık takip edebilirsiniz.")
+                Text(localization.string("onboarding.ready_hint"))
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -400,16 +420,16 @@ struct OnboardingView: View {
             }
 
             VStack(alignment: .leading, spacing: 12) {
-                tipItem(icon: "menubar.rectangle", title: "Menü Çubuğuna Tıklayın", desc: "Kontrol panelini ve ses ayarını açın.")
-                tipItem(icon: "music.note", title: "Albüm Kapağına Tıklayın", desc: "Müzik uygulamasını ön plana getirin.")
-                tipItem(icon: "doc.on.doc", title: "Şarkı Adına Tıklayın", desc: "Çalan parçayı panoya kopyalayın.")
+                tipItem(icon: "menubar.rectangle", title: localization.string("onboarding.tip_menu_title"), desc: localization.string("onboarding.tip_menu_hint"))
+                tipItem(icon: "music.note", title: localization.string("onboarding.tip_artwork_title"), desc: localization.string("onboarding.tip_artwork_hint"))
+                tipItem(icon: "doc.on.doc", title: localization.string("onboarding.tip_copy_title"), desc: localization.string("onboarding.tip_copy_hint"))
             }
             .padding(14)
             .background(.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
 
             Spacer(minLength: 4)
 
-            actionButton(title: "Başlat 🚀", color: .green) {
+            actionButton(title: localization.string("common.start"), color: .green) {
                 onFinish()
             }
         }
@@ -419,7 +439,7 @@ struct OnboardingView: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(SongletonTheme.cyan)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 1) {
@@ -443,8 +463,15 @@ struct OnboardingView: View {
                 .font(.system(size: 14, weight: .bold))
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .background(color, in: RoundedRectangle(cornerRadius: 12))
-                .foregroundStyle(.white)
+                .background(
+                    LinearGradient(
+                        colors: [color, color.opacity(0.72)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                )
+                .foregroundStyle(.black.opacity(0.82))
                 .contentShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(color: color.opacity(0.3), radius: 8, y: 4)
         }
@@ -457,7 +484,7 @@ struct OnboardingView: View {
         switch model.automationStatus {
         case .granted: "checkmark.shield.fill"
         case .denied: "xmark.shield.fill"
-        case .unknown: "shield.lefthalf.filled"
+        case .notDetermined: "shield.lefthalf.filled"
         }
     }
 
@@ -465,15 +492,15 @@ struct OnboardingView: View {
         switch model.automationStatus {
         case .granted: .green
         case .denied: .red
-        case .unknown: .orange
+        case .notDetermined: .orange
         }
     }
 
     private func statusText(for status: NowPlayingModel.AutomationStatus) -> String {
         switch status {
-        case .granted: "İzin Verildi"
-        case .denied: "İzin Reddedildi"
-        case .unknown: "Henüz İzin Verilmedi"
+        case .granted: localization.string("permission.granted")
+        case .denied: localization.string("permission.denied")
+        case .notDetermined: localization.string("permission.not_granted")
         }
     }
 
@@ -481,7 +508,7 @@ struct OnboardingView: View {
         switch status {
         case .granted: .green
         case .denied: .red
-        case .unknown: .secondary
+        case .notDetermined: .secondary
         }
     }
 

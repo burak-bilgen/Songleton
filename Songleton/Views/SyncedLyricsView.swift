@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct SyncedLyricsView: View {
+    private static let maximumHeight: CGFloat = 240
     @ObservedObject var nowPlaying: NowPlayingModel
     @StateObject private var lyricsModel = LyricsModel.shared
+    @ObservedObject private var localization = LocalizationManager.shared
 
     @State private var isUserScrolling = false
     @State private var userScrollTimer: Task<Void, Never>? = nil
@@ -14,25 +16,25 @@ struct SyncedLyricsView: View {
             if lyricsModel.isLoading {
                 VStack(spacing: 8) {
                     ProgressView().controlSize(.small)
-                    Text(NSLocalizedString("Sözler yükleniyor…", comment: "Loading lyrics"))
+                    Text(localization.string("lyrics.loading"))
                         .font(.system(size: 11, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.6))
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: .infinity)
             } else if lyricsModel.lines.isEmpty {
                 VStack(spacing: 6) {
                     Image(systemName: "quote.bubble.fill")
                         .font(.system(size: 24, weight: .ultraLight))
                         .foregroundStyle(.white.opacity(0.4))
-                    Text(NSLocalizedString("Söz Bulunamadı", comment: "Lyrics not found"))
+                    Text(localization.string("lyrics.not_found"))
                         .font(.system(size: 12, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
-                    Text(NSLocalizedString("Bu parça için söz bulunmuyor.", comment: "No synced lyrics available"))
+                    Text(localization.string("lyrics.no_match"))
                         .font(.system(size: 10, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: .infinity)
             } else {
                 let activeIndex = lyricsModel.activeLineIndex(for: playbackPosition)
 
@@ -106,7 +108,8 @@ struct SyncedLyricsView: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .frame(maxHeight: Self.maximumHeight)
         .clipped()
         .focusable(false)
         .onAppear { loadLyricsForCurrentTrack() }
@@ -114,8 +117,8 @@ struct SyncedLyricsView: View {
     }
 
     private func loadLyricsForCurrentTrack() {
-        if case .loaded(let info, _) = nowPlaying.state {
-            lyricsModel.loadLyrics(track: info.track, artist: info.artist, album: info.album, duration: info.duration)
+        if case .loaded(let info, let source) = nowPlaying.state {
+            lyricsModel.loadLyrics(track: info.track, artist: info.artist, album: info.album, duration: info.duration, source: source)
         }
     }
 }

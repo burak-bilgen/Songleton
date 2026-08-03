@@ -23,14 +23,38 @@ struct NowPlayingInfo {
 enum MediaControllerError: Error {
     case appNotRunning
     case permissionDenied
+    case unsupportedCommand
     case scriptFailed(String)
+}
+
+nonisolated enum MediaValue {
+    nonisolated static let maximumPosition = 7 * 24 * 60 * 60.0
+
+    nonisolated static func position(_ value: Double) -> Double {
+        guard value.isFinite else { return 0 }
+        return min(max(0, value), maximumPosition)
+    }
+
+    nonisolated static func duration(_ value: Double) -> Double {
+        guard value.isFinite, value > 0 else { return 0 }
+        return min(value, maximumPosition)
+    }
+
+    nonisolated static func volume(_ value: Int) -> Int {
+        min(max(0, value), 100)
+    }
+
+    nonisolated static func volume(_ value: Double) -> Int {
+        guard value.isFinite else { return 0 }
+        return Int(min(max(0, value), 100).rounded())
+    }
 }
 
 enum AppleScriptRunner {
     @discardableResult
     nonisolated static func run(_ source: String) throws -> NSAppleEventDescriptor {
         guard let script = NSAppleScript(source: source) else {
-            throw MediaControllerError.scriptFailed("AppleScript derlenemedi")
+            throw MediaControllerError.scriptFailed("AppleScript compilation failed")
         }
         var error: NSDictionary?
         let result = script.executeAndReturnError(&error)
@@ -53,6 +77,7 @@ enum AutomationPermission {
 
 protocol MediaController: Sendable {
     nonisolated var bundleID: String { get }
+    nonisolated var activeBundleID: String? { get }
     nonisolated var displayName: String { get }
     nonisolated var scriptAppName: String { get }
     nonisolated var isRunning: Bool { get }
@@ -61,7 +86,6 @@ protocol MediaController: Sendable {
     nonisolated func togglePlayPause() throws
     nonisolated func nextTrack() throws
     nonisolated func previousTrack() throws
-    nonisolated func restartTrack() throws
     nonisolated func setVolume(_ volume: Int) throws
     nonisolated func seekTo(_ position: Double) throws
     nonisolated func toggleShuffle() throws
@@ -69,6 +93,8 @@ protocol MediaController: Sendable {
 }
 
 extension MediaController {
+    nonisolated var activeBundleID: String? { bundleID }
+
     nonisolated var isRunning: Bool {
         !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty
     }
@@ -76,9 +102,12 @@ extension MediaController {
     nonisolated func togglePlayPause() throws { try sendCommand("playpause") }
     nonisolated func nextTrack() throws { try sendCommand("next track") }
     nonisolated func previousTrack() throws { try sendCommand("previous track") }
-    nonisolated func restartTrack() throws { try sendCommand("set player position to 0") }
-    nonisolated func setVolume(_ volume: Int) throws { try sendCommand("set sound volume to \(volume)") }
-    nonisolated func seekTo(_ position: Double) throws { try sendCommand("set player position to \(Int(position))") }
+    nonisolated func setVolume(_ volume: Int) throws {
+        try sendCommand("set sound volume to \(MediaValue.volume(volume))")
+    }
+    nonisolated func seekTo(_ position: Double) throws {
+        try sendCommand("set player position to \(Int(MediaValue.position(position)))")
+    }
 
     private nonisolated func sendCommand(_ command: String) throws {
         guard isRunning else { throw MediaControllerError.appNotRunning }
@@ -113,13 +142,15 @@ final class SpotifyController: MediaController {
         guard let track = result.atIndex(1)?.stringValue,
               let artist = result.atIndex(2)?.stringValue,
               let playerState = result.atIndex(4)?.stringValue else {
-            throw MediaControllerError.scriptFailed("Spotify'dan beklenmeyen yanıt")
+            throw MediaControllerError.scriptFailed("Unexpected Spotify response")
         }
         let album = result.atIndex(3)?.stringValue ?? ""
-        let volume = Int(result.atIndex(5)?.int32Value ?? 50)
+        let volume = MediaValue.volume(Int(result.atIndex(5)?.int32Value ?? 50))
         let artworkURL = result.atIndex(6)?.stringValue.flatMap { URL(string: $0) }
-        let position = result.atIndex(7)?.doubleValue ?? 0
-        let duration = (result.atIndex(8)?.doubleValue ?? 0) / 1000.0
+        let position = MediaValue.position(result.atIndex(7)?.doubleValue ?? 0)
+        let rawDuration = result.atIndex(8)?.doubleValue ?? 0
+        // Spotify versions have returned both seconds and milliseconds.
+        let duration = MediaValue.duration(rawDuration > 10_000 ? rawDuration / 1_000 : rawDuration)
         let isShuffle = result.atIndex(9)?.booleanValue ?? false
         let isRepeatBool = result.atIndex(10)?.booleanValue ?? false
 
@@ -142,10 +173,14 @@ final class SpotifyController: MediaController {
     }
 }
 
-final class AppleMusicController: MediaController {
+final class AppleMusicController: @unchecked Sendable, MediaController {
     let bundleID = "com.apple.Music"
     let displayName = "Apple Music"
     var scriptAppName: String { "Music" }
+
+    private let artworkLock = NSLock()
+    private nonisolated(unsafe) var cachedArtworkTrack: String?
+    private nonisolated(unsafe) var cachedArtworkData: Data?
 
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""
@@ -158,26 +193,19 @@ final class AppleMusicController: MediaController {
         set dur to duration of current track
         set shuf to shuffle enabled
         set rep to song repeat as string
-        set d to missing value
-        try
-            set d to data of artwork 1 of current track
-        end try
-        return {t, a, al, s, v, pos, dur, shuf, rep, d}
+        return {t, a, al, s, v, pos, dur, shuf, rep}
         """)
         guard let track = result.atIndex(1)?.stringValue,
               let artist = result.atIndex(2)?.stringValue,
               let playerState = result.atIndex(4)?.stringValue else {
-            throw MediaControllerError.scriptFailed("Music'ten beklenmeyen yanıt")
+            throw MediaControllerError.scriptFailed("Unexpected Music response")
         }
         let album = result.atIndex(3)?.stringValue ?? ""
-        let volume = Int(result.atIndex(5)?.int32Value ?? 50)
-        let position = result.atIndex(6)?.doubleValue ?? 0
-        let duration = result.atIndex(7)?.doubleValue ?? 0
+        let volume = MediaValue.volume(Int(result.atIndex(5)?.int32Value ?? 50))
+        let position = MediaValue.position(result.atIndex(6)?.doubleValue ?? 0)
+        let duration = MediaValue.duration(result.atIndex(7)?.doubleValue ?? 0)
         let isShuffle = result.atIndex(8)?.booleanValue ?? false
         let repStr = result.atIndex(9)?.stringValue?.lowercased() ?? "off"
-        let rawData = result.atIndex(10)?.data
-        let artworkData = (rawData?.isEmpty == false) ? rawData : nil
-
         let mode: RepeatMode
         if repStr.contains("one") {
             mode = .one
@@ -187,6 +215,8 @@ final class AppleMusicController: MediaController {
             mode = .off
         }
 
+        let artworkData = loadArtworkIfNeeded(for: "\(track)|\(artist)|\(album)")
+
         return NowPlayingInfo(
             track: track, artist: artist, album: album,
             isPlaying: playerState == "playing",
@@ -194,6 +224,30 @@ final class AppleMusicController: MediaController {
             position: position, duration: duration,
             isShuffleEnabled: isShuffle, repeatMode: mode
         )
+    }
+
+    private nonisolated func loadArtworkIfNeeded(for trackKey: String) -> Data? {
+        artworkLock.lock()
+        if cachedArtworkTrack == trackKey {
+            let data = cachedArtworkData
+            artworkLock.unlock()
+            return data
+        }
+        artworkLock.unlock()
+
+        let data = (try? runInfoScript("""
+        try
+            return data of artwork 1 of current track
+        on error
+            return missing value
+        end try
+        """).data).flatMap { $0.isEmpty ? nil : $0 }
+
+        artworkLock.lock()
+        cachedArtworkTrack = trackKey
+        cachedArtworkData = data
+        artworkLock.unlock()
+        return data
     }
 
     nonisolated func toggleShuffle() throws {

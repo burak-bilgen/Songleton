@@ -5,6 +5,7 @@ import SwiftUI
 struct MenuBarMainLabelView: View {
     @ObservedObject var model: NowPlayingModel
     @ObservedObject var settings: SettingsModel
+    @ObservedObject private var localization = LocalizationManager.shared
 
     @State private var artworkScale: CGFloat = 1.0
 
@@ -23,7 +24,7 @@ struct MenuBarMainLabelView: View {
     }
 
     private var currentTitle: String {
-        model.menuBarTitle ?? "Songleton"
+        model.menuBarTitle ?? localization.string("app.name")
     }
 
     private var remainingTextWidth: CGFloat {
@@ -33,16 +34,16 @@ struct MenuBarMainLabelView: View {
     var body: some View {
         HStack(spacing: 4) {
             if isNotRunning {
-                // Cute Sleeping Music Note & zZz Text (No moon, no 'Songleton')
+                // Keep the inactive state compact and localized.
                 Image(systemName: "music.note")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(Color.secondary.opacity(0.65))
 
-                Text("zZz")
+                Text(localization.string("menu.sleeping"))
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.secondary.opacity(0.65))
             } else {
-                // 1. Albüm Kapağı Görseli (16x16) - Solda Sabit
+                // Album artwork stays fixed on the left.
                 ZStack {
                     if let artwork = model.artwork {
                         Image(nsImage: artwork)
@@ -65,7 +66,7 @@ struct MenuBarMainLabelView: View {
                 .frame(width: 16, height: 16)
                 .scaleEffect(artworkScale)
 
-                // 2. Şarkı Metni - Sağda Kalan Alanda Tam Ortalanmış
+                // Track text is centered in the remaining space.
                 MarqueeText(
                     text: currentTitle,
                     font: settings.menuBarFont.font(size: 12),
