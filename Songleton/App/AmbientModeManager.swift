@@ -78,10 +78,10 @@ final class AmbientModeManager: ObservableObject {
     }
 
     private func setupGlobalShortcutMonitor() {
-        // Global monitor for Cmd + Option + F to toggle Ambient Mode anywhere
+        // Global monitor for Option + Command + Shift + F to toggle Ambient Mode anywhere
         NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            if flags.contains([.command, .option]) && event.keyCode == 3 { // 'f' key is keyCode 3
+            if flags.contains([.command, .option, .shift]) && event.keyCode == 3 { // 'f' key is keyCode 3
                 Task { @MainActor in
                     self?.toggle()
                 }
@@ -90,7 +90,7 @@ final class AmbientModeManager: ObservableObject {
 
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            if flags.contains([.command, .option]) && event.keyCode == 3 {
+            if flags.contains([.command, .option, .shift]) && event.keyCode == 3 {
                 Task { @MainActor in
                     self?.toggle()
                 }

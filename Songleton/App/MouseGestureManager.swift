@@ -139,10 +139,10 @@ final class MouseGestureManager: ObservableObject {
     }
 
     fileprivate func handleFlagsChanged(_ flags: CGEventFlags, location: CGPoint) {
-        let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
+        let isCmdOptShiftPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate) && flags.contains(.maskShift)
         let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
 
-        if !isCmdOptionPressed && !isBothPressed && isVolumeGestureActive {
+        if !isCmdOptShiftPressed && !isBothPressed && isVolumeGestureActive {
             endVolumeGesture()
         }
     }
@@ -154,9 +154,9 @@ final class MouseGestureManager: ObservableObject {
             logger.debug("Global mouse move event received")
         }
         let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
-        let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
+        let isCmdOptShiftPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate) && flags.contains(.maskShift)
 
-        if isBothPressed || isCmdOptionPressed {
+        if isBothPressed || isCmdOptShiftPressed {
             if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: location) }
             updateVolumeGesture(at: location.y)
             return
@@ -183,9 +183,9 @@ final class MouseGestureManager: ObservableObject {
         }
 
         let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
-        let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
+        let isCmdOptShiftPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate) && flags.contains(.maskShift)
 
-        if isBothPressed || isCmdOptionPressed {
+        if isBothPressed || isCmdOptShiftPressed {
             if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: location) }
             updateVolumeGesture(at: location.y)
         } else if isVolumeGestureActive {
