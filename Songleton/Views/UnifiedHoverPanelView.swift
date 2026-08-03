@@ -15,17 +15,12 @@ struct UnifiedHoverPanelView: View {
     @State private var cancellables = Set<AnyCancellable>()
     @State private var hasConfiguredVolume = false
 
-    // Track Position Slider State
-    @State private var sliderPosition: Double = 0
-    @State private var isDraggingPosition: Bool = false
-
     // Button Press & Hover Micro-Animation States
     @State private var playButtonScale: CGFloat = 1.0
     @State private var prevButtonScale: CGFloat = 1.0
     @State private var nextButtonScale: CGFloat = 1.0
     @State private var shuffleButtonScale: CGFloat = 1.0
     @State private var repeatButtonScale: CGFloat = 1.0
-    @State private var lyricsButtonScale: CGFloat = 1.0
     @State private var ambientButtonScale: CGFloat = 1.0
     @State private var settingsButtonScale: CGFloat = 1.0
     @State private var isMutePressed: Bool = false
@@ -33,9 +28,6 @@ struct UnifiedHoverPanelView: View {
 
     // Gentle Artwork Breathing State
     @State private var isArtworkBreathing: Bool = false
-
-    // Accordion Lyrics Expansion State
-    @State private var isLyricsExpanded: Bool = false
 
     // Entrance Animation State
     @State private var appearScale: CGFloat = 0.88
@@ -106,9 +98,6 @@ struct UnifiedHoverPanelView: View {
 
             // 4. Panel Content
             VStack(spacing: 12) {
-                // Top Section: Volume Slider Row
-                volumeRow
-
                 // Center Section: Track Info & Controls
                 switch model.state {
                 case .loaded(let info, let source):
@@ -122,6 +111,22 @@ struct UnifiedHoverPanelView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 21)
+
+            // 5. Ambient Mode Button (top-left) + Settings (top-right)
+            .overlay(alignment: .topLeading) {
+                if case .loaded = model.state {
+                    ambientButton
+                        .padding(.top, 14)
+                        .padding(.leading, 14)
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if case .loaded = model.state {
+                    settingsButton
+                        .padding(.top, 14)
+                        .padding(.trailing, 14)
+                }
+            }
         }
         .frame(width: 360)
         .fixedSize(horizontal: true, vertical: true)
@@ -152,8 +157,7 @@ struct UnifiedHoverPanelView: View {
         }
     }
 
-    // MARK: - Volume Row
-
+    // Volume Slider Row (placed directly above the footer buttons)
     private var volumeRow: some View {
         HStack(spacing: 10) {
             Button {
@@ -163,17 +167,14 @@ struct UnifiedHoverPanelView: View {
                 }
                 toggleMute()
             } label: {
-                ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.12))
-                        .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 0.5))
-                        .frame(width: 28, height: 28)
-
-                    Image(systemName: speakerIconName)
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(activeVolume == 0 ? Color.red : Color.white)
-                        .symbolEffect(.bounce, value: isMutePressed)
-                }
+                controlCircle(
+                    icon: speakerIconName,
+                    iconSize: 12,
+                    circleSize: 28,
+                    isActive: activeVolume == 0,
+                    accentColor: .red
+                )
+                .symbolEffect(.bounce, value: isMutePressed)
             }
             .buttonStyle(.plain)
             .scaleEffect(isMutePressed ? 0.82 : (hoveredButtonID == "mute" ? 1.1 : 1.0))
@@ -213,6 +214,55 @@ struct UnifiedHoverPanelView: View {
         }
     }
 
+    // Ambient Mode Button — labeled pill, pinned to the top-right corner of the panel
+    private var ambientButton: some View {
+        Button {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { ambientButtonScale = 0.82 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { ambientButtonScale = 1.0 }
+            }
+            AmbientModeManager.shared.show()
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: "sparkles.tv.fill")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(themeColor)
+                Text(localization.string("ambient.short_label"))
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 30)
+            .background(Capsule().fill(themeColor.opacity(0.20)))
+            .overlay(Capsule().stroke(themeColor.opacity(0.60), lineWidth: 1))
+            .shadow(color: themeColor.opacity(0.30), radius: 6, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(hoveredButtonID == "ambient" ? 1.08 : ambientButtonScale)
+        .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
+        .onHover { isHovered in hoveredButtonID = isHovered ? "ambient" : nil }
+        .help(localization.string("ambient.short_label"))
+    }
+
+    // Settings Button — circular gear, pinned to the top-right corner of the panel
+    private var settingsButton: some View {
+        Button {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { settingsButtonScale = 0.82 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { settingsButtonScale = 1.0 }
+            }
+            openSettings()
+            NSApp.activate(ignoringOtherApps: true)
+        } label: {
+            controlCircle(icon: "gearshape.fill", iconSize: 14, circleSize: 32)
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(hoveredButtonID == "settings" ? 1.1 : settingsButtonScale)
+        .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
+        .onHover { isHovered in hoveredButtonID = isHovered ? "settings" : nil }
+        .help(localization.string("settings.title"))
+    }
+
     // MARK: - Now Playing Section
 
     private func nowPlayingView(info: NowPlayingInfo, source: String) -> some View {
@@ -223,7 +273,7 @@ struct UnifiedHoverPanelView: View {
                     Image(nsImage: artwork)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: isLyricsExpanded ? 84 : 130, height: isLyricsExpanded ? 84 : 130)
+                        .frame(width: 130, height: 130)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -250,7 +300,7 @@ struct UnifiedHoverPanelView: View {
                 } else {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.white.opacity(0.08))
-                        .frame(width: isLyricsExpanded ? 84 : 130, height: isLyricsExpanded ? 84 : 130)
+                        .frame(width: 130, height: 130)
                         .overlay(
                             Image(systemName: "music.note")
                                 .font(.system(size: 32, weight: .ultraLight))
@@ -276,263 +326,121 @@ struct UnifiedHoverPanelView: View {
                 }
             }
 
-            // Progress Bar
-            if settings.showProgressBar && info.duration > 0 {
-                VStack(spacing: 3) {
-                    CustomSliderView(
-                        value: $sliderPosition,
-                        range: 0...max(info.duration, 1),
-                        onEditingChanged: { editing in
-                            isDraggingPosition = editing
-                            if !editing { model.seekTo(sliderPosition) }
-                        },
-                        barColor: themeColor
-                    )
-                    .onAppear { if !isDraggingPosition { sliderPosition = info.position } }
-                    .onChange(of: info.position) { _, v in if !isDraggingPosition { sliderPosition = v } }
-
-                    HStack {
-                        Text(formatTime(isDraggingPosition ? sliderPosition : info.position))
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.5))
-                        Spacer()
-                        Text("-" + formatTime(max(0, info.duration - (isDraggingPosition ? sliderPosition : info.position))))
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.5))
-                    }
-                }
-            }
-
-            // Minimalist Controls Row with Hover Physics Micro-Animations
-            HStack(spacing: 16) {
-                // Shuffle Button
-                Button {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { shuffleButtonScale = 0.82 }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { shuffleButtonScale = 1.0 }
-                    }
-                    model.toggleShuffle()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(info.isShuffleEnabled ? themeColor.opacity(0.25) : Color.white.opacity(0.08))
-                            .overlay(Circle().stroke(info.isShuffleEnabled ? themeColor.opacity(0.6) : Color.white.opacity(0.15), lineWidth: 0.5))
-                            .frame(width: 32, height: 32)
-
-                        Image(systemName: "shuffle")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(info.isShuffleEnabled ? themeColor : Color.white.opacity(0.6))
-                    }
-                }
-                .buttonStyle(.plain)
-                .scaleEffect(hoveredButtonID == "shuffle" ? 1.1 : shuffleButtonScale)
-                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
-                .onHover { isHovered in hoveredButtonID = isHovered ? "shuffle" : nil }
-                .help(localization.string("control.shuffle"))
-
-                // Backward Button
-                Button {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { prevButtonScale = 0.82 }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { prevButtonScale = 1.0 }
-                    }
-                    model.previousTrack()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.1))
-                            .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 0.5))
-                            .frame(width: 36, height: 36)
-
-                        Image(systemName: "backward.fill")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-                }
-                .buttonStyle(.plain)
-                .scaleEffect(hoveredButtonID == "prev" ? 1.1 : prevButtonScale)
-                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
-                .onHover { isHovered in hoveredButtonID = isHovered ? "prev" : nil }
-                .help(localization.string("menu.previous_track"))
-
-                // Play / Pause Button (The ONLY element with Platform Glow Effect & Bouncy Micro-Animations!)
-                Button {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { playButtonScale = 0.85 }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) { playButtonScale = 1.0 }
-                    }
-                    model.togglePlayPause()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(themeColor)
-                            .shadow(color: themeColor.opacity(0.65), radius: 12, x: 0, y: 5)
-                            .frame(width: 46, height: 46)
-
-                        Image(systemName: info.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundStyle(.white)
-                            .offset(x: info.isPlaying ? 0 : 1.5)
-                            .contentTransition(.symbolEffect(.replace))
-                    }
-                }
-                .buttonStyle(.plain)
-                .scaleEffect(hoveredButtonID == "play" ? 1.12 : playButtonScale)
-                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
-                .onHover { isHovered in hoveredButtonID = isHovered ? "play" : nil }
-                .help(info.isPlaying ? localization.string("control.pause") : localization.string("control.play"))
-
-                // Forward Button
-                Button {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { nextButtonScale = 0.82 }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { nextButtonScale = 1.0 }
-                    }
-                    model.nextTrack()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.1))
-                            .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 0.5))
-                            .frame(width: 36, height: 36)
-
-                        Image(systemName: "forward.fill")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-                }
-                .buttonStyle(.plain)
-                .scaleEffect(hoveredButtonID == "next" ? 1.1 : nextButtonScale)
-                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
-                .onHover { isHovered in hoveredButtonID = isHovered ? "next" : nil }
-                .help(localization.string("menu.next_track"))
-
-                // Repeat Button (3 States: Off, All, One)
-                Button {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { repeatButtonScale = 0.82 }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { repeatButtonScale = 1.0 }
-                    }
-                    model.cycleRepeatMode()
-                } label: {
-                    let isRepeatActive = info.repeatMode != .off
-                    ZStack {
-                        Circle()
-                            .fill(isRepeatActive ? themeColor.opacity(0.25) : Color.white.opacity(0.08))
-                            .overlay(Circle().stroke(isRepeatActive ? themeColor.opacity(0.6) : Color.white.opacity(0.15), lineWidth: 0.5))
-                            .frame(width: 32, height: 32)
-
-                        Image(systemName: info.repeatMode == .one ? "repeat.1" : "repeat")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(isRepeatActive ? themeColor : Color.white.opacity(0.6))
-                            .contentTransition(.symbolEffect(.replace))
-                    }
-                }
-                .buttonStyle(.plain)
-                .scaleEffect(hoveredButtonID == "repeat" ? 1.1 : repeatButtonScale)
-                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
-                .onHover { isHovered in hoveredButtonID = isHovered ? "repeat" : nil }
-                .help(localization.string("control.repeat"))
-            }
-            .padding(.top, 2)
-
-            // Expanded Lyrics Section (Accordion Container with Smooth Asymmetric Transition)
-            if isLyricsExpanded {
-                VStack(spacing: 0) {
-                    SyncedLyricsView(nowPlaying: model)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.white.opacity(0.12), lineWidth: 0.5))
-                .transition(.asymmetric(
-                    insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)).combined(with: .move(edge: .top)),
-                    removal: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)).combined(with: .move(edge: .top))
-                ))
-            }
-
-            // Clean Footer Row (Bottom-Left Circular Lyrics & Ambient Buttons, Bottom-Right Settings Button)
+            // Controls Row: Playback (dead center)
             HStack(spacing: 10) {
-                // Bottom-Left Circular Lyrics Button
-                Button {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { lyricsButtonScale = 0.82 }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { lyricsButtonScale = 1.0 }
+                // Shuffle Button
+                    Button {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { shuffleButtonScale = 0.82 }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { shuffleButtonScale = 1.0 }
+                        }
+                        model.toggleShuffle()
+                    } label: {
+                        controlCircle(
+                            icon: "shuffle",
+                            iconSize: 13,
+                            circleSize: 32,
+                            isActive: info.isShuffleEnabled
+                        )
                     }
-                    withAnimation(.spring(response: 0.36, dampingFraction: 0.65)) {
-                        isLyricsExpanded.toggle()
-                    }
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(isLyricsExpanded ? themeColor.opacity(0.25) : Color.white.opacity(0.08))
-                            .overlay(Circle().stroke(isLyricsExpanded ? themeColor.opacity(0.6) : Color.white.opacity(0.15), lineWidth: 0.5))
-                            .frame(width: 32, height: 32)
+                    .buttonStyle(.plain)
+                    .scaleEffect(hoveredButtonID == "shuffle" ? 1.1 : shuffleButtonScale)
+                    .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
+                    .onHover { isHovered in hoveredButtonID = isHovered ? "shuffle" : nil }
+                    .help(localization.string("control.shuffle"))
 
-                        Image(systemName: "quote.bubble.fill")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(isLyricsExpanded ? themeColor : Color.white.opacity(0.7))
+                    // Backward Button
+                    Button {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { prevButtonScale = 0.82 }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { prevButtonScale = 1.0 }
+                        }
+                        model.previousTrack()
+                    } label: {
+                        controlCircle(icon: "backward.fill", iconSize: 16, circleSize: 36)
                     }
-                }
-                .buttonStyle(.plain)
-                .scaleEffect(hoveredButtonID == "lyrics" ? 1.1 : lyricsButtonScale)
-                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
-                .onHover { isHovered in hoveredButtonID = isHovered ? "lyrics" : nil }
-                .help(localization.string("lyrics.title"))
+                    .buttonStyle(.plain)
+                    .scaleEffect(hoveredButtonID == "prev" ? 1.1 : prevButtonScale)
+                    .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
+                    .onHover { isHovered in hoveredButtonID = isHovered ? "prev" : nil }
+                    .help(localization.string("menu.previous_track"))
 
-                // Ambient Mode Button (Full Screen)
-                Button {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { ambientButtonScale = 0.82 }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { ambientButtonScale = 1.0 }
+                    // Play / Pause Button (Hero: filled with theme color + glow)
+                    Button {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { playButtonScale = 0.85 }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) { playButtonScale = 1.0 }
+                        }
+                        model.togglePlayPause()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [themeColor.opacity(0.95), themeColor.opacity(0.75)],
+                                        startPoint: .top, endPoint: .bottom
+                                    )
+                                )
+                                .overlay(Circle().stroke(Color.white.opacity(0.35), lineWidth: 1))
+                                .shadow(color: themeColor.opacity(0.65), radius: 14, x: 0, y: 5)
+                                .frame(width: 48, height: 48)
+
+                            Image(systemName: info.isPlaying ? "pause.fill" : "play.fill")
+                                .font(.system(size: 19, weight: .bold))
+                                .foregroundStyle(.white)
+                                .offset(x: info.isPlaying ? 0 : 1.5)
+                                .contentTransition(.symbolEffect(.replace))
+                        }
                     }
-                    AmbientModeManager.shared.show()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.08))
-                            .overlay(Circle().stroke(Color.white.opacity(0.15), lineWidth: 0.5))
-                            .frame(width: 32, height: 32)
+                    .buttonStyle(.plain)
+                    .scaleEffect(hoveredButtonID == "play" ? 1.12 : playButtonScale)
+                    .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
+                    .onHover { isHovered in hoveredButtonID = isHovered ? "play" : nil }
+                    .help(info.isPlaying ? localization.string("control.pause") : localization.string("control.play"))
 
-                        Image(systemName: "sparkles.tv.fill")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(themeColor)
+                    // Forward Button
+                    Button {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { nextButtonScale = 0.82 }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { nextButtonScale = 1.0 }
+                        }
+                        model.nextTrack()
+                    } label: {
+                        controlCircle(icon: "forward.fill", iconSize: 16, circleSize: 36)
                     }
-                }
-                .buttonStyle(.plain)
-                .scaleEffect(hoveredButtonID == "ambient" ? 1.1 : ambientButtonScale)
-                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
-                .onHover { isHovered in hoveredButtonID = isHovered ? "ambient" : nil }
-                .help("Ambient Mode ✨")
+                    .buttonStyle(.plain)
+                    .scaleEffect(hoveredButtonID == "next" ? 1.1 : nextButtonScale)
+                    .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
+                    .onHover { isHovered in hoveredButtonID = isHovered ? "next" : nil }
+                    .help(localization.string("menu.next_track"))
 
-                Spacer()
-
-                // Bottom-Right Circular Settings Button
-                Button {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { settingsButtonScale = 0.82 }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { settingsButtonScale = 1.0 }
+                    // Repeat Button (3 States: Off, All, One)
+                    Button {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { repeatButtonScale = 0.82 }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { repeatButtonScale = 1.0 }
+                        }
+                        model.cycleRepeatMode()
+                    } label: {
+                        controlCircle(
+                            icon: info.repeatMode == .one ? "repeat.1" : "repeat",
+                            iconSize: 13,
+                            circleSize: 32,
+                            isActive: info.repeatMode != .off
+                        )
+                        .contentTransition(.symbolEffect(.replace))
                     }
-                    openSettings()
-                    NSApp.activate(ignoringOtherApps: true)
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.08))
-                            .overlay(Circle().stroke(Color.white.opacity(0.15), lineWidth: 0.5))
-                            .frame(width: 32, height: 32)
-
-                        Image(systemName: "gearshape.fill")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.7))
-                    }
-                }
-                .buttonStyle(.plain)
-                .scaleEffect(hoveredButtonID == "settings" ? 1.1 : settingsButtonScale)
-                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
-                .onHover { isHovered in hoveredButtonID = isHovered ? "settings" : nil }
-                .help(localization.string("settings.title"))
+                    .buttonStyle(.plain)
+                    .scaleEffect(hoveredButtonID == "repeat" ? 1.1 : repeatButtonScale)
+                    .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
+                    .onHover { isHovered in hoveredButtonID = isHovered ? "repeat" : nil }
+                    .help(localization.string("control.repeat"))
             }
             .padding(.top, 2)
+
+            // Volume Slider Row
+            volumeRow
+                .padding(.top, 2)
         }
     }
 
@@ -569,6 +477,47 @@ struct UnifiedHoverPanelView: View {
 
     // MARK: - Helpers
 
+    // Unified circular control button look: gradient glass fill, rim, soft shadow,
+    // and a clear accent highlight whenever the control is active.
+    private func controlCircle(
+        icon: String,
+        iconSize: CGFloat,
+        circleSize: CGFloat,
+        isActive: Bool = false,
+        accentColor: Color? = nil
+    ) -> some View {
+        let accent = accentColor ?? themeColor
+        return ZStack {
+            Group {
+                if isActive {
+                    Circle().fill(accent.opacity(0.30))
+                } else {
+                    Circle().fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.14), Color.white.opacity(0.05)],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+                }
+            }
+            .overlay(
+                Circle().stroke(
+                    isActive ? accent.opacity(0.70) : Color.white.opacity(0.18),
+                    lineWidth: 1
+                )
+            )
+            .frame(width: circleSize, height: circleSize)
+            .shadow(
+                color: isActive ? accent.opacity(0.35) : .black.opacity(0.25),
+                radius: 6, x: 0, y: 2
+            )
+
+            Image(systemName: icon)
+                .font(.system(size: iconSize, weight: .bold))
+                .foregroundStyle(isActive ? accent : .white.opacity(0.85))
+        }
+    }
+
     private var speakerIconName: String {
         let vol = activeVolume
         if vol == 0 {
@@ -592,10 +541,5 @@ struct UnifiedHoverPanelView: View {
             localVolume = 50
             model.setVolume(50)
         }
-    }
-
-    private func formatTime(_ seconds: Double) -> String {
-        let s = max(0, Int(seconds))
-        return String(format: "%d:%02d", s / 60, s % 60)
     }
 }
