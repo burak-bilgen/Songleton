@@ -23,8 +23,7 @@ struct VolumeGestureHUDView: View {
                     .shadow(color: .white.opacity(0.45), radius: 10)
                     .offset(y: -progress * (height - 26))
             }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 13)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.easeOut(duration: 0.06), value: manager.gestureVolume)
         }
         .frame(width: 46, height: 220)
