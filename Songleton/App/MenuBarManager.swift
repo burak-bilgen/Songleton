@@ -14,7 +14,6 @@ final class MenuBarManager: NSObject {
     private var cancellables = Set<AnyCancellable>()
     private var hoverWorkItem: DispatchWorkItem?
     private var closeWorkItem: DispatchWorkItem?
-    private var hideStatusItemsWorkItem: DispatchWorkItem?
 
     var mainButton: NSStatusBarButton? { mainStatusItem?.button }
 
@@ -62,7 +61,7 @@ final class MenuBarManager: NSObject {
             button.frame = hosting.frame
             button.target = self
             button.action = #selector(mainItemClicked)
-            button.sendAction(on: [.leftMouseUp])
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.toolTip = LocalizationManager.shared.string("menu.main_item_tooltip")
 
             let trackingView = MenuBarTrackingAreaView(frame: button.bounds)
@@ -87,6 +86,9 @@ final class MenuBarManager: NSObject {
             button.toolTip = LocalizationManager.shared.string("menu.next_track")
         }
         self.fwdStatusItem = fwdItem
+
+        // Always ensure menu bar status items remain visible
+        setStatusItemsVisible(true)
 
         NowPlayingModel.shared.$state
             .receive(on: DispatchQueue.main)
@@ -126,27 +128,11 @@ final class MenuBarManager: NSObject {
     }
 
     private func updateStatusItemVisibility(for state: NowPlayingModel.State) {
-        switch state {
-        case .loaded, .permissionDenied:
-            hideStatusItemsWorkItem?.cancel()
-            hideStatusItemsWorkItem = nil
-            setStatusItemsVisible(true)
-
-        case .notRunning:
-            // A failed poll should not make the menu bar flicker. Only hide
-            // after the source has been unavailable for a short grace period.
-            guard hideStatusItemsWorkItem == nil else { return }
-            let workItem = DispatchWorkItem { [weak self] in
-                guard let self else { return }
-                self.setStatusItemsVisible(false)
-                self.hideStatusItemsWorkItem = nil
-            }
-            hideStatusItemsWorkItem = workItem
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
-        }
+        // ALWAYS keep menu bar status items active and visible so Songleton never disappears
+        setStatusItemsVisible(true)
     }
 
-    private func setStatusItemsVisible(_ isVisible: Bool) {
+    func setStatusItemsVisible(_ isVisible: Bool) {
         mainStatusItem?.isVisible = isVisible
         bwdStatusItem?.isVisible = isVisible
         fwdStatusItem?.isVisible = isVisible
@@ -154,7 +140,31 @@ final class MenuBarManager: NSObject {
     }
 
     @objc private func mainItemClicked() {
-        if let type = NSApp.currentEvent?.type, type == .rightMouseUp || type == .rightMouseDown {
+        if let event = NSApp.currentEvent, (event.type == .rightMouseUp || event.type == .rightMouseDown) {
+            hoverWorkItem?.cancel()
+            closeWorkItem?.cancel()
+            volumePopover?.performClose(nil)
+
+            let menu = NSMenu()
+            let ambientItem = NSMenuItem(title: "Ambient Mode ✨", action: #selector(openAmbientMode), keyEquivalent: "")
+            ambientItem.target = self
+            menu.addItem(ambientItem)
+
+            menu.addItem(NSMenuItem.separator())
+
+            let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettingsMenu), keyEquivalent: ",")
+            settingsItem.target = self
+            menu.addItem(settingsItem)
+
+            menu.addItem(NSMenuItem.separator())
+
+            let quitItem = NSMenuItem(title: "Quit Songleton", action: #selector(quitApp), keyEquivalent: "q")
+            quitItem.target = self
+            menu.addItem(quitItem)
+
+            if let button = mainStatusItem?.button {
+                NSMenu.popUpContextMenu(menu, with: event, for: button)
+            }
             return
         }
         hoverWorkItem?.cancel()
@@ -164,6 +174,21 @@ final class MenuBarManager: NSObject {
             updateWidth()
         }
         NowPlayingModel.shared.togglePlayPause()
+    }
+
+    @objc private func openAmbientMode() {
+        volumePopover?.performClose(nil)
+        AmbientModeManager.shared.show()
+    }
+
+    @objc private func openSettingsMenu() {
+        volumePopover?.performClose(nil)
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func quitApp() {
+        NSApp.terminate(nil)
     }
 
     @objc private func bwdTapped() {
