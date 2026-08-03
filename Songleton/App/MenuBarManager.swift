@@ -151,13 +151,13 @@ final class MenuBarManager: NSObject {
             // Option/Alt key held -> Show Context Menu (Settings, Quit)
             if event.modifierFlags.contains(.option) {
                 let menu = NSMenu()
-                let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettingsMenu), keyEquivalent: ",")
+                let settingsItem = NSMenuItem(title: LocalizationManager.shared.string("menu.settings"), action: #selector(openSettingsMenu), keyEquivalent: ",")
                 settingsItem.target = self
                 menu.addItem(settingsItem)
 
                 menu.addItem(NSMenuItem.separator())
 
-                let quitItem = NSMenuItem(title: "Quit Songleton", action: #selector(quitApp), keyEquivalent: "q")
+                let quitItem = NSMenuItem(title: LocalizationManager.shared.string("menu.quit"), action: #selector(quitApp), keyEquivalent: "q")
                 quitItem.target = self
                 menu.addItem(quitItem)
 
@@ -278,6 +278,10 @@ final class MenuBarManager: NSObject {
 final class MenuBarTrackingAreaView: NSView {
     var onMouseEntered: (() -> Void)?
     var onMouseExited: (() -> Void)?
+
+    // The overlay only exists for hover tracking; let all clicks pass through
+    // to the status bar button underneath.
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
