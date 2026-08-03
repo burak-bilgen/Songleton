@@ -45,24 +45,31 @@ final class SettingsModel: ObservableObject {
         didSet { defaults.set(showTrackNotifications, forKey: "showTrackNotifications") }
     }
 
-    @Published var circularGesturesEnabled: Bool {
-        didSet { defaults.set(circularGesturesEnabled, forKey: "circularGesturesEnabled") }
-    }
-
     @Published var horizontalGesturesEnabled: Bool {
-        didSet { defaults.set(horizontalGesturesEnabled, forKey: "horizontalGesturesEnabled") }
+        didSet {
+            defaults.set(horizontalGesturesEnabled, forKey: "horizontalGesturesEnabled")
+            Task { @MainActor in
+                MouseGestureManager.shared.updateMonitoring()
+            }
+        }
     }
 
     @Published var verticalGesturesEnabled: Bool {
-        didSet { defaults.set(verticalGesturesEnabled, forKey: "verticalGesturesEnabled") }
+        didSet {
+            defaults.set(verticalGesturesEnabled, forKey: "verticalGesturesEnabled")
+            Task { @MainActor in
+                MouseGestureManager.shared.updateMonitoring()
+            }
+        }
     }
 
-    @Published var showProgressBar: Bool {
-        didSet { defaults.set(showProgressBar, forKey: "showProgressBar") }
-    }
-
-    @Published var useDynamicColor: Bool {
-        didSet { defaults.set(useDynamicColor, forKey: "useDynamicColor") }
+    @Published var showMenuBarNavButtons: Bool {
+        didSet {
+            defaults.set(showMenuBarNavButtons, forKey: "showMenuBarNavButtons")
+            Task { @MainActor in
+                MenuBarManager.shared.refreshNavButtonVisibility()
+            }
+        }
     }
 
     @Published var lyricsOffset: Double {
@@ -79,11 +86,9 @@ final class SettingsModel: ObservableObject {
             "menuBarFont": MenuBarFont.system.rawValue,
             "launchAtLogin": false,
             "showTrackNotifications": true,
-            "circularGesturesEnabled": true,
             "horizontalGesturesEnabled": true,
             "verticalGesturesEnabled": true,
-            "showProgressBar": true,
-            "useDynamicColor": true,
+            "showMenuBarNavButtons": true,
             "lyricsOffset": 0.9
         ])
         showArtistInMenuBar = userDefaults.bool(forKey: "showArtistInMenuBar")
@@ -91,11 +96,9 @@ final class SettingsModel: ObservableObject {
         menuBarFont = MenuBarFont(rawValue: userDefaults.string(forKey: "menuBarFont") ?? "") ?? .system
         launchAtLogin = SMAppService.mainApp.status == .enabled
         showTrackNotifications = userDefaults.bool(forKey: "showTrackNotifications")
-        circularGesturesEnabled = userDefaults.bool(forKey: "circularGesturesEnabled")
         horizontalGesturesEnabled = userDefaults.bool(forKey: "horizontalGesturesEnabled")
         verticalGesturesEnabled = userDefaults.bool(forKey: "verticalGesturesEnabled")
-        showProgressBar = userDefaults.bool(forKey: "showProgressBar")
-        useDynamicColor = userDefaults.bool(forKey: "useDynamicColor")
+        showMenuBarNavButtons = userDefaults.bool(forKey: "showMenuBarNavButtons")
         lyricsOffset = min(3, max(-3, userDefaults.double(forKey: "lyricsOffset")))
     }
 

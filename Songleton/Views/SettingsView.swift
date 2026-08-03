@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var appearScale: CGFloat = 0.95
     @State private var appearOpacity: Double = 0.0
     @State private var hoveredSection: String? = nil
+    @State private var accessibilityPermissionGranted = MouseGestureManager.shared.isAccessibilityTrusted
 
     var body: some View {
         ZStack {
@@ -34,6 +35,7 @@ struct SettingsView: View {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
             model.checkAutomationPermission(askUser: false)
+            refreshAccessibilityStatus()
             centerWindow()
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 appearScale = 1.0
@@ -43,12 +45,20 @@ struct SettingsView: View {
         .onDisappear {
             NSApp.setActivationPolicy(.accessory)
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refreshAccessibilityStatus()
+            model.checkAutomationPermission(askUser: false)
+        }
     }
 
     private func centerWindow() {
         DispatchQueue.main.async {
             NSApp.keyWindow?.center()
         }
+    }
+
+    private func refreshAccessibilityStatus() {
+        accessibilityPermissionGranted = MouseGestureManager.shared.isAccessibilityTrusted
     }
 
     // MARK: - Header
@@ -203,28 +213,28 @@ struct SettingsView: View {
 
                 VStack(spacing: 8) {
                     gestureRow(
-                        badge: "👈",
+                        icon: "arrow.left.to.line.compact",
                         action: localization.string("gesture.left_action"),
                         description: localization.string("gesture.left_desc"),
                         isEnabled: settings.horizontalGesturesEnabled
                     )
 
                     gestureRow(
-                        badge: "👉",
+                        icon: "arrow.right.to.line.compact",
                         action: localization.string("gesture.right_action"),
                         description: localization.string("gesture.right_desc"),
                         isEnabled: settings.horizontalGesturesEnabled
                     )
 
                     gestureRow(
-                        badge: "👆",
+                        icon: "arrow.up.to.line.compact",
                         action: localization.string("gesture.top_action"),
                         description: localization.string("gesture.top_desc"),
                         isEnabled: settings.verticalGesturesEnabled
                     )
 
                     gestureRow(
-                        badge: "🎚️",
+                        icon: "speaker.wave.2.fill",
                         action: localization.string("gesture.volume_action"),
                         description: localization.string("gesture.volume_desc"),
                         isEnabled: settings.verticalGesturesEnabled
@@ -252,16 +262,18 @@ struct SettingsView: View {
         }
     }
 
-    private func gestureRow(badge: String, action: String, description: String, isEnabled: Bool = true) -> some View {
+    private func gestureRow(icon: String, action: String, description: String, isEnabled: Bool = true) -> some View {
         HStack(spacing: 10) {
-            Text(badge)
-                .font(.system(size: 13))
-                .frame(minWidth: 26)
-                .frame(height: 24)
-                .padding(.horizontal, 4)
-                .background(isEnabled ? Color.white.opacity(0.10) : Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(isEnabled ? Color.white.opacity(0.18) : Color.white.opacity(0.06), lineWidth: 0.5))
-                .opacity(isEnabled ? 1.0 : 0.4)
+            ZStack {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(isEnabled ? Color.white.opacity(0.10) : Color.white.opacity(0.04))
+                    .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(isEnabled ? Color.white.opacity(0.18) : Color.white.opacity(0.06), lineWidth: 0.5))
+                    .frame(width: 30, height: 26)
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(isEnabled ? SongletonTheme.cyan : Color.white.opacity(0.3))
+            }
+            .opacity(isEnabled ? 1.0 : 0.4)
 
             Text(action)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -346,6 +358,15 @@ struct SettingsView: View {
                     title: localization.string("settings.show_artist"),
                     subtitle: localization.string("settings.show_artist_hint"),
                     isOn: $settings.showArtistInMenuBar
+                )
+
+                sectionDivider
+
+                settingsToggleRow(
+                    icon: "forward.fill",
+                    title: localization.string("settings.menu_bar_nav_buttons"),
+                    subtitle: localization.string("settings.menu_bar_nav_buttons_hint"),
+                    isOn: $settings.showMenuBarNavButtons
                 )
 
                 sectionDivider
@@ -471,16 +492,18 @@ struct SettingsView: View {
 
                 Button {
                     MouseGestureManager.shared.requestAccessibilityAccess()
+                    MouseGestureManager.shared.updateMonitoring()
+                    refreshAccessibilityStatus()
                     if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
                         NSWorkspace.shared.open(url)
                     }
                 } label: {
                     HStack(spacing: 12) {
                         iconBadge(
-                            systemName: MouseGestureManager.shared.isAccessibilityTrusted
+                            systemName: accessibilityPermissionGranted
                                 ? "checkmark.circle.fill"
                                 : "hand.raised.fill",
-                            color: MouseGestureManager.shared.isAccessibilityTrusted
+                            color: accessibilityPermissionGranted
                                 ? SongletonTheme.cyan
                                 : SongletonTheme.violet
                         )
@@ -489,11 +512,11 @@ struct SettingsView: View {
                             Text(localization.string("permission.accessibility"))
                                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
-                            Text(MouseGestureManager.shared.isAccessibilityTrusted
+                            Text(accessibilityPermissionGranted
                                 ? localization.string("permission.granted")
                                 : localization.string("permission.not_granted"))
                                 .font(.system(size: 11, weight: .medium, design: .rounded))
-                                .foregroundStyle(MouseGestureManager.shared.isAccessibilityTrusted
+                                .foregroundStyle(accessibilityPermissionGranted
                                     ? SongletonTheme.cyan
                                     : SongletonTheme.violet)
                         }
@@ -516,12 +539,33 @@ struct SettingsView: View {
     // MARK: - Footer
 
     private var footerSection: some View {
-        HStack {
+        HStack(spacing: 10) {
+            Link(destination: URL(string: "https://github.com/burak-bilgen")!) {
+                HStack(spacing: 5) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(SongletonTheme.cyan.opacity(0.8))
+                    Text("Made by Burak")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.35))
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.25))
+                }
+            }
+            .buttonStyle(.plain)
+            .onHover { hovering in
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    hoveredSection = hovering ? "footer" : nil
+                }
+            }
+            .help("github.com/burak-bilgen")
+
+            Spacer()
+
             Text("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
                 .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.2))
-
-            Spacer()
         }
         .padding(.top, 4)
     }
