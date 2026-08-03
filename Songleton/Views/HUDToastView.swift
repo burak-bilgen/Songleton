@@ -15,9 +15,19 @@ struct HUDToastView: View {
 
     var body: some View {
         ZStack {
-            // 1. Pure Jet Black Base Container
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(white: 0.07))
+            // 1. Glassmorphic Themed Base Container (Gradient tinted with album color)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            themeColor.opacity(0.16),
+                            Color(white: 0.07),
+                            Color(white: 0.045)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
 
             // 2. Ambient Artwork Aura Glow Layer (Matches Ambient Mode & Hover Panel)
             if let artwork {
@@ -28,25 +38,40 @@ struct HUDToastView: View {
                     .blur(radius: 40)
                     .saturation(1.8)
                     .opacity(0.36)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             } else {
                 Circle()
                     .fill(themeColor.opacity(0.25))
                     .frame(width: 160, height: 160)
                     .blur(radius: 45)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             }
 
-            // 3. Specular Glass Rim with Dynamic Theme Glow Shadow
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            // 3. Bottom-edge glaze so the panel reads as a soft floating card
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [.clear, .white.opacity(0.06)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+            // 4. Specular Glass Rim with Dynamic Theme Glow Shadow
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .stroke(
                     LinearGradient(
-                        colors: [.white.opacity(0.30), .white.opacity(0.08)],
+                        colors: [
+                            .white.opacity(0.42),
+                            themeColor.opacity(0.30),
+                            .white.opacity(0.06)
+                        ],
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     ),
                     lineWidth: 1
                 )
-                .shadow(color: themeColor.opacity(0.40), radius: 16, x: 0, y: 8)
+                .shadow(color: .black.opacity(0.55), radius: 10, x: 0, y: 6)
+                .shadow(color: themeColor.opacity(0.35), radius: 14, x: 0, y: 8)
 
             // 4. Toast Content (Thumbnail + Meta)
             HStack(spacing: 12) {

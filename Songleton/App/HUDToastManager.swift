@@ -56,16 +56,19 @@ final class HUDToastManager: NSObject {
         // Display visually WITHOUT ever stealing keyboard focus from active application!
         panel.orderFrontRegardless()
 
-        dismissTask = Task {
+        dismissTask = Task { [weak self, weak panel] in
             try? await Task.sleep(for: .seconds(2.8))
+            guard !Task.isCancelled, let self, let panel else { return }
             if !Task.isCancelled {
                 NSAnimationContext.runAnimationGroup { context in
                     context.duration = 0.35
                     panel.animator().alphaValue = 0.0
-                } completionHandler: {
+                } completionHandler: { [weak self, weak panel] in
+                    guard let panel else { return }
                     panel.orderOut(nil)
                     panel.close()
-                    if self.toastWindow === panel {
+                    Task { @MainActor [weak self, weak panel] in
+                        guard let self, self.toastWindow === panel else { return }
                         self.toastWindow = nil
                     }
                 }
