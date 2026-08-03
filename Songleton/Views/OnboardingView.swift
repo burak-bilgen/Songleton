@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 // MARK: - OnboardingView
@@ -10,6 +11,7 @@ struct OnboardingView: View {
     @State private var step: Step = .welcome
     @State private var animateIcon = false
     @State private var hoveredCard: Int? = nil
+    @State private var transitionDirection: Edge = .trailing
 
     enum Step: Int, CaseIterable {
         case welcome = 0
@@ -48,34 +50,19 @@ struct OnboardingView: View {
                     switch step {
                     case .welcome:
                         welcomeStepView
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .trailing).combined(with: .opacity),
-                                removal: .move(edge: .leading).combined(with: .opacity)
-                            ))
+                            .transition(pageTransition)
                     case .hoverAndTriggers:
                         hoverStepView
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .trailing).combined(with: .opacity),
-                                removal: .move(edge: .leading).combined(with: .opacity)
-                            ))
+                            .transition(pageTransition)
                     case .ambientMode:
                         ambientStepView
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .trailing).combined(with: .opacity),
-                                removal: .move(edge: .leading).combined(with: .opacity)
-                            ))
+                            .transition(pageTransition)
                     case .gestures:
                         gesturesStepView
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .trailing).combined(with: .opacity),
-                                removal: .move(edge: .leading).combined(with: .opacity)
-                            ))
+                            .transition(pageTransition)
                     case .permissions:
                         permissionsStepView
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .trailing).combined(with: .opacity),
-                                removal: .move(edge: .leading).combined(with: .opacity)
-                            ))
+                            .transition(pageTransition)
                     }
                 }
                 .padding(.horizontal, 28)
@@ -100,9 +87,7 @@ struct OnboardingView: View {
                 if step != .welcome {
                     Button(action: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            if let prev = Step(rawValue: step.rawValue - 1) {
-                                step = prev
-                            }
+                            move(to: Step(rawValue: step.rawValue - 1)!)
                         }
                     }) {
                         HStack(spacing: 4) {
@@ -120,6 +105,13 @@ struct OnboardingView: View {
                 }
 
                 Spacer()
+
+                if step != .permissions {
+                    Button(localization.string("onboarding.skip"), action: onFinish)
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.45))
+                }
 
                 Text("\(step.rawValue + 1) / \(Step.allCases.count)")
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
@@ -186,8 +178,8 @@ struct OnboardingView: View {
                     id: 2,
                     icon: "sparkles",
                     color: SongletonTheme.violet,
-                    title: localization.string("settings.dynamic_color"),
-                    desc: localization.string("settings.dynamic_color_hint")
+                    title: localization.string("onboarding.feature_lyrics_title"),
+                    desc: localization.string("onboarding.feature_lyrics_hint")
                 )
 
                 featureCard(
@@ -202,9 +194,7 @@ struct OnboardingView: View {
             Spacer(minLength: 4)
 
             actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                    step = .hoverAndTriggers
-                }
+                move(to: .hoverAndTriggers)
             }
         }
     }
@@ -231,7 +221,7 @@ struct OnboardingView: View {
                     id: 4,
                     icon: "computermouse.fill",
                     color: SongletonTheme.cyan,
-                    title: "Direkt Sağ Tık (Right-Click)",
+                    title: localization.string("onboarding.right_click_title"),
                     desc: localization.string("onboarding.right_click_hint")
                 )
 
@@ -239,7 +229,7 @@ struct OnboardingView: View {
                     id: 5,
                     icon: "hand.tap.fill",
                     color: SongletonTheme.violet,
-                    title: "Kapağa Çift Tıklama (Double-Click)",
+                    title: localization.string("onboarding.double_click_title"),
                     desc: localization.string("onboarding.double_click_hint")
                 )
 
@@ -255,9 +245,7 @@ struct OnboardingView: View {
             Spacer(minLength: 4)
 
             actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                    step = .ambientMode
-                }
+                move(to: .ambientMode)
             }
         }
     }
@@ -295,9 +283,7 @@ struct OnboardingView: View {
             Spacer(minLength: 4)
 
             actionButton(title: localization.string("common.continue"), color: SongletonTheme.violet) {
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                    step = .gestures
-                }
+                move(to: .gestures)
             }
         }
     }
@@ -329,9 +315,7 @@ struct OnboardingView: View {
             Spacer(minLength: 4)
 
             actionButton(title: localization.string("common.continue"), color: SongletonTheme.pink) {
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                    step = .permissions
-                }
+                move(to: .permissions)
             }
         }
     }
@@ -356,25 +340,17 @@ struct OnboardingView: View {
             VStack(spacing: 10) {
                 playerPermissionCard(appName: "Spotify", bundleID: "com.spotify.client", iconName: "music.note.list", color: .green)
                 playerPermissionCard(appName: "Apple Music", bundleID: "com.apple.Music", iconName: "music.note", color: .pink)
+                accessibilityPermissionCard
             }
 
             Spacer(minLength: 4)
 
             VStack(spacing: 8) {
-                actionButton(
-                    title: model.automationStatus == .granted ? localization.string("common.start") : localization.string("permission.request_all"),
-                    color: model.automationStatus == .granted ? .green : SongletonTheme.cyan
-                ) {
-                    if model.automationStatus == .granted {
-                        onFinish()
-                    } else {
-                        model.requestPermissionByScript()
-                    }
-                }
+                actionButton(title: localization.string("common.start"), color: SongletonTheme.cyan, action: onFinish)
 
                 if model.automationStatus != .granted {
-                    Button(action: { onFinish() }) {
-                        Text(localization.string("permission.skip"))
+                    Button(action: model.requestPermissionByScript) {
+                        Text(localization.string("permission.request_all"))
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(.white.opacity(0.4))
                     }
@@ -385,6 +361,20 @@ struct OnboardingView: View {
     }
 
     // MARK: - Reusable UI Components
+
+    private var pageTransition: AnyTransition {
+        .asymmetric(
+            insertion: .move(edge: transitionDirection).combined(with: .opacity),
+            removal: .move(edge: transitionDirection == .trailing ? .leading : .trailing).combined(with: .opacity)
+        )
+    }
+
+    private func move(to nextStep: Step) {
+        transitionDirection = nextStep.rawValue > step.rawValue ? .trailing : .leading
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+            step = nextStep
+        }
+    }
 
     private func badgeIcon(_ systemName: String, color: Color) -> some View {
         ZStack {
@@ -548,6 +538,58 @@ struct OnboardingView: View {
         .padding(12)
         .background(SongletonTheme.card.opacity(0.68), in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06), lineWidth: 1))
+    }
+
+    private var accessibilityPermissionCard: some View {
+        let isGranted = MouseGestureManager.shared.isAccessibilityTrusted
+        return HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(SongletonTheme.violet.opacity(0.15))
+                    .frame(width: 34, height: 34)
+                Image(systemName: "hand.raised.fill")
+                    .font(.system(size: 15))
+                    .foregroundStyle(SongletonTheme.violet)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(localization.string("permission.accessibility"))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text(isGranted ? localization.string("permission.granted") : localization.string("permission.not_granted"))
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(isGranted ? .green : .white.opacity(0.4))
+            }
+
+            Spacer()
+
+            if isGranted {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.green)
+            } else {
+                Button(action: requestAccessibilityPermission) {
+                    Text(localization.string("permission.open_accessibility"))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(SongletonTheme.violet, in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(12)
+        .background(SongletonTheme.card.opacity(0.68), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06), lineWidth: 1))
+    }
+
+    private func requestAccessibilityPermission() {
+        MouseGestureManager.shared.requestAccessibilityAccess()
+        MouseGestureManager.shared.updateMonitoring()
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     private func actionButton(title: String, color: Color, action: @escaping () -> Void) -> some View {
