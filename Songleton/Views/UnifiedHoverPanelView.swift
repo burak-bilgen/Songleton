@@ -23,6 +23,7 @@ struct UnifiedHoverPanelView: View {
     @State private var repeatButtonScale: CGFloat = 1.0
     @State private var ambientButtonScale: CGFloat = 1.0
     @State private var settingsButtonScale: CGFloat = 1.0
+    @State private var quitButtonScale: CGFloat = 1.0
     @State private var isMutePressed: Bool = false
     @State private var hoveredButtonID: String? = nil
 
@@ -121,11 +122,12 @@ struct UnifiedHoverPanelView: View {
                 }
             }
             .overlay(alignment: .topTrailing) {
-                if case .loaded = model.state {
+                HStack(spacing: 8) {
                     settingsButton
-                        .padding(.top, 14)
-                        .padding(.trailing, 14)
+                    quitButton
                 }
+                .padding(.top, 14)
+                .padding(.trailing, 14)
             }
         }
         .frame(width: 360)
@@ -242,6 +244,30 @@ struct UnifiedHoverPanelView: View {
         .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
         .onHover { isHovered in hoveredButtonID = isHovered ? "ambient" : nil }
         .help(localization.string("ambient.short_label"))
+    }
+
+    // Quit Button — small power circle, always visible so the app can be fully quit
+    private var quitButton: some View {
+        Button {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { quitButtonScale = 0.82 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { quitButtonScale = 1.0 }
+            }
+            NSApp.terminate(nil)
+        } label: {
+            controlCircle(
+                icon: "power",
+                iconSize: 13,
+                circleSize: 32,
+                isActive: hoveredButtonID == "quit",
+                accentColor: .red
+            )
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(hoveredButtonID == "quit" ? 1.1 : quitButtonScale)
+        .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
+        .onHover { isHovered in hoveredButtonID = isHovered ? "quit" : nil }
+        .help(localization.string("menu.quit"))
     }
 
     // Settings Button — circular gear, pinned to the top-right corner of the panel
