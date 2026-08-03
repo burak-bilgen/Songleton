@@ -26,7 +26,7 @@ final class MenuBarManager: NSObject {
 
     func setup() {
         guard mainStatusItem == nil else { return }
-        MouseGestureManager.shared.start()
+        MouseGestureManager.shared.updateMonitoring()
 
         // Unified detail and volume panel opened on hover.
         let volPopover = NSPopover()
@@ -132,10 +132,15 @@ final class MenuBarManager: NSObject {
         setStatusItemsVisible(true)
     }
 
+    func refreshNavButtonVisibility() {
+        setStatusItemsVisible(true)
+    }
+
     func setStatusItemsVisible(_ isVisible: Bool) {
+        let navVisible = isVisible && SettingsModel.shared.showMenuBarNavButtons
         mainStatusItem?.isVisible = isVisible
-        bwdStatusItem?.isVisible = isVisible
-        fwdStatusItem?.isVisible = isVisible
+        bwdStatusItem?.isVisible = navVisible
+        fwdStatusItem?.isVisible = navVisible
         if isVisible { updateWidth() }
     }
 

@@ -34,14 +34,15 @@ struct MenuBarMainLabelView: View {
     var body: some View {
         HStack(spacing: 4) {
             if isNotRunning {
-                // Keep the inactive state compact and localized.
-                Image(systemName: "music.note")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.secondary.opacity(0.65))
-
-                Text(localization.string("menu.sleeping"))
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.secondary.opacity(0.65))
+                // Clean brand wordmark while no music app is running.
+                MarqueeText(
+                    text: localization.string("app.name"),
+                    font: .custom("Audiowide", size: 11),
+                    maxWidth: max(30, settings.menuBarWidth - 8),
+                    alignment: .leading
+                )
+                .foregroundStyle(Color.secondary.opacity(0.55))
+                .transition(.opacity)
             } else {
                 // Album artwork stays fixed on the left.
                 ZStack {
@@ -80,10 +81,12 @@ struct MenuBarMainLabelView: View {
                         removal: .move(edge: .bottom).combined(with: .opacity)
                     )
                 )
+                .transition(.opacity)
             }
         }
         .padding(.horizontal, 2)
         .animation(.spring(response: 0.45, dampingFraction: 0.65), value: currentTitle)
+        .animation(.easeInOut(duration: 0.3), value: isNotRunning)
         .onChange(of: currentTitle) { _, _ in
             triggerCuteBounce()
         }
