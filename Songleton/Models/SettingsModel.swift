@@ -49,6 +49,14 @@ final class SettingsModel: ObservableObject {
         didSet { defaults.set(circularGesturesEnabled, forKey: "circularGesturesEnabled") }
     }
 
+    @Published var horizontalGesturesEnabled: Bool {
+        didSet { defaults.set(horizontalGesturesEnabled, forKey: "horizontalGesturesEnabled") }
+    }
+
+    @Published var verticalGesturesEnabled: Bool {
+        didSet { defaults.set(verticalGesturesEnabled, forKey: "verticalGesturesEnabled") }
+    }
+
     @Published var showProgressBar: Bool {
         didSet { defaults.set(showProgressBar, forKey: "showProgressBar") }
     }
@@ -72,6 +80,8 @@ final class SettingsModel: ObservableObject {
             "launchAtLogin": false,
             "showTrackNotifications": true,
             "circularGesturesEnabled": true,
+            "horizontalGesturesEnabled": true,
+            "verticalGesturesEnabled": true,
             "showProgressBar": true,
             "useDynamicColor": true,
             "lyricsOffset": 0.9
@@ -82,6 +92,8 @@ final class SettingsModel: ObservableObject {
         launchAtLogin = SMAppService.mainApp.status == .enabled
         showTrackNotifications = userDefaults.bool(forKey: "showTrackNotifications")
         circularGesturesEnabled = userDefaults.bool(forKey: "circularGesturesEnabled")
+        horizontalGesturesEnabled = userDefaults.bool(forKey: "horizontalGesturesEnabled")
+        verticalGesturesEnabled = userDefaults.bool(forKey: "verticalGesturesEnabled")
         showProgressBar = userDefaults.bool(forKey: "showProgressBar")
         useDynamicColor = userDefaults.bool(forKey: "useDynamicColor")
         lyricsOffset = min(3, max(-3, userDefaults.double(forKey: "lyricsOffset")))

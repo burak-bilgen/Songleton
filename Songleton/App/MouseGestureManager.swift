@@ -221,13 +221,20 @@ final class MouseGestureManager: ObservableObject {
     private func edgeZone(at location: NSPoint) -> EdgeZone? {
         guard let screen = NSScreen.screens.first(where: { $0.frame.contains(location) }) else { return nil }
         let frame = screen.frame
-        if location.x <= frame.minX + 4 { return .previous }
-        if location.x >= frame.maxX - 4 { return .next }
-        if location.y <= frame.minY + 4 { return .playPause }
+        let settings = SettingsModel.shared
+
+        if settings.horizontalGesturesEnabled {
+            if location.x <= frame.minX + 4 { return .previous }
+            if location.x >= frame.maxX - 4 { return .next }
+        }
+        if settings.verticalGesturesEnabled {
+            if location.y <= frame.minY + 4 { return .playPause }
+        }
         return nil
     }
 
     private func startVolumeGesture(at y: CGFloat, screenLocation: CGPoint) {
+        guard SettingsModel.shared.verticalGesturesEnabled else { return }
         guard case .loaded(let info, _) = NowPlayingModel.shared.state else { return }
         isVolumeGestureActive = true
         volumeGestureStartY = y

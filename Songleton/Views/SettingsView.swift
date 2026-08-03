@@ -17,17 +17,17 @@ struct SettingsView: View {
                     headerSection
                     generalSection
                     languageSection
-                    appearanceSection
                     menuBarSection
                     lyricsSection
                     permissionsSection
+                    shortcutsAndGesturesGuideSection
                     footerSection
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 22)
             }
         }
-        .frame(width: 500, height: 680)
+        .frame(width: 520, height: 720)
         .scaleEffect(appearScale)
         .opacity(appearOpacity)
         .onAppear {
@@ -98,33 +98,215 @@ struct SettingsView: View {
     // MARK: - General Section
 
     private var generalSection: some View {
-            settingsCard(title: localization.string("settings.general"), icon: "gearshape.fill", sectionID: "general") {
-                settingsToggleRow(
-                    icon: "power",
-                    title: localization.string("settings.launch_at_login"),
-                    subtitle: localization.string("settings.launch_at_login_hint"),
-                    isOn: $settings.launchAtLogin
-                )
+        settingsCard(title: localization.string("settings.general"), icon: "gearshape.fill", sectionID: "general") {
+            settingsToggleRow(
+                icon: "power",
+                title: localization.string("settings.launch_at_login"),
+                subtitle: localization.string("settings.launch_at_login_hint"),
+                isOn: $settings.launchAtLogin
+            )
 
-                sectionDivider
+            sectionDivider
 
-                settingsToggleRow(
-                    icon: "bell.fill",
-                    title: localization.string("settings.track_notifications"),
-                    subtitle: localization.string("settings.track_notifications_hint"),
-                    isOn: $settings.showTrackNotifications
-                )
+            settingsToggleRow(
+                icon: "bell.fill",
+                title: localization.string("settings.track_notifications"),
+                subtitle: localization.string("settings.track_notifications_hint"),
+                isOn: $settings.showTrackNotifications
+            )
 
-                sectionDivider
+            sectionDivider
 
-                settingsToggleRow(
-                    icon: "arrow.triangle.2.circlepath",
-                    title: localization.string("settings.circular_gestures"),
-                    subtitle: localization.string("settings.circular_gestures_hint"),
-                    isOn: $settings.circularGesturesEnabled
-                )
-            }
+            settingsToggleRow(
+                icon: "arrow.left.and.right.square.fill",
+                title: localization.string("settings.horizontal_gestures"),
+                subtitle: localization.string("settings.horizontal_gestures_hint"),
+                isOn: $settings.horizontalGesturesEnabled
+            )
+
+            sectionDivider
+
+            settingsToggleRow(
+                icon: "arrow.up.and.down.square.fill",
+                title: localization.string("settings.vertical_gestures"),
+                subtitle: localization.string("settings.vertical_gestures_hint"),
+                isOn: $settings.verticalGesturesEnabled
+            )
         }
+    }
+
+    // MARK: - Shortcuts & Gestures Visual Guide Section
+
+    private var shortcutsAndGesturesGuideSection: some View {
+        settingsCard(
+            title: localization.string("settings.shortcuts_guide"),
+            icon: "keyboard.fill",
+            sectionID: "shortcuts_guide"
+        ) {
+            VStack(alignment: .leading, spacing: 14) {
+                // Section Title: Keyboard Shortcuts Legend
+                HStack {
+                    Image(systemName: "command")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(SongletonTheme.cyan)
+                    Text(localization.string("settings.keyboard_shortcuts_title"))
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(SongletonTheme.cyan)
+                }
+
+                VStack(spacing: 8) {
+                    shortcutRow(
+                        keys: [keyCapView("Space", width: 52)],
+                        description: localization.string("shortcut.play_pause")
+                    )
+
+                    shortcutRow(
+                        keys: [keyCapView("←"), keyCapView("→")],
+                        description: localization.string("shortcut.prev_next_track")
+                    )
+
+                    shortcutRow(
+                        keys: [keyCapView("↑"), keyCapView("↓")],
+                        description: localization.string("shortcut.volume_control")
+                    )
+
+                    shortcutRow(
+                        keys: [keyCapView("L")],
+                        description: localization.string("shortcut.toggle_lyrics")
+                    )
+
+                    shortcutRow(
+                        keys: [keyCapView("T")],
+                        description: localization.string("shortcut.cycle_themes")
+                    )
+
+                    shortcutRow(
+                        keys: [keyCapView("ESC")],
+                        description: localization.string("shortcut.exit_ambient")
+                    )
+                }
+
+                sectionDivider
+                    .padding(.vertical, 2)
+
+                // Section Title: Screen & Mouse Gestures Legend
+                HStack {
+                    Image(systemName: "hand.point.up.left.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(SongletonTheme.cyan)
+                    Text(localization.string("settings.gestures_title"))
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(SongletonTheme.cyan)
+
+                    Spacer()
+                }
+
+                VStack(spacing: 8) {
+                    gestureRow(
+                        badge: "👈",
+                        action: localization.string("gesture.left_action"),
+                        description: localization.string("gesture.left_desc"),
+                        isEnabled: settings.horizontalGesturesEnabled
+                    )
+
+                    gestureRow(
+                        badge: "👉",
+                        action: localization.string("gesture.right_action"),
+                        description: localization.string("gesture.right_desc"),
+                        isEnabled: settings.horizontalGesturesEnabled
+                    )
+
+                    gestureRow(
+                        badge: "👆",
+                        action: localization.string("gesture.top_action"),
+                        description: localization.string("gesture.top_desc"),
+                        isEnabled: settings.verticalGesturesEnabled
+                    )
+
+                    gestureRow(
+                        badge: "🎚️",
+                        action: localization.string("gesture.volume_action"),
+                        description: localization.string("gesture.volume_desc"),
+                        isEnabled: settings.verticalGesturesEnabled
+                    )
+                }
+            }
+            .padding(16)
+        }
+    }
+
+    private func shortcutRow(keys: [AnyView], description: String) -> some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 4) {
+                ForEach(0..<keys.count, id: \.self) { idx in
+                    keys[idx]
+                }
+            }
+            .frame(width: 80, alignment: .leading)
+
+            Text(description)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.85))
+
+            Spacer()
+        }
+    }
+
+    private func gestureRow(badge: String, action: String, description: String, isEnabled: Bool = true) -> some View {
+        HStack(spacing: 10) {
+            Text(badge)
+                .font(.system(size: 13))
+                .frame(minWidth: 26)
+                .frame(height: 24)
+                .padding(.horizontal, 4)
+                .background(isEnabled ? Color.white.opacity(0.10) : Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(isEnabled ? Color.white.opacity(0.18) : Color.white.opacity(0.06), lineWidth: 0.5))
+                .opacity(isEnabled ? 1.0 : 0.4)
+
+            Text(action)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(isEnabled ? .white : .white.opacity(0.35))
+
+            Spacer()
+
+            Text(description)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(isEnabled ? SongletonTheme.cyan.opacity(0.9) : .white.opacity(0.25))
+
+            Text(isEnabled ? "✓" : "✕")
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .foregroundStyle(isEnabled ? SongletonTheme.cyan : .white.opacity(0.25))
+        }
+    }
+
+    private func keyCapView(_ text: String, width: CGFloat = 28) -> AnyView {
+        AnyView(
+            Text(text)
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundStyle(Color.white.opacity(0.95))
+                .frame(height: 24)
+                .frame(minWidth: width)
+                .padding(.horizontal, 4)
+                .background(
+                    LinearGradient(
+                        colors: [Color(white: 0.24), Color(white: 0.12)],
+                        startPoint: .top, endPoint: .bottom
+                    ),
+                    in: RoundedRectangle(cornerRadius: 6, style: .continuous)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.white.opacity(0.40), .white.opacity(0.10)],
+                                startPoint: .top, endPoint: .bottom
+                            ),
+                            lineWidth: 0.8
+                        )
+                )
+                .shadow(color: .black.opacity(0.45), radius: 3, x: 0, y: 2)
+        )
+    }
 
     private var languageSection: some View {
         settingsCard(title: localization.string("settings.language"), icon: "globe", sectionID: "language") {
@@ -151,30 +333,6 @@ struct SettingsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-        }
-    }
-
-    // MARK: - Appearance Section
-
-    private var appearanceSection: some View {
-        settingsCard(title: localization.string("settings.appearance"), icon: "paintbrush.fill", sectionID: "appearance") {
-            VStack(spacing: 0) {
-                settingsToggleRow(
-                    icon: "sparkles",
-                    title: localization.string("settings.dynamic_color"),
-                    subtitle: localization.string("settings.dynamic_color_hint"),
-                    isOn: $settings.useDynamicColor
-                )
-
-                sectionDivider
-
-                settingsToggleRow(
-                    icon: "chart.bar.fill",
-                    title: localization.string("settings.progress_bar"),
-                    subtitle: localization.string("settings.progress_bar_hint"),
-                    isOn: $settings.showProgressBar
-                )
-            }
         }
     }
 
@@ -364,10 +522,6 @@ struct SettingsView: View {
                 .foregroundStyle(.white.opacity(0.2))
 
             Spacer()
-
-            Text(localization.string("app.made_with_love"))
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.2))
         }
         .padding(.top, 4)
     }
