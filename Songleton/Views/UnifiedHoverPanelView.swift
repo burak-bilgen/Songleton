@@ -26,6 +26,7 @@ struct UnifiedHoverPanelView: View {
     @State private var shuffleButtonScale: CGFloat = 1.0
     @State private var repeatButtonScale: CGFloat = 1.0
     @State private var lyricsButtonScale: CGFloat = 1.0
+    @State private var ambientButtonScale: CGFloat = 1.0
     @State private var settingsButtonScale: CGFloat = 1.0
     @State private var isMutePressed: Bool = false
     @State private var hoveredButtonID: String? = nil
@@ -426,8 +427,8 @@ struct UnifiedHoverPanelView: View {
                 ))
             }
 
-            // Clean Footer Row (Bottom-Left Circular Lyrics Button & Bottom-Right Circular Settings Button)
-            HStack {
+            // Clean Footer Row (Bottom-Left Circular Lyrics & Ambient Buttons, Bottom-Right Settings Button)
+            HStack(spacing: 10) {
                 // Bottom-Left Circular Lyrics Button
                 Button {
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { lyricsButtonScale = 0.82 }
@@ -454,6 +455,31 @@ struct UnifiedHoverPanelView: View {
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                 .onHover { isHovered in hoveredButtonID = isHovered ? "lyrics" : nil }
                 .help(localization.string("lyrics.title"))
+
+                // Ambient Mode Button (Full Screen)
+                Button {
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { ambientButtonScale = 0.82 }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { ambientButtonScale = 1.0 }
+                    }
+                    AmbientModeManager.shared.show()
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white.opacity(0.08))
+                            .overlay(Circle().stroke(Color.white.opacity(0.15), lineWidth: 0.5))
+                            .frame(width: 32, height: 32)
+
+                        Image(systemName: "sparkles.tv.fill")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(themeColor)
+                    }
+                }
+                .buttonStyle(.plain)
+                .scaleEffect(hoveredButtonID == "ambient" ? 1.1 : ambientButtonScale)
+                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
+                .onHover { isHovered in hoveredButtonID = isHovered ? "ambient" : nil }
+                .help("Ambient Mode (⌘⌥F)")
 
                 Spacer()
 
