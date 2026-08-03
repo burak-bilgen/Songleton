@@ -77,24 +77,33 @@ final class AmbientModeManager: ObservableObject {
         NSApp.setActivationPolicy(.accessory)
     }
 
+    private var wasShortcutPressed = false
+
     private func setupGlobalShortcutMonitor() {
-        // Global monitor for Option + Command + Shift + F to toggle Ambient Mode anywhere
-        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        // Toggle Ambient Mode when Option + Command + Shift modifier combination is pressed
+        NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            if flags.contains([.command, .option, .shift]) && event.keyCode == 3 { // 'f' key is keyCode 3
+            let isPressed = flags.contains([.command, .option, .shift])
+            if isPressed && self?.wasShortcutPressed == false {
+                self?.wasShortcutPressed = true
                 Task { @MainActor in
                     self?.toggle()
                 }
+            } else if !isPressed {
+                self?.wasShortcutPressed = false
             }
         }
 
-        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            if flags.contains([.command, .option, .shift]) && event.keyCode == 3 {
+            let isPressed = flags.contains([.command, .option, .shift])
+            if isPressed && self?.wasShortcutPressed == false {
+                self?.wasShortcutPressed = true
                 Task { @MainActor in
                     self?.toggle()
                 }
-                return nil
+            } else if !isPressed {
+                self?.wasShortcutPressed = false
             }
             return event
         }
