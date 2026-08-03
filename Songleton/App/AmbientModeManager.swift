@@ -9,6 +9,8 @@ final class AmbientModeManager: ObservableObject {
     @Published private(set) var isPresented = false
     private var window: NSWindow?
     private var keyMonitor: Any?
+    private var activeObserver: NSObjectProtocol?
+    private var resignObserver: NSObjectProtocol?
 
     private init() {}
 
@@ -20,10 +22,11 @@ final class AmbientModeManager: ObservableObject {
         }
     }
 
-    private var activeObserver: NSObjectProtocol?
-
     func show() {
         guard !isPresented else { return }
+
+        // Close the hover popover so it doesn't linger behind the ambient screen.
+        MenuBarManager.shared.closeVolumePopoverImmediately()
 
         let screen = NSScreen.main ?? NSScreen.screens.first
         guard let screen else { return }
@@ -53,19 +56,20 @@ final class AmbientModeManager: ObservableObject {
         self.isPresented = true
 
         NSApp.setActivationPolicy(.regular)
+        hideSystemChrome()
         window.alphaValue = 0.0
         window.makeKeyAndOrderFront(nil)
         window.makeFirstResponder(window.contentView)
         NSApp.activate(ignoringOtherApps: true)
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.45
+            context.duration = 0.55
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             window.animator().alphaValue = 1.0
         }
 
         setupKeyMonitor()
-        setupFocusObserver()
+        setupFocusObservers()
     }
 
     func dismiss() {
@@ -73,7 +77,7 @@ final class AmbientModeManager: ObservableObject {
         isPresented = false
 
         removeKeyMonitor()
-        removeFocusObserver()
+        removeFocusObservers()
 
         if let win = window {
             win.orderOut(nil)
@@ -83,26 +87,75 @@ final class AmbientModeManager: ObservableObject {
         window = nil
 
         NSApp.setActivationPolicy(.accessory)
+        showSystemChrome()
         MenuBarManager.shared.setStatusItemsVisible(true)
     }
 
-    private func setupFocusObserver() {
-        removeFocusObserver()
+    // While ambient is frontmost, hide the system menu bar and Dock (like fullscreen).
+    private func hideSystemChrome() {
+        NSApp.presentationOptions = [.autoHideDock, .autoHideMenuBar]
+    }
+
+    private func showSystemChrome() {
+        NSApp.presentationOptions = []
+    }
+
+    // When we lose active status (e.g. Cmd+Tab to another app), immediately demote
+    // the ambient window below every other app's windows so the screen is never
+    // blocked while the user works elsewhere. Ambient state itself is preserved.
+    private func demoteForInactiveApp() {
+        guard isPresented, let win = window else { return }
+        showSystemChrome()
+        win.level = .normal
+        win.orderBack(nil)
+    }
+
+    // When the user comes back via Cmd+Tab / Dock, restore full immersion and
+    // reclaim key focus so keyboard shortcuts work immediately, no clicks needed.
+    private func restoreActiveWindow() {
+        guard isPresented, let win = window else { return }
+        hideSystemChrome()
+        win.level = .floating
+        if !win.isVisible { win.orderFront(nil) }
+        win.makeKeyAndOrderFront(nil)
+        win.makeFirstResponder(win.contentView)
+        NSApp.activate(ignoringOtherApps: true)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.25
+            win.animator().alphaValue = 1.0
+        }
+    }
+
+    private func setupFocusObservers() {
+        removeFocusObservers()
         activeObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            guard let self, let win = self.window else { return }
-            win.makeKeyAndOrderFront(nil)
-            win.makeFirstResponder(win.contentView)
+            MainActor.assumeIsolated {
+                self?.restoreActiveWindow()
+            }
+        }
+        resignObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.demoteForInactiveApp()
+            }
         }
     }
 
-    private func removeFocusObserver() {
+    private func removeFocusObservers() {
         if let obs = activeObserver {
             NotificationCenter.default.removeObserver(obs)
             activeObserver = nil
+        }
+        if let obs = resignObserver {
+            NotificationCenter.default.removeObserver(obs)
+            resignObserver = nil
         }
     }
 

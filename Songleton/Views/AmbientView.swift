@@ -118,6 +118,9 @@ struct AmbientView: View {
     // Synced Lyrics Overlay State
     @State private var showLyrics: Bool = false
 
+    // Top Toolbar Hover State
+    @State private var hoveredToolbarItem: String? = nil
+
     // Sleep Timer State (minutes: 0, 15, 30, 45, 60)
     @State private var sleepTimerMinutes: Int = 0
     @State private var sleepSecondsRemaining: Int = 0
@@ -186,17 +189,18 @@ struct AmbientView: View {
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .blur(radius: 120)
                         .saturation(1.8)
-                        .opacity(auraPulse && isPlaying ? 0.80 : 0.60)
-                        .scaleEffect(auraPulse && isPlaying ? 1.06 : 1.0)
+                        .opacity(isPlaying ? 0.80 : 0.68)
+                        .scaleEffect(isPlaying ? 1.06 : 1.0)
                         .clipped()
                         .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: auraPulse)
+                        .animation(.easeInOut(duration: 0.9), value: isPlaying)
                         .animation(.easeInOut(duration: 1.2), value: model.artwork)
                 } else {
                     Circle()
                         .fill(themeColor.opacity(0.3))
                         .frame(width: 600, height: 600)
                         .blur(radius: 130)
-                        .scaleEffect(auraPulse && isPlaying ? 1.08 : 1.0)
+                        .scaleEffect(auraPulse ? 1.08 : 1.0)
                         .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: auraPulse)
                         .animation(.easeInOut(duration: 1.2), value: themeColor)
                 }
@@ -381,7 +385,7 @@ struct AmbientView: View {
                 .animation(.spring(response: 0.55, dampingFraction: 0.82), value: showLyrics)
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .center)
 
-                // 4. Top Status Bar (Clock, Theme Switcher, Sleep Timer Dropdown Menu, Lyrics Toggle & Exit)
+                // 4. Top Status Bar (Clock, Unified Glass Toolbar with Theme, Lyrics, Sleep Timer & Exit)
                 VStack {
                     HStack(spacing: 16) {
                         // Desk Clock & Date Display
@@ -396,95 +400,98 @@ struct AmbientView: View {
 
                         Spacer()
 
-                        // Theme Mode Switcher Button
-                        Button {
-                            cycleThemeMode()
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: selectedTheme.icon)
-                                    .font(.system(size: 13, weight: .bold))
-                                Text(selectedTheme.rawValue)
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                        // Unified Glass Toolbar (all top controls in one polished pill)
+                        HStack(spacing: 2) {
+                            // Theme Mode Switcher
+                            Button {
+                                cycleThemeMode()
+                            } label: {
+                                toolbarItemLabel(icon: selectedTheme.icon, label: selectedTheme.rawValue, id: "theme")
                             }
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(Color.white.opacity(0.12), in: Capsule())
-                            .overlay(Capsule().stroke(Color.white.opacity(0.20), lineWidth: 0.5))
-                        }
-                        .buttonStyle(.plain)
+                            .buttonStyle(.plain)
+                            .onHover { isHovered in hoveredToolbarItem = isHovered ? "theme" : nil }
 
-                        // Lyrics Toggle Button
-                        Button {
-                            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                                showLyrics.toggle()
-                                if showLyrics { triggerLyricsFetch() }
-                            }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "quote.bubble.fill")
-                                    .font(.system(size: 13, weight: .bold))
-                                Text("Lyrics")
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                            }
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(showLyrics ? themeColor.opacity(0.4) : Color.white.opacity(0.12), in: Capsule())
-                            .overlay(Capsule().stroke(showLyrics ? themeColor : Color.white.opacity(0.20), lineWidth: 0.5))
-                        }
-                        .buttonStyle(.plain)
+                            toolbarDivider
 
-                        // Sleep Timer Dropdown Menu
-                        Menu {
-                            Button("Timer Off") { setSleepTimer(0) }
-                            Divider()
-                            Button("15 Minutes") { setSleepTimer(15) }
-                            Button("30 Minutes") { setSleepTimer(30) }
-                            Button("45 Minutes") { setSleepTimer(45) }
-                            Button("60 Minutes") { setSleepTimer(60) }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "moon.fill")
-                                    .font(.system(size: 12, weight: .bold))
-                                if sleepTimerMinutes > 0 {
-                                    Text(formatSleepTimerRemaining())
-                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                } else {
-                                    Text("Sleep Timer")
-                                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                            // Lyrics Toggle
+                            Button {
+                                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                                    showLyrics.toggle()
+                                    if showLyrics { triggerLyricsFetch() }
                                 }
-                                Image(systemName: "chevron.down")
-                                    .font(.system(size: 9, weight: .bold))
+                            } label: {
+                                toolbarItemLabel(icon: "quote.bubble.fill", label: "Lyrics", id: "lyrics", active: showLyrics)
                             }
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(sleepTimerMinutes > 0 ? themeColor.opacity(0.4) : Color.white.opacity(0.12), in: Capsule())
-                            .overlay(Capsule().stroke(sleepTimerMinutes > 0 ? themeColor : Color.white.opacity(0.20), lineWidth: 0.5))
-                        }
-                        .menuStyle(.borderlessButton)
+                            .buttonStyle(.plain)
+                            .onHover { isHovered in hoveredToolbarItem = isHovered ? "lyrics" : nil }
 
-                        // Exit Ambient Mode Button (Triggers CRT Turn-Off Animation)
-                        Button {
-                            triggerCRTTurnOffAndClose()
-                        } label: {
-                            HStack(spacing: 6) {
-                                Text("ESC")
-                                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 4))
-                                Text("Exit")
-                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                            toolbarDivider
+
+                            // Sleep Timer Dropdown Menu
+                            Menu {
+                                Button("Timer Off") { setSleepTimer(0) }
+                                Divider()
+                                Button("15 Minutes") { setSleepTimer(15) }
+                                Button("30 Minutes") { setSleepTimer(30) }
+                                Button("45 Minutes") { setSleepTimer(45) }
+                                Button("60 Minutes") { setSleepTimer(60) }
+                            } label: {
+                                toolbarItemLabel(
+                                    icon: "moon.fill",
+                                    label: sleepTimerMinutes > 0 ? formatSleepTimerRemaining() : "Sleep Timer",
+                                    id: "sleep",
+                                    active: sleepTimerMinutes > 0
+                                )
                             }
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(Color.white.opacity(0.10), in: Capsule())
-                            .overlay(Capsule().stroke(Color.white.opacity(0.20), lineWidth: 0.5))
+                            .menuStyle(.borderlessButton)
+                            .onHover { isHovered in hoveredToolbarItem = isHovered ? "sleep" : nil }
+
+                            toolbarDivider
+
+                            // Exit Ambient Mode (Triggers CRT Turn-Off Animation)
+                            Button {
+                                triggerCRTTurnOffAndClose()
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Text("ESC")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 1)
+                                        .background(Color.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 3))
+                                    Text("Exit")
+                                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(hoveredToolbarItem == "exit" ? Color.white.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .scaleEffect(hoveredToolbarItem == "exit" ? 1.05 : 1.0)
+                                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredToolbarItem)
+                            }
+                            .buttonStyle(.plain)
+                            .onHover { isHovered in hoveredToolbarItem = isHovered ? "exit" : nil }
                         }
-                        .buttonStyle(.plain)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.14), Color.white.opacity(0.05)],
+                                        startPoint: .top, endPoint: .bottom
+                                    )
+                                )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.white.opacity(0.28), .white.opacity(0.06)],
+                                        startPoint: .topLeading, endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
                     }
                     .padding(.horizontal, 36)
                     .padding(.top, 28)
@@ -887,6 +894,30 @@ struct AmbientView: View {
 
     // MARK: - Helpers, Rotation & Actions
 
+    // Unified glass toolbar item (icon + label with hover micro-animation)
+    private func toolbarItemLabel(icon: String, label: String, id: String, active: Bool = false) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .bold))
+            Text(label)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+        }
+        .foregroundStyle(active ? themeColor : .white)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(hoveredToolbarItem == id ? Color.white.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .scaleEffect(hoveredToolbarItem == id ? 1.05 : 1.0)
+        .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredToolbarItem)
+    }
+
+    private var toolbarDivider: some View {
+        Rectangle()
+            .fill(Color.white.opacity(0.12))
+            .frame(width: 1, height: 18)
+            .padding(.vertical, 7)
+    }
+
     private func startContinuousRotationTimer() {
         rotationTimerCancellable = Timer.publish(every: 0.03, on: .main, in: .common)
             .autoconnect()
@@ -955,13 +986,13 @@ struct AmbientView: View {
         openingBlur = 24.0
         crtState = .off
 
-        withAnimation(.spring(response: 0.58, dampingFraction: 0.76)) {
+        withAnimation(.spring(response: 0.72, dampingFraction: 0.86)) {
             openingScale = 1.0
             openingOpacity = 1.0
             openingBlur = 0.0
             crtState = .turningOn
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.58) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.72) {
             crtState = .active
         }
     }
@@ -970,20 +1001,27 @@ struct AmbientView: View {
         guard !isClosing else { return }
         isClosing = true
 
-        withAnimation(.spring(response: 0.26, dampingFraction: 0.82)) {
+        // Fade the whole window out in sync with the CRT collapse so the exit melts away.
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.55
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            NSApp.keyWindow?.animator().alphaValue = 0.0
+        }
+
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.84)) {
             crtState = .turningOffLine
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) {
-            withAnimation(.easeInOut(duration: 0.18)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+            withAnimation(.easeInOut(duration: 0.2)) {
                 crtState = .turningOffDot
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.42) {
-            withAnimation(.easeOut(duration: 0.14)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.44) {
+            withAnimation(.easeOut(duration: 0.16)) {
                 crtState = .turningOffFade
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.56) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.62) {
             onClose()
         }
     }
