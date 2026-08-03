@@ -45,6 +45,14 @@ final class LyricsModel: ObservableObject {
         }
     }
 
+    func reset() {
+        loadTask?.cancel()
+        loadTask = nil
+        currentTrackKey = ""
+        lines = []
+        isLoading = false
+    }
+
     func activeLineIndex(for position: Double) -> Int? {
         guard !lines.isEmpty else { return nil }
         let effectivePosition = position + SettingsModel.shared.lyricsOffset
