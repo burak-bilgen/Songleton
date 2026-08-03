@@ -212,8 +212,14 @@ final class MouseGestureManager: ObservableObject {
         pendingWorkItem = nil
         activeZone = zone
         guard let zone else { return }
-        guard now.timeIntervalSince(lastTriggeredAt) >= 1.0 else { return }
 
+        scheduleZoneGesture(zone, now: now)
+    }
+
+    private func scheduleZoneGesture(_ zone: EdgeZone, now: Date) {
+        // If a gesture was triggered recently, wait out the remaining cooldown
+        // before recognizing the new zone, so the gesture is never silently lost.
+        let cooldownDelay = max(0, 1.0 - now.timeIntervalSince(lastTriggeredAt))
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, self.activeZone == zone else { return }
             self.lastTriggeredAt = Date()
@@ -226,7 +232,7 @@ final class MouseGestureManager: ObservableObject {
             }
         }
         pendingWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5 + cooldownDelay, execute: workItem)
     }
 
     private func edgeZone(at location: NSPoint) -> EdgeZone? {
