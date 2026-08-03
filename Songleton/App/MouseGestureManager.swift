@@ -62,6 +62,7 @@ final class MouseGestureManager: ObservableObject {
     @Published private(set) var gestureVolume = 50
     @Published private(set) var edgeGestureProgress = 0.0
     @Published private(set) var edgeGestureBurst = 0
+    @Published private(set) var edgeGestureCancelBurst = 0
     private var pressedButtons = Set<Int64>()
     private var volumeGestureStartY: CGFloat = 0
     private var volumeGestureStartValue = 50
@@ -222,8 +223,14 @@ final class MouseGestureManager: ObservableObject {
         pendingWorkItem = nil
         edgeProgressTask?.cancel()
         edgeProgressTask = nil
-        hideCursorGestureOverlay()
-        edgeGestureProgress = 0
+
+        if cursorGestureWindow != nil {
+            edgeGestureCancelBurst += 1
+            cancelCursorGestureOverlay()
+        } else {
+            edgeGestureProgress = 0
+            hideCursorGestureOverlay()
+        }
         activeZone = zone
         guard let zone else { return }
 
@@ -320,8 +327,8 @@ final class MouseGestureManager: ObservableObject {
         let cursor = NSEvent.mouseLocation
         let screen = NSScreen.screens.first(where: { $0.frame.contains(cursor) }) ?? NSScreen.main
         let bounds = screen?.frame ?? .zero
-        let x = min(max(cursor.x + 18, bounds.minX + 6), bounds.maxX - size.width - 6)
-        let y = min(max(cursor.y - size.height - 18, bounds.minY + 6), bounds.maxY - size.height - 6)
+        let x = min(max(cursor.x + 8, bounds.minX + 6), bounds.maxX - size.width - 6)
+        let y = min(max(cursor.y - size.height - 8, bounds.minY + 6), bounds.maxY - size.height - 6)
         return NSPoint(x: x, y: y)
     }
 
@@ -330,6 +337,18 @@ final class MouseGestureManager: ObservableObject {
         cursorGestureWindow = nil
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.1
+            panel.animator().alphaValue = 0
+        } completionHandler: {
+            panel.orderOut(nil)
+        }
+    }
+
+    private func cancelCursorGestureOverlay() {
+        guard let panel = cursorGestureWindow else { return }
+        cursorGestureWindow = nil
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.18
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             panel.animator().alphaValue = 0
         } completionHandler: {
             panel.orderOut(nil)
