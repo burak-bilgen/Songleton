@@ -6,7 +6,7 @@
   **A hidden-in-the-menu-bar full-screen visual experience that elevates music listening on your Mac!**
 
   [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111827?style=for-the-badge&logo=apple&logoColor=white)](https://www.apple.com/macos/)
-  [![Swift](https://img.shields.io/badge/Swift-5.9-orange?style=for-the-badge&logo=swift&logoColor=white)](https://www.swift.org/)
+  [![Swift](https://img.shields.io/badge/Swift-5.0-orange?style=for-the-badge&logo=swift&logoColor=white)](https://www.swift.org/)
   [![SwiftUI](https://img.shields.io/badge/SwiftUI-Native-6D5DFB?style=for-the-badge&logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/)
   [![Tests](https://img.shields.io/badge/tests-22%20passing-20C997?style=for-the-badge)](Makefile)
   [![License](https://img.shields.io/badge/license-MIT-38BDF8?style=for-the-badge)](LICENSE)
@@ -70,7 +70,8 @@ When the app is launched for the first time, an interactive guide starts right i
 ### 🛡️ Privacy & Security
 
 - **100% Local & Secure**: No membership, registration, or tracking code.
-- **Lyrics Only**: Track name and artist are sent to the open-source [LRCLIB](https://lrclib.net/) service solely to fetch live lyrics.
+- **Lyrics Only**: Track name, artist, album, and duration are sent to the open-source [LRCLIB](https://lrclib.net/) service solely to fetch live lyrics.
+- **Artwork**: Album artwork is loaded from the media player's own source (Spotify/Apple Music).
 - **No Personal Data Uploaded**: Your passwords, listening history, or personal data never leave your Mac.
 
 ---
@@ -116,3 +117,5 @@ For distribution, use `make archive` with `DEVELOPER_IDENTITY` to create a signe
 ### 📄 License
 
 Songleton is freely distributed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+The bundled **Audiowide** typeface is licensed under the [SIL Open Font License 1.1](https://openfontlicense.org/); see the OFL notice in the font metadata.
