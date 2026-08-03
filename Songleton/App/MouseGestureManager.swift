@@ -139,10 +139,10 @@ final class MouseGestureManager: ObservableObject {
     }
 
     fileprivate func handleFlagsChanged(_ flags: CGEventFlags, location: CGPoint) {
-        let isCmdPressed = flags.contains(.maskCommand)
+        let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
         let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
 
-        if !isCmdPressed && !isBothPressed && isVolumeGestureActive {
+        if !isCmdOptionPressed && !isBothPressed && isVolumeGestureActive {
             endVolumeGesture()
         }
     }
@@ -154,9 +154,9 @@ final class MouseGestureManager: ObservableObject {
             logger.debug("Global mouse move event received")
         }
         let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
-        let isCmdPressed = flags.contains(.maskCommand)
+        let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
 
-        if isBothPressed || isCmdPressed {
+        if isBothPressed || isCmdOptionPressed {
             if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: location) }
             updateVolumeGesture(at: location.y)
             return
@@ -183,9 +183,9 @@ final class MouseGestureManager: ObservableObject {
         }
 
         let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
-        let isCmdPressed = flags.contains(.maskCommand)
+        let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
 
-        if isBothPressed || isCmdPressed {
+        if isBothPressed || isCmdOptionPressed {
             if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: location) }
             updateVolumeGesture(at: location.y)
         } else if isVolumeGestureActive {
