@@ -20,6 +20,8 @@ final class AmbientModeManager: ObservableObject {
         }
     }
 
+    private var activeObserver: NSObjectProtocol?
+
     func show() {
         guard !isPresented else { return }
 
@@ -38,19 +40,19 @@ final class AmbientModeManager: ObservableObject {
             screen: screen
         )
         window.isReleasedWhenClosed = false
-        window.level = .screenSaver
+        window.level = .floating
         window.backgroundColor = .black
         window.isOpaque = true
         window.hasShadow = false
         window.isMovableByWindowBackground = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenPrimary, .participatesInCycle]
         window.contentView = NSHostingView(rootView: ambientView)
         window.setFrame(screen.frame, display: true)
 
         self.window = window
         self.isPresented = true
 
-        // Smooth window alpha fade-in entrance
+        NSApp.setActivationPolicy(.regular)
         window.alphaValue = 0.0
         window.makeKeyAndOrderFront(nil)
         window.makeFirstResponder(window.contentView)
@@ -63,6 +65,7 @@ final class AmbientModeManager: ObservableObject {
         }
 
         setupKeyMonitor()
+        setupFocusObserver()
     }
 
     func dismiss() {
@@ -70,6 +73,7 @@ final class AmbientModeManager: ObservableObject {
         isPresented = false
 
         removeKeyMonitor()
+        removeFocusObserver()
 
         if let win = window {
             win.orderOut(nil)
@@ -78,7 +82,28 @@ final class AmbientModeManager: ObservableObject {
         }
         window = nil
 
+        NSApp.setActivationPolicy(.accessory)
         MenuBarManager.shared.setStatusItemsVisible(true)
+    }
+
+    private func setupFocusObserver() {
+        removeFocusObserver()
+        activeObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self, let win = self.window else { return }
+            win.makeKeyAndOrderFront(nil)
+            win.makeFirstResponder(win.contentView)
+        }
+    }
+
+    private func removeFocusObserver() {
+        if let obs = activeObserver {
+            NotificationCenter.default.removeObserver(obs)
+            activeObserver = nil
+        }
     }
 
     private func setupKeyMonitor() {
