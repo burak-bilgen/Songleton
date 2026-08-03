@@ -21,6 +21,7 @@ final class SettingsModelTests {
         runTest(name: "testPersistence", test: testPersistence)
         runTest(name: "testLaunchAtLoginToggle", test: testLaunchAtLoginToggle)
         runTest(name: "testStoredValuesAreClamped", test: testStoredValuesAreClamped)
+        runTest(name: "testEdgeGestureHoldDuration", test: testEdgeGestureHoldDuration)
         runTest(name: "testInvalidFontFallsBackToSystem", test: testInvalidFontFallsBackToSystem)
     }
 
@@ -39,6 +40,7 @@ final class SettingsModelTests {
         assertTrue(settings.showTrackNotifications, "showTrackNotifications should default to true")
         assertTrue(settings.horizontalGesturesEnabled, "horizontalGesturesEnabled should default to true")
         assertTrue(settings.verticalGesturesEnabled, "verticalGesturesEnabled should default to true")
+        assertAccuracy(settings.edgeGestureHoldDuration, 0.5, accuracy: 0.001, "edgeGestureHoldDuration should default to 0.5")
         assertAccuracy(settings.lyricsOffset, 0.9, accuracy: 0.001, "lyricsOffset should default to 0.9")
     }
 
@@ -49,6 +51,7 @@ final class SettingsModelTests {
         settings.showTrackNotifications = false
         settings.horizontalGesturesEnabled = false
         settings.verticalGesturesEnabled = false
+        settings.edgeGestureHoldDuration = 1.2
         settings.lyricsOffset = 1.5
 
         assertFalse(userDefaults.bool(forKey: "showArtistInMenuBar"))
@@ -57,6 +60,7 @@ final class SettingsModelTests {
         assertFalse(userDefaults.bool(forKey: "showTrackNotifications"))
         assertFalse(userDefaults.bool(forKey: "horizontalGesturesEnabled"))
         assertFalse(userDefaults.bool(forKey: "verticalGesturesEnabled"))
+        assertAccuracy(userDefaults.double(forKey: "edgeGestureHoldDuration"), 1.2, accuracy: 0.001)
         assertAccuracy(userDefaults.double(forKey: "lyricsOffset"), 1.5, accuracy: 0.001)
 
         // Create new instance with same userDefaults
@@ -67,6 +71,7 @@ final class SettingsModelTests {
         assertFalse(newSettings.showTrackNotifications)
         assertFalse(newSettings.horizontalGesturesEnabled)
         assertFalse(newSettings.verticalGesturesEnabled)
+        assertAccuracy(newSettings.edgeGestureHoldDuration, 1.2, accuracy: 0.001)
         assertAccuracy(newSettings.lyricsOffset, 1.5, accuracy: 0.001)
     }
 
@@ -90,6 +95,16 @@ final class SettingsModelTests {
         let lowerClamped = SettingsModel(userDefaults: userDefaults)
         assertEqual(lowerClamped.menuBarWidth, 80)
         assertEqual(lowerClamped.lyricsOffset, 3)
+    }
+
+    func testEdgeGestureHoldDuration() {
+        userDefaults.set(-1, forKey: "edgeGestureHoldDuration")
+        let lowerClamped = SettingsModel(userDefaults: userDefaults)
+        assertAccuracy(lowerClamped.edgeGestureHoldDuration, 0.2, accuracy: 0.001)
+
+        userDefaults.set(3, forKey: "edgeGestureHoldDuration")
+        let upperClamped = SettingsModel(userDefaults: userDefaults)
+        assertAccuracy(upperClamped.edgeGestureHoldDuration, 2.0, accuracy: 0.001)
     }
 
     func testInvalidFontFallsBackToSystem() {

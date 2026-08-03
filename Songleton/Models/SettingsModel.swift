@@ -63,6 +63,10 @@ final class SettingsModel: ObservableObject {
         }
     }
 
+    @Published var edgeGestureHoldDuration: Double {
+        didSet { defaults.set(edgeGestureHoldDuration, forKey: "edgeGestureHoldDuration") }
+    }
+
     @Published var showMenuBarNavButtons: Bool {
         didSet {
             defaults.set(showMenuBarNavButtons, forKey: "showMenuBarNavButtons")
@@ -93,6 +97,7 @@ final class SettingsModel: ObservableObject {
             "showTrackNotifications": true,
             "horizontalGesturesEnabled": true,
             "verticalGesturesEnabled": true,
+            "edgeGestureHoldDuration": 0.5,
             "showMenuBarNavButtons": true,
             "lyricsOffset": 0.9
         ])
@@ -107,6 +112,7 @@ final class SettingsModel: ObservableObject {
         showTrackNotifications = userDefaults.bool(forKey: "showTrackNotifications")
         horizontalGesturesEnabled = userDefaults.bool(forKey: "horizontalGesturesEnabled")
         verticalGesturesEnabled = userDefaults.bool(forKey: "verticalGesturesEnabled")
+        edgeGestureHoldDuration = min(2, max(0.2, userDefaults.double(forKey: "edgeGestureHoldDuration")))
         showMenuBarNavButtons = userDefaults.bool(forKey: "showMenuBarNavButtons")
         lyricsOffset = min(3, max(-3, userDefaults.double(forKey: "lyricsOffset")))
     }

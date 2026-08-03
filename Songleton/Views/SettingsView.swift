@@ -142,6 +142,23 @@ struct SettingsView: View {
                 subtitle: localization.string("settings.vertical_gestures_hint"),
                 isOn: $settings.verticalGesturesEnabled
             )
+
+            sectionDivider
+
+            settingsPickerRow(
+                icon: "timer",
+                title: localization.string("settings.edge_gesture_duration"),
+                subtitle: localization.string("settings.edge_gesture_duration_hint")
+            ) {
+                Slider(value: $settings.edgeGestureHoldDuration, in: 0.2...2.0, step: 0.1)
+                    .tint(SongletonTheme.cyan)
+                    .frame(width: 110)
+
+                Text(String(format: "%.1fs", settings.edgeGestureHoldDuration))
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .frame(width: 34, alignment: .trailing)
+            }
         }
     }
 
@@ -215,21 +232,21 @@ struct SettingsView: View {
                     gestureRow(
                         icon: "arrow.left.to.line.compact",
                         action: localization.string("gesture.left_action"),
-                        description: localization.string("gesture.left_desc"),
+                        description: gestureDescription("gesture.left_desc"),
                         isEnabled: settings.horizontalGesturesEnabled
                     )
 
                     gestureRow(
                         icon: "arrow.right.to.line.compact",
                         action: localization.string("gesture.right_action"),
-                        description: localization.string("gesture.right_desc"),
+                        description: gestureDescription("gesture.right_desc"),
                         isEnabled: settings.horizontalGesturesEnabled
                     )
 
                     gestureRow(
                         icon: "arrow.up.to.line.compact",
                         action: localization.string("gesture.top_action"),
-                        description: localization.string("gesture.top_desc"),
+                        description: gestureDescription("gesture.top_desc"),
                         isEnabled: settings.verticalGesturesEnabled
                     )
 
@@ -289,6 +306,13 @@ struct SettingsView: View {
                 .font(.system(size: 10, weight: .bold, design: .rounded))
                 .foregroundStyle(isEnabled ? SongletonTheme.cyan : .white.opacity(0.25))
         }
+    }
+
+    private func gestureDescription(_ key: String) -> String {
+        let duration = key == "gesture.top_desc"
+            ? settings.edgeGestureHoldDuration * 0.8
+            : settings.edgeGestureHoldDuration
+        return String(format: localization.string(key), String(format: "%.1f", duration))
     }
 
     private func keyCapView(_ text: String, width: CGFloat = 28) -> AnyView {

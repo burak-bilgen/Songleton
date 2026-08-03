@@ -41,7 +41,7 @@ private func mouseEventTapCallback(
 
 @MainActor
 final class MouseGestureManager: ObservableObject {
-    private enum EdgeZone: Equatable {
+    enum EdgeZone: Equatable {
         case previous
         case playPause
         case next
@@ -53,9 +53,15 @@ final class MouseGestureManager: ObservableObject {
     private var eventTapRunLoopSource: CFRunLoopSource?
     private var activeZone: EdgeZone?
     private var pendingWorkItem: DispatchWorkItem?
+    private var edgeProgressTask: Task<Void, Never>?
+    private var cursorGestureWindow: NSPanel?
+    private var edgeGestureStartedAt = Date.distantPast
+    private var edgeGestureDuration = 0.5
     private var lastTriggeredAt = Date.distantPast
     @Published private(set) var isVolumeGestureActive = false
     @Published private(set) var gestureVolume = 50
+    @Published private(set) var edgeGestureProgress = 0.0
+    @Published private(set) var edgeGestureBurst = 0
     private var pressedButtons = Set<Int64>()
     private var volumeGestureStartY: CGFloat = 0
     private var volumeGestureStartValue = 50
@@ -142,6 +148,10 @@ final class MouseGestureManager: ObservableObject {
         if let eventTap { CFMachPortInvalidate(eventTap) }
         eventTap = nil
         activeZone = nil
+        edgeProgressTask?.cancel()
+        edgeProgressTask = nil
+        hideCursorGestureOverlay()
+        edgeGestureProgress = 0
         pressedButtons.removeAll()
         endVolumeGesture()
         pendingWorkItem?.cancel()
@@ -210,6 +220,10 @@ final class MouseGestureManager: ObservableObject {
 
         pendingWorkItem?.cancel()
         pendingWorkItem = nil
+        edgeProgressTask?.cancel()
+        edgeProgressTask = nil
+        hideCursorGestureOverlay()
+        edgeGestureProgress = 0
         activeZone = zone
         guard let zone else { return }
 
@@ -222,17 +236,116 @@ final class MouseGestureManager: ObservableObject {
         let cooldownDelay = max(0, 1.0 - now.timeIntervalSince(lastTriggeredAt))
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, self.activeZone == zone else { return }
-            self.lastTriggeredAt = Date()
-            self.pendingWorkItem = nil
-            self.logger.info("Screen edge gesture recognized: \(String(describing: zone), privacy: .public)")
-            switch zone {
-            case .previous: NowPlayingModel.shared.previousTrack()
-            case .playPause: NowPlayingModel.shared.togglePlayPause()
-            case .next: NowPlayingModel.shared.nextTrack()
+            let configuredDuration = SettingsModel.shared.edgeGestureHoldDuration
+            let duration = zone == .playPause
+                ? configuredDuration * 0.8
+                : configuredDuration
+            self.edgeGestureDuration = duration
+            self.edgeGestureStartedAt = Date()
+            self.edgeGestureProgress = 0
+            self.showCursorGestureOverlay(for: zone)
+
+            self.edgeProgressTask = Task { @MainActor [weak self] in
+                guard let self else { return }
+                while !Task.isCancelled {
+                    let progress = min(1, Date().timeIntervalSince(self.edgeGestureStartedAt) / self.edgeGestureDuration)
+                    self.edgeGestureProgress = progress
+                    self.updateCursorGestureOverlayPosition()
+                    if progress >= 1 { return }
+                    do {
+                        try await Task.sleep(for: .milliseconds(16))
+                    } catch {
+                        return
+                    }
+                }
             }
+
+            let trigger = DispatchWorkItem { [weak self] in
+                guard let self, self.activeZone == zone else { return }
+                self.lastTriggeredAt = Date()
+                self.pendingWorkItem = nil
+                self.edgeProgressTask?.cancel()
+                self.edgeProgressTask = nil
+                self.edgeGestureProgress = 1
+                self.edgeGestureBurst += 1
+                self.burstCursorGestureOverlay()
+                self.logger.info("Screen edge gesture recognized: \(String(describing: zone), privacy: .public)")
+                switch zone {
+                case .previous: NowPlayingModel.shared.previousTrack()
+                case .playPause: NowPlayingModel.shared.togglePlayPause()
+                case .next: NowPlayingModel.shared.nextTrack()
+                }
+            }
+            self.pendingWorkItem = trigger
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: trigger)
         }
         pendingWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5 + cooldownDelay, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + cooldownDelay, execute: workItem)
+    }
+
+    private func showCursorGestureOverlay(for zone: EdgeZone) {
+        guard cursorGestureWindow == nil else { return }
+
+        let hostingController = NSHostingController(rootView: CursorGestureOverlayView(manager: self, zone: zone))
+        let size = NSSize(width: 112, height: 112)
+        let panel = NSPanel(
+            contentRect: NSRect(origin: cursorOverlayOrigin(for: size), size: size),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.level = .statusBar
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = false
+        panel.ignoresMouseEvents = true
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.contentViewController = hostingController
+        panel.alphaValue = 0
+        panel.orderFrontRegardless()
+        cursorGestureWindow = panel
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            panel.animator().alphaValue = 1
+        }
+    }
+
+    private func updateCursorGestureOverlayPosition() {
+        guard let panel = cursorGestureWindow else { return }
+        panel.setFrameOrigin(cursorOverlayOrigin(for: panel.frame.size))
+    }
+
+    private func cursorOverlayOrigin(for size: NSSize) -> NSPoint {
+        let cursor = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(cursor) }) ?? NSScreen.main
+        let bounds = screen?.frame ?? .zero
+        let x = min(max(cursor.x + 18, bounds.minX + 6), bounds.maxX - size.width - 6)
+        let y = min(max(cursor.y - size.height - 18, bounds.minY + 6), bounds.maxY - size.height - 6)
+        return NSPoint(x: x, y: y)
+    }
+
+    private func hideCursorGestureOverlay() {
+        guard let panel = cursorGestureWindow else { return }
+        cursorGestureWindow = nil
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.1
+            panel.animator().alphaValue = 0
+        } completionHandler: {
+            panel.orderOut(nil)
+        }
+    }
+
+    private func burstCursorGestureOverlay() {
+        guard let panel = cursorGestureWindow else { return }
+        cursorGestureWindow = nil
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.24
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().alphaValue = 0
+        } completionHandler: {
+            panel.orderOut(nil)
+        }
     }
 
     private func edgeZone(at location: NSPoint) -> EdgeZone? {

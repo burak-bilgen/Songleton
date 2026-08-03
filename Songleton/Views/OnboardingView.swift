@@ -306,9 +306,9 @@ struct OnboardingView: View {
             }
 
             VStack(spacing: 8) {
-                gestureItem(badge: "👈", title: localization.string("gesture.left_action"), desc: localization.string("gesture.left_desc"))
-                gestureItem(badge: "👉", title: localization.string("gesture.right_action"), desc: localization.string("gesture.right_desc"))
-                gestureItem(badge: "👆", title: localization.string("gesture.top_action"), desc: localization.string("gesture.top_desc"))
+                gestureItem(badge: "👈", title: localization.string("gesture.left_action"), desc: gestureDescription("gesture.left_desc"))
+                gestureItem(badge: "👉", title: localization.string("gesture.right_action"), desc: gestureDescription("gesture.right_desc"))
+                gestureItem(badge: "👆", title: localization.string("gesture.top_action"), desc: gestureDescription("gesture.top_desc"))
                 gestureItem(badge: "🎚️", title: localization.string("gesture.volume_action"), desc: localization.string("gesture.volume_desc"))
             }
 
@@ -447,6 +447,14 @@ struct OnboardingView: View {
         .padding(10)
         .background(SongletonTheme.card.opacity(0.65), in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.06), lineWidth: 1))
+    }
+
+    private func gestureDescription(_ key: String) -> String {
+        let configuredDuration = SettingsModel.shared.edgeGestureHoldDuration
+        let duration = key == "gesture.top_desc"
+            ? configuredDuration * 0.8
+            : configuredDuration
+        return String(format: localization.string(key), String(format: "%.1f", duration))
     }
 
     private func shortcutRow(keys: [AnyView], desc: String) -> some View {
