@@ -19,13 +19,15 @@ private func mouseEventTapCallback(
         }
     } else if type == .mouseMoved || type == .leftMouseDragged || type == .rightMouseDragged {
         let location = event.location
+        let flags = event.flags
         Task { @MainActor in
-            manager.handleGlobalMouseLocation(location, now: Date())
+            manager.handleGlobalMouseLocation(location, flags: flags, now: Date())
         }
     } else if type == .leftMouseDown || type == .leftMouseUp || type == .rightMouseDown || type == .rightMouseUp {
         let location = event.location
+        let flags = event.flags
         Task { @MainActor in
-            manager.handleGlobalMouseEvent(type, location: location)
+            manager.handleGlobalMouseEvent(type, flags: flags, location: location)
         }
     }
     return Unmanaged.passUnretained(event)
@@ -130,13 +132,16 @@ final class MouseGestureManager: ObservableObject {
         logger.info("Global mouse monitor stopped")
     }
 
-    fileprivate func handleGlobalMouseLocation(_ location: CGPoint, now: Date) {
+    fileprivate func handleGlobalMouseLocation(_ location: CGPoint, flags: CGEventFlags, now: Date) {
         guard SettingsModel.shared.circularGesturesEnabled else { return }
         if now.timeIntervalSince(lastEventLogDate) >= 1.0 {
             lastEventLogDate = now
             logger.debug("Global mouse move event received")
         }
-        if pressedButtons.contains(0) && pressedButtons.contains(1) {
+        let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
+        let isCmdPressedWithButton = flags.contains(.maskCommand) && !pressedButtons.isEmpty
+
+        if isBothPressed || isCmdPressedWithButton {
             if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: location) }
             updateVolumeGesture(at: location.y)
             return
@@ -144,7 +149,7 @@ final class MouseGestureManager: ObservableObject {
         handleMouseLocation(NSPoint(x: location.x, y: location.y), now: now)
     }
 
-    fileprivate func handleGlobalMouseEvent(_ type: CGEventType, location: CGPoint) {
+    fileprivate func handleGlobalMouseEvent(_ type: CGEventType, flags: CGEventFlags, location: CGPoint) {
         let button: Int64?
         switch type {
         case .leftMouseDown, .leftMouseUp: button = 0
@@ -160,7 +165,10 @@ final class MouseGestureManager: ObservableObject {
             }
         }
 
-        if pressedButtons.contains(0) && pressedButtons.contains(1) {
+        let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
+        let isCmdPressedWithButton = flags.contains(.maskCommand) && !pressedButtons.isEmpty
+
+        if isBothPressed || isCmdPressedWithButton {
             if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: location) }
             updateVolumeGesture(at: location.y)
         } else if isVolumeGestureActive {
