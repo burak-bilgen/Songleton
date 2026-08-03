@@ -1,7 +1,8 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-SDK_PATH=$(xcrun --show-sdk-path)
+SDK_PATH=$(xcrun --sdk macosx --show-sdk-path)
+TARGET_ARCH="$(uname -m)"
 BUILD_DIR="${BUILD_DIR:-/tmp/SongletonTests}"
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
@@ -17,10 +18,10 @@ for file in Songleton/*.swift Songleton/App/*.swift Songleton/Controllers/*.swif
   SWIFT_FILES+=("$file")
 done
 
-SWIFT_EXTRA_FLAGS=(${SWIFT_EXTRA_FLAGS:-})
-
-swiftc -sdk "$SDK_PATH" \
-  -target arm64-apple-macos14.0 \
+EXTRA_FLAGS_VALUE="${SWIFT_EXTRA_FLAGS:-}"
+SWIFTC_ARGS=(
+  -sdk "$SDK_PATH"
+  -target "${TARGET_ARCH}-apple-macos14.0" \
   -framework Foundation \
   -framework SwiftUI \
   -framework AppKit \
@@ -28,9 +29,14 @@ swiftc -sdk "$SDK_PATH" \
   -framework ServiceManagement \
   -parse-as-library \
   -emit-executable \
-  -o "$BUILD_DIR/RunTests" \
-  "${SWIFT_EXTRA_FLAGS[@]}" \
-  "${SWIFT_FILES[@]}"
+  -o "$BUILD_DIR/RunTests"
+)
+
+if [[ -n "$EXTRA_FLAGS_VALUE" ]]; then
+  SWIFTC_ARGS+=( $EXTRA_FLAGS_VALUE )
+fi
+
+swiftc "${SWIFTC_ARGS[@]}" "${SWIFT_FILES[@]}"
 
 echo "🚀 Running tests..."
 "$BUILD_DIR/RunTests"

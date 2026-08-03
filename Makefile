@@ -12,6 +12,8 @@ RELEASE_DIR  = build/Release
 RELEASE_APP  = $(RELEASE_DIR)/$(APP_NAME).app
 DMG_NAME     = $(APP_NAME)-1.0.dmg
 DMG_PATH     = build/$(DMG_NAME)
+ARCHIVE_PATH = build/$(APP_NAME).xcarchive
+ARCHIVE_APP  = $(ARCHIVE_PATH)/Products/Applications/$(APP_NAME).app
 
 # ─────────────────────────────────────────────
 # Development targets.
@@ -57,12 +59,12 @@ logs:
 # Distribution targets.
 # ─────────────────────────────────────────────
 
-## Build a release and create a DMG.
-dmg: build-release
+## Create a distributable DMG from a Developer ID-signed archive.
+dmg: archive
 	@echo "Creating DMG..."
 	@rm -rf build/dmg-stage
 	@mkdir -p build/dmg-stage
-	@cp -R "$(RELEASE_APP)" build/dmg-stage/
+	@cp -R "$(ARCHIVE_APP)" build/dmg-stage/
 	@ln -sf /Applications build/dmg-stage/Applications
 	@rm -f "$(DMG_PATH)"
 	@hdiutil create \
@@ -81,6 +83,16 @@ build-release:
 	@xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration Release build \
 		CONFIGURATION_BUILD_DIR="$(PWD)/$(RELEASE_DIR)"
 	@codesign --verify --deep --strict --verbose=2 "$(RELEASE_APP)"
+
+## Create a Developer ID-signed archive suitable for distribution.
+archive:
+	@test -n "$(DEVELOPER_IDENTITY)" || (echo "DEVELOPER_IDENTITY is required, for example: Developer ID Application: Your Name (TEAMID)" && exit 1)
+	@echo "📦 Archiving release..."
+	@rm -rf "$(ARCHIVE_PATH)"
+	@xcodebuild archive -project $(PROJECT) -scheme $(SCHEME) -configuration Release \
+		-archivePath "$(ARCHIVE_PATH)" \
+		CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$(DEVELOPER_IDENTITY)"
+	@codesign --verify --deep --strict --verbose=2 "$(ARCHIVE_APP)"
 
 ## Clean build artifacts.
 clean:
@@ -102,6 +114,11 @@ coverage:
 	@xcrun llvm-profdata merge -sparse /tmp/SongletonCoverage/*.profraw -o /tmp/SongletonCoverage/Songleton.profdata
 	@xcrun llvm-cov report /tmp/SongletonCoverage/RunTests -instr-profile=/tmp/SongletonCoverage/Songleton.profdata --ignore-filename-regex='Songleton/(App|Views)/|SongletonTests/'
 
+## Run tests and fail the build on Swift compiler warnings.
+quality: test
+	@xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration Debug build \
+		CODE_SIGNING_ALLOWED=NO SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+
 ## Create a notarized release DMG (Apple credentials required).
 notarize: dmg
 	@test -n "$(APPLE_ID)" || (echo "APPLE_ID is required" && exit 1)
@@ -110,5 +127,5 @@ notarize: dmg
 	@xcrun notarytool submit "$(DMG_PATH)" --apple-id "$(APPLE_ID)" --team-id "$(TEAM_ID)" --password "$(APP_PASSWORD)" --wait
 	@xcrun stapler staple "$(DMG_PATH)"
 
-.PHONY: run build-debug fresh kill restart logs dmg build-release clean test coverage notarize
+.PHONY: run build-debug fresh kill restart logs dmg build-release archive clean test coverage quality notarize
 .DEFAULT_GOAL := run

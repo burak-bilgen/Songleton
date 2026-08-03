@@ -66,4 +66,5 @@ fastlane/test_output
 build/
 DerivedData/
 *.dmg
-
+*.xcarchive
+*.xcresult
