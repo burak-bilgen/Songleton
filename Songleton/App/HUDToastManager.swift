@@ -5,7 +5,7 @@ import SwiftUI
 final class HUDToastManager: NSObject {
     static let shared = HUDToastManager()
 
-    private var popover: NSPopover?
+    private var toastWindow: NonActivatingToastPanel?
     private var dismissTask: Task<Void, Never>?
 
     private override init() {
@@ -15,28 +15,67 @@ final class HUDToastManager: NSObject {
     func show(track: String, artist: String, artwork: NSImage?) {
         dismissTask?.cancel()
 
-        if let popover, popover.isShown {
-            popover.performClose(nil)
+        // Close existing toast window immediately
+        if let existing = toastWindow {
+            existing.orderOut(nil)
+            existing.close()
+            toastWindow = nil
         }
 
-        let popover = NSPopover()
-        popover.contentSize = NSSize(width: 240, height: 56)
-        popover.behavior = .transient
-        popover.animates = true
-        popover.contentViewController = NSHostingController(
+        let screen = NSScreen.main ?? NSScreen.screens.first
+        guard let screen else { return }
+
+        let visibleFrame = screen.visibleFrame
+        let toastWidth: CGFloat = 270
+        let toastHeight: CGFloat = 64
+        let paddingRight: CGFloat = 20
+        let paddingTop: CGFloat = 12
+
+        // Top-Right Corner Position (Aligned right below menu bar)
+        let toastX = visibleFrame.maxX - toastWidth - paddingRight
+        let toastY = visibleFrame.maxY - toastHeight - paddingTop
+
+        let panel = NonActivatingToastPanel(
+            contentRect: NSRect(x: toastX, y: toastY, width: toastWidth, height: toastHeight),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.level = .statusBar
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = false
+        panel.ignoresMouseEvents = true
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        panel.contentView = NSHostingView(
             rootView: HUDToastView(track: track, artist: artist, artwork: artwork)
         )
-        self.popover = popover
 
-        if let button = MenuBarManager.shared.mainButton {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        }
+        self.toastWindow = panel
+
+        // Display visually WITHOUT ever stealing keyboard focus from active application!
+        panel.orderFrontRegardless()
 
         dismissTask = Task {
-            try? await Task.sleep(for: .seconds(3.0))
+            try? await Task.sleep(for: .seconds(2.8))
             if !Task.isCancelled {
-                popover.performClose(nil)
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.35
+                    panel.animator().alphaValue = 0.0
+                } completionHandler: {
+                    panel.orderOut(nil)
+                    panel.close()
+                    if self.toastWindow === panel {
+                        self.toastWindow = nil
+                    }
+                }
             }
         }
     }
+}
+
+// Custom NSPanel subclass that NEVER steals key focus or main window status
+final class NonActivatingToastPanel: NSPanel {
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
 }
