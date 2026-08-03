@@ -225,10 +225,14 @@ final class MouseGestureManager: ObservableObject {
         guard isVolumeGestureActive else { return }
         isVolumeGestureActive = false
         guard let panel = volumeGestureWindow else { return }
+        let view = panel.contentView
+
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.16
+            context.duration = 0.22
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            context.allowsImplicitAnimation = true
             panel.animator().alphaValue = 0
+            view?.layer?.setAffineTransform(CGAffineTransform(scaleX: 0.7, y: 0.7))
         } completionHandler: { [weak self, weak panel] in
             panel?.orderOut(nil)
             self?.volumeGestureWindow = nil
@@ -240,7 +244,11 @@ final class MouseGestureManager: ObservableObject {
         let screen = NSScreen.screens.first(where: { $0.frame.contains(location) }) ?? NSScreen.main
         guard let screen else { return }
 
-        let hudSize = NSSize(width: 50, height: 240)
+        let hostingController = NSHostingController(rootView: VolumeGestureHUDView(manager: self))
+        hostingController.sizingOptions = [.intrinsicContentSize]
+        let fittingSize = hostingController.view.fittingSize
+        let hudSize = NSSize(width: max(fittingSize.width, 40), height: max(fittingSize.height, 160))
+
         let panel = NSPanel(
             contentRect: NSRect(origin: .zero, size: hudSize),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -253,27 +261,30 @@ final class MouseGestureManager: ObservableObject {
         panel.hasShadow = true
         panel.ignoresMouseEvents = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.contentViewController = NSHostingController(rootView: VolumeGestureHUDView(manager: self))
+        panel.contentViewController = hostingController
 
         let visibleFrame = screen.visibleFrame
-        let x = max(visibleFrame.minX + 8, visibleFrame.maxX - hudSize.width - 10)
-        let y = max(visibleFrame.minY + 8, visibleFrame.maxY - hudSize.height - 8)
-        panel.setFrame(NSRect(x: x, y: y - 10, width: hudSize.width, height: hudSize.height), display: true)
+        let x = visibleFrame.maxX - hudSize.width - 6
+        let y = visibleFrame.maxY - hudSize.height - 4
+
+        panel.setFrame(NSRect(x: x, y: y, width: hudSize.width, height: hudSize.height), display: true)
         volumeGestureWindow = panel
         panel.alphaValue = 0
         panel.orderFrontRegardless()
 
+        // Bouncy spring entrance: scale up from 0.6 + fade in
+        let view = panel.contentView!
+        view.wantsLayer = true
+        view.layer?.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        view.layer?.position = CGPoint(x: hudSize.width / 2, y: hudSize.height / 2)
+        view.layer?.setAffineTransform(CGAffineTransform(scaleX: 0.6, y: 0.6))
+
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.18
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            context.duration = 0.45
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.175, 0.885, 0.32, 1.5)
+            context.allowsImplicitAnimation = true
             panel.animator().alphaValue = 1
-            panel.animator().setFrameOrigin(NSPoint(x: x, y: y + 4))
-        } completionHandler: {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.13
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                panel.animator().setFrameOrigin(NSPoint(x: x, y: y))
-            }
+            view.layer?.setAffineTransform(.identity)
         }
     }
 
