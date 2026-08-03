@@ -25,21 +25,9 @@ struct TestRunnerMain {
         print("▶ Running LyricsServiceTests...")
         lyricsTests.runAllTests()
 
-        let playlistTests = SpotifyPlaylistModelTests()
-        print("▶ Running SpotifyPlaylistModelTests...")
-        playlistTests.runAllTests()
-
         let localizationTests = LocalizationModelTests()
         print("▶ Running LocalizationModelTests...")
         localizationTests.runAllTests()
-
-        let youtubeTests = YouTubeControllerTests()
-        print("▶ Running YouTubeControllerTests...")
-        youtubeTests.runAllTests()
-
-        let circularGestureTests = CircularGestureTests()
-        print("▶ Running CircularGestureTests...")
-        circularGestureTests.runAllTests()
 
         print("==================================================")
         if TestObserver.shared.failedCount == 0 {

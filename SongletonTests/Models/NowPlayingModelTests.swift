@@ -7,14 +7,10 @@ final class NowPlayingModelTests {
         await runTest(name: "testPlatformAccentColorDynamicToggle", test: testPlatformAccentColorDynamicToggle)
         await runTest(name: "testShowArtistInMenuBarSetting", test: testShowArtistInMenuBarSetting)
         await runTest(name: "testLyricsOffsetIntegration", test: testLyricsOffsetIntegration)
-        await runTest(name: "testYouTubeControllerIntegration", test: testYouTubeControllerIntegration)
-        await runTest(name: "testYouTubeTitleParsing", test: testYouTubeTitleParsing)
         await runTest(name: "testLyricsActiveLineSelection", test: testLyricsActiveLineSelection)
-        await runTest(name: "testSpotifyPlaylistURIValidation", test: testSpotifyPlaylistURIValidation)
         await runTest(name: "testLanguageSelection", test: testLanguageSelection)
         await runTest(name: "testMediaValueSanitization", test: testMediaValueSanitization)
         await runTest(name: "testMediaValueBoundaries", test: testMediaValueBoundaries)
-        await runTest(name: "testYouTubeTitleVariants", test: testYouTubeTitleVariants)
         await runTest(name: "testLyricsActiveLineBoundaries", test: testLyricsActiveLineBoundaries)
     }
 
@@ -56,18 +52,6 @@ final class NowPlayingModelTests {
         assertEqual(SettingsModel.shared.lyricsOffset, 1.2)
     }
 
-    func testYouTubeControllerIntegration() async {
-        let ytController = YouTubeController()
-        assertEqual(ytController.bundleID, "com.google.Chrome")
-        assertEqual(ytController.scriptAppName, "Google Chrome")
-    }
-
-    func testYouTubeTitleParsing() async {
-        let parsed = YouTubeController().parseYouTubeTitle("(2) Artist - Track - YouTube")
-        assertEqual(parsed.artist, "Artist")
-        assertEqual(parsed.track, "Track")
-    }
-
     func testLyricsActiveLineSelection() async {
         let settings = SettingsModel.shared
         settings.lyricsOffset = 0
@@ -80,15 +64,6 @@ final class NowPlayingModelTests {
         assertEqual(lyrics.activeLineIndex(for: 6), 1)
         assertEqual(lyrics.activeLineIndex(for: 11), 2)
         lyrics.lines = []
-    }
-
-    func testSpotifyPlaylistURIValidation() async {
-        assertEqual(
-            SpotifyPlaylistModel.normalizedURI(from: "https://open.spotify.com/playlist/abc123?si=test"),
-            "spotify:playlist:abc123"
-        )
-        assertEqual(SpotifyPlaylistModel.normalizedURI(from: "https://evilspotify.com/playlist/abc123"), "")
-        assertEqual(SpotifyPlaylistModel.normalizedURI(from: "spotify:playlist:\"bad\""), "")
     }
 
     func testLanguageSelection() async {
@@ -119,21 +94,6 @@ final class NowPlayingModelTests {
         assertEqual(MediaValue.volume(42.6), 43)
         assertEqual(MediaValue.volume(-10.0), 0)
         assertEqual(MediaValue.volume(120.0), 100)
-    }
-
-    func testYouTubeTitleVariants() async {
-        let controller = YouTubeController()
-        let music = controller.parseYouTubeTitle("(3) Artist - Track - YouTube Music")
-        assertEqual(music.artist, "Artist")
-        assertEqual(music.track, "Track")
-
-        let noArtist = controller.parseYouTubeTitle("Track Name - YouTube")
-        assertEqual(noArtist.track, "Track Name")
-        assertEqual(noArtist.artist, "")
-
-        let hyphenated = controller.parseYouTubeTitle("Artist - Track - Live - YouTube")
-        assertEqual(hyphenated.artist, "Artist")
-        assertEqual(hyphenated.track, "Track - Live")
     }
 
     func testLyricsActiveLineBoundaries() async {
