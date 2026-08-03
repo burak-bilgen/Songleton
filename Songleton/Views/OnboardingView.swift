@@ -11,69 +11,79 @@ struct OnboardingView: View {
     @State private var animateIcon = false
     @State private var hoveredCard: Int? = nil
 
-    enum Step { case welcome, permission, ready }
+    enum Step: Int, CaseIterable {
+        case welcome = 0
+        case hoverAndTriggers = 1
+        case ambientMode = 2
+        case gestures = 3
+        case permissions = 4
+    }
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color.black,
-                    SongletonTheme.panelTop,
-                    Color.black
-                ],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            SongletonTheme.background.ignoresSafeArea()
 
             Circle()
-                .fill(SongletonTheme.cyan.opacity(0.035))
-                .frame(width: 280, height: 280)
-                .blur(radius: 70)
-                .offset(x: -170, y: -260)
+                .fill(SongletonTheme.cyan.opacity(0.04))
+                .frame(width: 320, height: 320)
+                .blur(radius: 80)
+                .offset(x: -180, y: -240)
 
             Circle()
                 .fill(SongletonTheme.violet.opacity(0.04))
-                .frame(width: 260, height: 260)
-                .blur(radius: 80)
-                .offset(x: 180, y: 260)
+                .frame(width: 300, height: 300)
+                .blur(radius: 90)
+                .offset(x: 190, y: 250)
 
             VStack(spacing: 0) {
-                // Header drag area & step indicator
+                // Top Progress Bar & Navigation Header
                 headerView
-                    .padding(.top, 24)
+                    .padding(.top, 22)
                     .padding(.horizontal, 24)
 
                 Spacer(minLength: 12)
 
-                // Animated step views
+                // Step Pages Content
                 ZStack {
                     switch step {
                     case .welcome:
-                        welcomeView
+                        welcomeStepView
                             .transition(.asymmetric(
                                 insertion: .move(edge: .trailing).combined(with: .opacity),
                                 removal: .move(edge: .leading).combined(with: .opacity)
                             ))
-                    case .permission:
-                        permissionView
+                    case .hoverAndTriggers:
+                        hoverStepView
                             .transition(.asymmetric(
                                 insertion: .move(edge: .trailing).combined(with: .opacity),
                                 removal: .move(edge: .leading).combined(with: .opacity)
                             ))
-                    case .ready:
-                        readyView
+                    case .ambientMode:
+                        ambientStepView
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            ))
+                    case .gestures:
+                        gesturesStepView
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            ))
+                    case .permissions:
+                        permissionsStepView
                             .transition(.asymmetric(
                                 insertion: .move(edge: .trailing).combined(with: .opacity),
                                 removal: .move(edge: .leading).combined(with: .opacity)
                             ))
                     }
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 28)
 
                 Spacer(minLength: 12)
             }
         }
-        .frame(width: 520, height: 660)
+        .frame(width: 540, height: 680)
         .onAppear {
             model.checkAutomationPermission(askUser: false)
             withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
@@ -82,15 +92,7 @@ struct OnboardingView: View {
         }
     }
 
-    private var stepIndex: Int {
-        switch step {
-        case .welcome: 0
-        case .permission: 1
-        case .ready: 2
-        }
-    }
-
-    // MARK: - Header & Step Indicator
+    // MARK: - Navigation Header & Indicator
 
     private var headerView: some View {
         VStack(spacing: 12) {
@@ -98,146 +100,332 @@ struct OnboardingView: View {
                 if step != .welcome {
                     Button(action: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            step = (step == .ready) ? .permission : .welcome
+                            if let prev = Step(rawValue: step.rawValue - 1) {
+                                step = prev
+                            }
                         }
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 11, weight: .bold))
                             Text(localization.string("common.back"))
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
                         }
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(.primary.opacity(0.06), in: Capsule())
+                        .background(Color.white.opacity(0.06), in: Capsule())
                     }
                     .buttonStyle(.plain)
                 }
 
                 Spacer()
 
-                Text("\(stepIndex + 1) / 3")
+                Text("\(step.rawValue + 1) / \(Step.allCases.count)")
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.white.opacity(0.35))
             }
 
-            // Step Progress Bar
-            HStack(spacing: 8) {
-                ForEach(0..<3, id: \.self) { i in
+            // Progress Indicators
+            HStack(spacing: 6) {
+                ForEach(Step.allCases, id: \.rawValue) { s in
                     Capsule()
-                        .fill(stepIndex >= i ? SongletonTheme.accentGradient : LinearGradient(colors: [Color.white.opacity(0.1)], startPoint: .leading, endPoint: .trailing))
+                        .fill(step.rawValue >= s.rawValue ? SongletonTheme.accentGradient : LinearGradient(colors: [Color.white.opacity(0.1)], startPoint: .leading, endPoint: .trailing))
                         .frame(height: 4)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: stepIndex)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: step)
                 }
             }
         }
     }
 
-    // MARK: - 1. Welcome Step
+    // MARK: - Step 1: Welcome
 
-    private var welcomeView: some View {
-        VStack(spacing: 22) {
-            // Hero Icon
+    private var welcomeStepView: some View {
+        VStack(spacing: 20) {
+            // App Icon Badge
             ZStack {
                 Circle()
                     .fill(SongletonTheme.violet.opacity(0.18))
-                    .frame(width: 96, height: 96)
+                    .frame(width: 90, height: 90)
                     .scaleEffect(animateIcon ? 1.06 : 0.96)
 
                 if let icon = NSImage(named: NSImage.applicationIconName) {
                     Image(nsImage: icon)
                         .resizable()
-                        .frame(width: 80, height: 80)
+                        .frame(width: 76, height: 76)
                         .shadow(color: SongletonTheme.cyan.opacity(0.35), radius: 14, y: 6)
                 } else {
                     Image(systemName: "music.note")
-                        .font(.system(size: 44, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
+                        .font(.system(size: 40, weight: .semibold))
+                        .foregroundStyle(SongletonTheme.cyan)
                 }
             }
 
-            // Title & Description (No Overflow)
-            VStack(spacing: 8) {
-                Text(localization.string("onboarding.welcome"))
-                    .font(.system(size: 22, weight: .bold))
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 6) {
+                Text(localization.string("onboarding.step_1_title"))
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
 
-                Text(localization.string("onboarding.welcome_hint"))
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
+                Text(localization.string("onboarding.step_1_subtitle"))
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.55))
                     .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineSpacing(3)
             }
 
-            // Feature Cards
             VStack(spacing: 10) {
                 featureCard(
                     id: 1,
-                    icon: "music.note.house.fill",
-                    color: SongletonTheme.pink,
+                    icon: "menubar.rectangle",
+                    color: SongletonTheme.cyan,
                     title: localization.string("onboarding.feature_live_title"),
                     desc: localization.string("onboarding.feature_live_hint")
                 )
+
                 featureCard(
                     id: 2,
-                    icon: "playpause.circle.fill",
-                    color: SongletonTheme.cyan,
-                    title: localization.string("onboarding.feature_control_title"),
-                    desc: localization.string("onboarding.feature_control_hint")
+                    icon: "sparkles",
+                    color: SongletonTheme.violet,
+                    title: localization.string("settings.dynamic_color"),
+                    desc: localization.string("settings.dynamic_color_hint")
                 )
+
                 featureCard(
                     id: 3,
-                    icon: "quote.bubble.fill",
-                    color: SongletonTheme.violet,
-                    title: localization.string("onboarding.feature_lyrics_title"),
-                    desc: localization.string("onboarding.feature_lyrics_hint")
+                    icon: "bolt.horizontal.fill",
+                    color: SongletonTheme.pink,
+                    title: localization.string("onboarding.feature_control_title"),
+                    desc: localization.string("onboarding.feature_control_hint")
                 )
             }
 
             Spacer(minLength: 4)
 
-            // Primary Button
-            actionButton(title: localization.string("common.continue"), color: .accentColor) {
+            actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                    step = .permission
+                    step = .hoverAndTriggers
                 }
             }
+        }
+    }
+
+    // MARK: - Step 2: Hover Panel & Triggers
+
+    private var hoverStepView: some View {
+        VStack(spacing: 18) {
+            badgeIcon("hand.point.up.left.fill", color: SongletonTheme.cyan)
+
+            VStack(spacing: 6) {
+                Text(localization.string("onboarding.step_2_title"))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Text(localization.string("onboarding.step_2_subtitle"))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .multilineTextAlignment(.center)
+            }
+
+            VStack(spacing: 10) {
+                featureCard(
+                    id: 4,
+                    icon: "computermouse.fill",
+                    color: SongletonTheme.cyan,
+                    title: "Direkt Sağ Tık (Right-Click)",
+                    desc: localization.string("onboarding.right_click_hint")
+                )
+
+                featureCard(
+                    id: 5,
+                    icon: "hand.tap.fill",
+                    color: SongletonTheme.violet,
+                    title: "Kapağa Çift Tıklama (Double-Click)",
+                    desc: localization.string("onboarding.double_click_hint")
+                )
+
+                featureCard(
+                    id: 6,
+                    icon: "doc.on.doc.fill",
+                    color: SongletonTheme.pink,
+                    title: localization.string("onboarding.tip_copy_title"),
+                    desc: localization.string("onboarding.tip_copy_hint")
+                )
+            }
+
+            Spacer(minLength: 4)
+
+            actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                    step = .ambientMode
+                }
+            }
+        }
+    }
+
+    // MARK: - Step 3: Ambient Mode & Shortcuts
+
+    private var ambientStepView: some View {
+        VStack(spacing: 16) {
+            badgeIcon("sparkles.tv.fill", color: SongletonTheme.violet)
+
+            VStack(spacing: 4) {
+                Text(localization.string("onboarding.step_3_title"))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Text(localization.string("onboarding.step_3_subtitle"))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .multilineTextAlignment(.center)
+            }
+
+            // Keyboard Shortcuts Showcase Grid
+            VStack(spacing: 6) {
+                shortcutRow(keys: [keyCapView("Space", width: 50)], desc: localization.string("shortcut.play_pause"))
+                shortcutRow(keys: [keyCapView("←"), keyCapView("→")], desc: localization.string("shortcut.prev_next_track"))
+                shortcutRow(keys: [keyCapView("↑"), keyCapView("↓")], desc: localization.string("shortcut.volume_control"))
+                shortcutRow(keys: [keyCapView("L")], desc: localization.string("shortcut.toggle_lyrics"))
+                shortcutRow(keys: [keyCapView("T")], desc: localization.string("shortcut.cycle_themes"))
+                shortcutRow(keys: [keyCapView("ESC")], desc: localization.string("shortcut.exit_ambient"))
+            }
+            .padding(12)
+            .background(SongletonTheme.card.opacity(0.7), in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.08), lineWidth: 1))
+
+            Spacer(minLength: 4)
+
+            actionButton(title: localization.string("common.continue"), color: SongletonTheme.violet) {
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                    step = .gestures
+                }
+            }
+        }
+    }
+
+    // MARK: - Step 4: Screen Edge & Mouse Gestures
+
+    private var gesturesStepView: some View {
+        VStack(spacing: 16) {
+            badgeIcon("hand.raised.fill", color: SongletonTheme.pink)
+
+            VStack(spacing: 4) {
+                Text(localization.string("onboarding.step_4_title"))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Text(localization.string("onboarding.step_4_subtitle"))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .multilineTextAlignment(.center)
+            }
+
+            VStack(spacing: 8) {
+                gestureItem(badge: "👈", title: localization.string("gesture.left_action"), desc: localization.string("gesture.left_desc"))
+                gestureItem(badge: "👉", title: localization.string("gesture.right_action"), desc: localization.string("gesture.right_desc"))
+                gestureItem(badge: "👆", title: localization.string("gesture.top_action"), desc: localization.string("gesture.top_desc"))
+                gestureItem(badge: "🎚️", title: localization.string("gesture.volume_action"), desc: localization.string("gesture.volume_desc"))
+            }
+
+            Spacer(minLength: 4)
+
+            actionButton(title: localization.string("common.continue"), color: SongletonTheme.pink) {
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                    step = .permissions
+                }
+            }
+        }
+    }
+
+    // MARK: - Step 5: Permissions & Launch
+
+    private var permissionsStepView: some View {
+        VStack(spacing: 18) {
+            badgeIcon(automationStatusIcon, color: automationStatusColor)
+
+            VStack(spacing: 6) {
+                Text(localization.string("onboarding.step_5_title"))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Text(localization.string("onboarding.step_5_subtitle"))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .multilineTextAlignment(.center)
+            }
+
+            VStack(spacing: 10) {
+                playerPermissionCard(appName: "Spotify", bundleID: "com.spotify.client", iconName: "music.note.list", color: .green)
+                playerPermissionCard(appName: "Apple Music", bundleID: "com.apple.Music", iconName: "music.note", color: .pink)
+            }
+
+            Spacer(minLength: 4)
+
+            VStack(spacing: 8) {
+                actionButton(
+                    title: model.automationStatus == .granted ? localization.string("common.start") : localization.string("permission.request_all"),
+                    color: model.automationStatus == .granted ? .green : SongletonTheme.cyan
+                ) {
+                    if model.automationStatus == .granted {
+                        onFinish()
+                    } else {
+                        model.requestPermissionByScript()
+                    }
+                }
+
+                if model.automationStatus != .granted {
+                    Button(action: { onFinish() }) {
+                        Text(localization.string("permission.skip"))
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    // MARK: - Reusable UI Components
+
+    private func badgeIcon(_ systemName: String, color: Color) -> some View {
+        ZStack {
+            Circle()
+                .fill(color.opacity(0.16))
+                .frame(width: 72, height: 72)
+            Image(systemName: systemName)
+                .font(.system(size: 32, weight: .bold))
+                .foregroundStyle(color)
         }
     }
 
     private func featureCard(id: Int, icon: String, color: Color, title: String, desc: String) -> some View {
         HStack(spacing: 14) {
             ZStack {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(color.opacity(0.16))
-                    .frame(width: 38, height: 38)
+                    .frame(width: 36, height: 36)
                 Image(systemName: icon)
-                    .font(.system(size: 18))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(color)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .fixedSize(horizontal: false, vertical: true)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
                 Text(desc)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.45))
             }
 
             Spacer(minLength: 0)
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(SongletonTheme.card.opacity(hoveredCard == id ? 0.9 : 0.68))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(hoveredCard == id ? color.opacity(0.38) : Color.white.opacity(0.08), lineWidth: 1)
         )
         .onHover { isHovered in
@@ -247,102 +435,73 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - 2. Permission Step
+    private func gestureItem(badge: String, title: String, desc: String) -> some View {
+        HStack(spacing: 10) {
+            Text(badge)
+                .font(.system(size: 14))
+                .frame(width: 28, height: 26)
+                .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(Color.white.opacity(0.12), lineWidth: 0.5))
 
-    private var permissionView: some View {
-        VStack(spacing: 20) {
-            // Header Icon
-            ZStack {
-                Circle()
-                    .fill(automationStatusColor.opacity(0.14))
-                    .frame(width: 80, height: 80)
-                Image(systemName: automationStatusIcon)
-                    .font(.system(size: 36, weight: .medium))
-                    .foregroundStyle(automationStatusColor)
-            }
-
-            VStack(spacing: 8) {
-                Text(localization.string("permission.automation"))
-                    .font(.system(size: 20, weight: .bold))
-
-             Text(localization.string("permission.onboarding_explanation"))
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                     .fixedSize(horizontal: false, vertical: true)
-
-                Text(localization.string("permission.onboarding_privacy"))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text(desc)
                     .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.48))
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
-             }
-
-            // Per-Player Permission List
-            VStack(spacing: 10) {
-                playerPermissionCard(
-                    appName: "Spotify",
-                    bundleID: "com.spotify.client",
-                    iconName: "music.note.list",
-                    color: .green
-                )
-
-                playerPermissionCard(
-                    appName: "Apple Music",
-                    bundleID: "com.apple.Music",
-                    iconName: "music.note",
-                    color: .pink
-                )
+                    .foregroundStyle(.white.opacity(0.45))
             }
 
-            // Global System Settings Link
-            if model.automationStatus != .granted {
-                Button(action: { openAutomationSettings() }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "gearshape.fill")
-                        Text(localization.string("permission.settings_path"))
-                    }
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(SongletonTheme.cyan)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(SongletonTheme.cyan.opacity(0.12), in: Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-
-            Spacer(minLength: 4)
-
-            // Bottom Actions
-            VStack(spacing: 8) {
-                actionButton(
-                    title: model.automationStatus == .granted ? localization.string("common.continue") : localization.string("permission.request_all"),
-                    color: .accentColor
-                ) {
-                    if model.automationStatus == .granted {
-                        withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) { step = .ready }
-                    } else {
-                        model.requestPermissionByScript()
-                    }
-                }
-
-                if model.automationStatus != .granted {
-                    Button(action: {
-                        withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) { step = .ready }
-                    }) {
-                        Text(localization.string("permission.skip"))
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
+            Spacer(minLength: 0)
         }
-        .onAppear {
-            model.checkAutomationPermission(askUser: false)
+        .padding(10)
+        .background(SongletonTheme.card.opacity(0.65), in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.06), lineWidth: 1))
+    }
+
+    private func shortcutRow(keys: [AnyView], desc: String) -> some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 4) {
+                ForEach(0..<keys.count, id: \.self) { idx in
+                    keys[idx]
+                }
+            }
+            .frame(width: 76, alignment: .leading)
+
+            Text(desc)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.85))
+
+            Spacer()
         }
+    }
+
+    private func keyCapView(_ text: String, width: CGFloat = 26) -> AnyView {
+        AnyView(
+            Text(text)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundStyle(Color.white.opacity(0.95))
+                .frame(height: 22)
+                .frame(minWidth: width)
+                .padding(.horizontal, 4)
+                .background(
+                    LinearGradient(
+                        colors: [Color(white: 0.24), Color(white: 0.12)],
+                        startPoint: .top, endPoint: .bottom
+                    ),
+                    in: RoundedRectangle(cornerRadius: 5, style: .continuous)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.white.opacity(0.40), .white.opacity(0.10)],
+                                startPoint: .top, endPoint: .bottom
+                            ),
+                            lineWidth: 0.8
+                        )
+                )
+        )
     }
 
     private func playerPermissionCard(appName: String, bundleID: String, iconName: String, color: Color) -> some View {
@@ -359,9 +518,10 @@ struct OnboardingView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(appName)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
                 Text(statusText(for: status))
-                    .font(.system(size: 11))
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(statusColor(for: status))
             }
 
@@ -376,108 +536,39 @@ struct OnboardingView: View {
                     model.requestPermissionFor(bundleID: bundleID)
                 }) {
                     Text(localization.string("permission.grant"))
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
-                        .background(Color.accentColor, in: Capsule())
-                        .foregroundStyle(.white)
+                        .background(SongletonTheme.cyan, in: Capsule())
+                        .foregroundStyle(.black)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(12)
-                    .background(SongletonTheme.card.opacity(0.68), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(.primary.opacity(0.06), lineWidth: 1)
-        )
+        .background(SongletonTheme.card.opacity(0.68), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06), lineWidth: 1))
     }
-
-    // MARK: - 3. Ready Step
-
-    private var readyView: some View {
-        VStack(spacing: 22) {
-            ZStack {
-                Circle()
-                    .fill(Color.green.opacity(0.16))
-                    .frame(width: 88, height: 88)
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.green)
-            }
-
-            VStack(spacing: 8) {
-                Text(localization.string("onboarding.ready"))
-                    .font(.system(size: 22, weight: .bold))
-
-                Text(localization.string("onboarding.ready_hint"))
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            VStack(alignment: .leading, spacing: 12) {
-                tipItem(icon: "menubar.rectangle", title: localization.string("onboarding.tip_menu_title"), desc: localization.string("onboarding.tip_menu_hint"))
-                tipItem(icon: "music.note", title: localization.string("onboarding.tip_artwork_title"), desc: localization.string("onboarding.tip_artwork_hint"))
-                tipItem(icon: "doc.on.doc", title: localization.string("onboarding.tip_copy_title"), desc: localization.string("onboarding.tip_copy_hint"))
-            }
-            .padding(14)
-            .background(.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
-
-            Spacer(minLength: 4)
-
-            actionButton(title: localization.string("common.start"), color: .green) {
-                onFinish()
-            }
-        }
-    }
-
-    private func tipItem(icon: String, title: String, desc: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundStyle(SongletonTheme.cyan)
-                .frame(width: 24)
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(desc)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
-        }
-    }
-
-    // MARK: - Reusable Action Button
 
     private func actionButton(title: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 14, weight: .bold))
+                .font(.system(size: 14, weight: .bold, design: .rounded))
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
                 .background(
                     LinearGradient(
-                        colors: [color, color.opacity(0.72)],
+                        colors: [color, color.opacity(0.78)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
                     in: RoundedRectangle(cornerRadius: 12, style: .continuous)
                 )
-                .foregroundStyle(.black.opacity(0.82))
-                .contentShape(RoundedRectangle(cornerRadius: 12))
+                .foregroundStyle(.black.opacity(0.88))
                 .shadow(color: color.opacity(0.3), radius: 8, y: 4)
         }
         .buttonStyle(.plain)
     }
-
-    // MARK: - Helpers
 
     private var automationStatusIcon: String {
         switch model.automationStatus {
@@ -507,20 +598,7 @@ struct OnboardingView: View {
         switch status {
         case .granted: .green
         case .denied: .red
-        case .notDetermined: .secondary
-        }
-    }
-
-    private func openAutomationSettings() {
-        let urls = [
-            "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
-            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension"
-        ]
-        for urlString in urls {
-            if let url = URL(string: urlString) {
-                NSWorkspace.shared.open(url)
-                return
-            }
+        case .notDetermined: .white.opacity(0.4)
         }
     }
 }

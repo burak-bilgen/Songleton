@@ -18,39 +18,38 @@
 
 **Songleton**, Spotify veya Apple Music kullanırken arka planda sessizce çalışan, Mac'inizin menü çubuğuna (Menu Bar) yerleşen ve tek tıkla ekranınızı nostaljik bir müzik stüdyosuna dönüştüren **ultra hızlı ve yerel macOS müzik yardımcısıdır.**
 
-Karmaşık ayarlarla uğraşmadan, şarkıyı kimin söylediğini menü çubuğundan anında görün, fare tekerleğinizle sesi ayarlayın ya da tam ekrana geçip arkada dönen plağın ve akan şarkı sözlerinin tadını çıkarın!
+Karmaşık ayarlarla uğraşmadan, şarkıyı kimin söylediğini menü çubuğundan anında görün, fare hareketleriyle sesi ayarlayın ya da tam ekrana geçip arkada dönen plağın ve akan şarkı sözlerinin tadını çıkarın!
 
 ---
 
 ### 🎨 Öne Çıkan Havalı Özellikler
 
-#### 💿 Tam Ekran Ambient (Ortam) Modu
+#### 💿 Tam Ekran Sinematik Ambient (Ortam) Modu
 Masada çalışırken veya odanızda müzik dinlerken Mac ekranınızı büyüleyici bir müzik çalar ekranına dönüştürür.
-- **Nostaljik CRT TV Efektleri**: Eski tüplü televizyonların gözü yormayan, tatlı açılış ve kapanış ışık hüzmesi animasyonları.
+- **Sinematik Açılış & Mercek Efekti**: Ekran 0.82 ölçekten yaylanarak büyür (`.spring`), 24px mercek buğusu (Lens Blur) süzülerek kristal netliğe kavuşur.
+- **Nostaljik CRT TV Efektleri**: Eski tüplü televizyonların gözü yormayan kapanış ışık hüzmesi animasyonları.
 - **3 Farklı Görsel Tema**:
   - 💿 **Vinil Plak**: Dönüş ışık süzmesi, hız noktaları ve şarkı durduğunda olduğu yerde donan gerçekçi plak gövdesi.
   - 📼 **Kaset Çalar**: Çift makarası dönen nostaljik 90'lar kaset çalar tasarımı.
   - 🧊 **Cam (Pure Glass)**: Albüm kapağının derinlik ve cam efektiyle parladığı modern tasarım.
 - **Philips Ambilight Ritim Işığı**: Şarkının ritmine göre arka planda tatlı tatlı parlayan renk aurası.
-- **Ekran Dışı Şarkı Geçişleri**: Şarkı değiştiğinde albüm kapakları ekranın en dışından süzülerek gelir.
-- **Masa Saati & Takvim**: Çalışma masanızda saat ve tarih göstergesi.
-- **Uyku Zamanlayıcısı (Sleep Timer)**: 15, 30, 45 veya 60 dakika sonra müziği otomatik durdurup ekranı kapatır.
+- **Uyku Zamanlayıcısı (Sleep Timer)**: Müziği otomatik durdurup ekranı kapatan dahili zamanlayıcı.
 
-#### 🎤 Anlık Canlı Şarkı Sözleri (Synced Lyrics)
-- **Ritimle Kayan Sözler**: Müziğin anlık saniyesiyle birebir senkronize şekilde kayan canlı şarkı sözleri.
-- **Taşmayan Başlıklar**: Uzun şarkı isimleri veya sanatçı adları asla kesilmez (`...` olmaz), ekrana göre otomatik boyutlanır.
+#### 🔔 Odak Çalmayan Sağ Üst Bildirimler (Non-Activating Toast)
+- **Yazı Yazmayı Bölmez**: Kod yazarken, mesajlaşırken veya tarayıcıda gezinirken yeni şarkı bildirimi çıktığında **klavye odağınız asla bozulmaz** (`isKeyWindow = false`).
+- **Sağ Üst Yerleşim & Ambilight Aura**: Sağ üst köşede renkli HSL aurası ve cam kaplamasıyla süzülür.
 
-#### 🎨 Canlı & Parlak Renk Motoru (Smart HSL Engine)
-- **Çamur Tonlara Son**: Albüm kapaklarındaki mat ve çamurumsu kahverengi tonları filtreler; kapağın en canlı ve parlak ana rengini seçer.
-- **Neon Düğmeler**: Düğmeler, kaydırma çubukları ve ışık efektleri her zaman canlı ve göz alıcı renklerde parlar.
-
-#### 🖱️ Fare Jestleri & Menü Çubuğu Kontrolü
-- **Tekerlekle Ses Ayarı**: Menü çubuğundaki Songleton simgesinin üzerine gelip fare tekerleğini çevirerek sesi anında değiştirin.
-- **Sürekli Aktif Menü Çubuğu**: Ambient moddan çıksanız bile Songleton menü çubuğunuzda 7/24 hazır bekler.
+#### 🖱️ Akıllı Fare & Ekran Kenarı Jestleri (Gestures)
+- **Direkt Sağ Tık Kestirmesi**: Menü çubuğu ikonuna **doğrudan Sağ Tık (Right-Click)** yaparak Ambient Mode'a anında geçin! (Option + Sağ Tık: Ayarlar & Çıkış menüsü).
+- **Kapağa Çift Tıklama**: Hover panelindeki albüm kapağına **Çift Tıklayarak (Double-Click)** Ambient Mode'a geçiş yapın.
+- **Sağa / Sola Ekran Vurma**: Fareyi ekranın sol/sağ kenarına vurup 0.5s durarak **Önceki / Sonraki Şarkı**'ya geçin.
+- **Yukarı Ekran Vurma**: Fareyi ekranın en üstüne vurup 0.5s durarak **Müziği Oynatın / Durdurun**.
+- **Sol + Sağ Tık Canlı Ses Ayarı**: İki fare tuşuna aynı anda basarak (veya ⌘ + ⌥) fareyi yukarı/aşağı sürükleyip **Canlı Ses Düzeyini** ayarlayın.
+- **Bağımsız Ayarlar**: İstediğiniz jest grubunu Ayarlar ekranından bağımsız olarak açıp kapatabilirsiniz.
 
 ---
 
-### ⌨️ Klavye Dostu Kısayollar
+### ⌨️ Klavye Dostu Kısayollar (Ambient Mode)
 
 | Kısayol | Ne İşe Yarar? |
 | :--- | :--- |
@@ -60,6 +59,11 @@ Masada çalışırken veya odanızda müzik dinlerken Mac ekranınızı büyüle
 | `ESC` | Ambient Moddan Çık (CRT Kapanış Animasyonu) |
 | `L` | Canlı Şarkı Sözlerini Aç / Kapat |
 | `T` | Temayı Değiştir (Plak ↔ Kaset ↔ Cam) |
+
+---
+
+### 📱 5 Adımlı İnteraktif Onboarding
+Uygulama ilk kez açıldığında ekranın tam ortasında başlayan ve tüm kestirmeleri, fare hareketlerini, klavye kısayollarını görsellerle anlatan interaktif açılış rehberi.
 
 ---
 
