@@ -77,7 +77,6 @@ enum AutomationPermission {
 
 protocol MediaController: Sendable {
     nonisolated var bundleID: String { get }
-    nonisolated var activeBundleID: String? { get }
     nonisolated var displayName: String { get }
     nonisolated var scriptAppName: String { get }
     nonisolated var isRunning: Bool { get }
@@ -93,8 +92,6 @@ protocol MediaController: Sendable {
 }
 
 extension MediaController {
-    nonisolated var activeBundleID: String? { bundleID }
-
     nonisolated var isRunning: Bool {
         !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty
     }

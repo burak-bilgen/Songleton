@@ -26,17 +26,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         MouseGestureManager.shared.start()
     }
 
-    func reopenOnboarding() {
-        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
-        NSApp.setActivationPolicy(.regular)
-        if let window = onboardingWindow {
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
-        }
-        showOnboarding()
-    }
-
     private func registerCustomFonts() {
         guard let url = Bundle.main.url(forResource: "Audiowide-Regular", withExtension: "ttf") else { return }
         CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
