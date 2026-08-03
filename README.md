@@ -52,6 +52,7 @@ The hover panel provides:
 - Copyable track information.
 - A direct Ambient Mode button.
 - A direct Settings button.
+- A Quit button that closes Songleton completely.
 
 Double-clicking the album artwork opens Ambient Mode. The panel uses the artwork's dominant color for its visual accents.
 
@@ -73,7 +74,7 @@ Songleton does not play music itself. Spotify or Apple Music must be running and
 
 ### From a release
 
-Open the Songleton DMG, drag Songleton to Applications, and launch it. macOS may ask you to confirm the first launch depending on the signing and notarization status of the release.
+Open the Songleton DMG, drag Songleton to Applications, and launch it. Release builds are Developer ID-signed and notarized by Apple, so macOS opens them without a security warning.
 
 ### From source
 
@@ -93,7 +94,7 @@ Songleton is a menu bar application, so it may not open a traditional main windo
 
 ## First Launch and Permissions
 
-The first launch opens a five-step onboarding flow. You can use it to understand the controls and grant the required permissions.
+The first launch opens a five-step onboarding flow with an animated welcome, guided feature cards, and permission shortcuts. You can use it to understand the controls and grant the required permissions.
 
 ### Automation permission
 
@@ -176,9 +177,9 @@ Mouse gestures work globally after Accessibility permission is granted. The curs
 | Rest at the right edge | Next track |
 | Rest at the top edge | Play or pause |
 
-While an edge gesture is being recognized, a small black-and-white AMOLED cursor orb follows the pointer. Its ring fills as the hold progresses and bursts outward when the action is triggered. The real cursor is never moved by Songleton.
+While an edge gesture is being recognized, a small black-and-white AMOLED cursor orb follows the pointer. Its ring fills as the hold progresses and bursts outward in white when the action is triggered. If the cursor leaves the edge before the hold completes, the orb flashes red and collapses quickly — a cancel cue that is distinct from the success burst. The real cursor is never moved by Songleton.
 
-The default edge hold duration is `0.5s`. The top play/pause gesture is intentionally faster at `0.4s`. Both values are derived from the Edge hold duration setting, so changing the setting scales the top gesture proportionally.
+The default edge hold duration is `0.8s`. The top play/pause gesture is intentionally faster at `0.64s` (80% of the setting). Both values are derived from the Edge hold duration setting, so changing the setting scales the top gesture proportionally.
 
 The edge gesture control is available in Settings under General. It can be adjusted from `0.2s` to `2.0s` in `0.1s` increments.
 
