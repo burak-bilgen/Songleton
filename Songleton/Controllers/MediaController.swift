@@ -97,7 +97,8 @@ enum AppleScriptRunner {
         if let error {
             let code = error[NSAppleScript.errorNumber] as? Int ?? 0
             if code == -1743 { throw MediaControllerError.permissionDenied }
-            let message = error[NSAppleScript.errorMessage] as? String ?? "Bilinmeyen hata"
+            let message = error[NSAppleScript.errorMessage] as? String
+                ?? Bundle.main.localizedString(forKey: "media.unknown_error", value: "Unknown error", table: "Localizable")
             throw MediaControllerError.scriptFailed(message)
         }
         return result

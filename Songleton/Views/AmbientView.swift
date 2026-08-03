@@ -406,7 +406,7 @@ struct AmbientView: View {
                             Button {
                                 cycleThemeMode()
                             } label: {
-                                toolbarItemLabel(icon: selectedTheme.icon, label: selectedTheme.rawValue, id: "theme")
+                                toolbarItemLabel(icon: selectedTheme.icon, label: themeLabel(selectedTheme), id: "theme")
                             }
                             .buttonStyle(.plain)
                             .onHover { isHovered in hoveredToolbarItem = isHovered ? "theme" : nil }
@@ -420,7 +420,7 @@ struct AmbientView: View {
                                     if showLyrics { triggerLyricsFetch() }
                                 }
                             } label: {
-                                toolbarItemLabel(icon: "quote.bubble.fill", label: "Lyrics", id: "lyrics", active: showLyrics)
+                                toolbarItemLabel(icon: "quote.bubble.fill", label: localization.string("ambient.lyrics"), id: "lyrics", active: showLyrics)
                             }
                             .buttonStyle(.plain)
                             .onHover { isHovered in hoveredToolbarItem = isHovered ? "lyrics" : nil }
@@ -429,16 +429,16 @@ struct AmbientView: View {
 
                             // Sleep Timer Dropdown Menu
                             Menu {
-                                Button("Timer Off") { setSleepTimer(0) }
+                                Button(localization.string("ambient.timer_off")) { setSleepTimer(0) }
                                 Divider()
-                                Button("15 Minutes") { setSleepTimer(15) }
-                                Button("30 Minutes") { setSleepTimer(30) }
-                                Button("45 Minutes") { setSleepTimer(45) }
-                                Button("60 Minutes") { setSleepTimer(60) }
+                                Button(localization.string("ambient.timer_15")) { setSleepTimer(15) }
+                                Button(localization.string("ambient.timer_30")) { setSleepTimer(30) }
+                                Button(localization.string("ambient.timer_45")) { setSleepTimer(45) }
+                                Button(localization.string("ambient.timer_60")) { setSleepTimer(60) }
                             } label: {
                                 toolbarItemLabel(
                                     icon: "moon.fill",
-                                    label: sleepTimerMinutes > 0 ? formatSleepTimerRemaining() : "Sleep Timer",
+                                    label: sleepTimerMinutes > 0 ? formatSleepTimerRemaining() : localization.string("ambient.sleep_timer"),
                                     id: "sleep",
                                     active: sleepTimerMinutes > 0
                                 )
@@ -458,7 +458,7 @@ struct AmbientView: View {
                                         .padding(.horizontal, 5)
                                         .padding(.vertical, 1)
                                         .background(Color.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 3))
-                                    Text("Exit")
+                                    Text(localization.string("ambient.exit"))
                                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                                 }
                                 .foregroundStyle(.white)
@@ -766,7 +766,7 @@ struct AmbientView: View {
             HStack {
                 HStack(spacing: 6) {
                     Circle().fill(themeColor).frame(width: 8, height: 8)
-                    Text("LIVE LYRICS")
+                    Text(localization.string("ambient.live_lyrics"))
                         .font(.system(size: 11, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                 }
@@ -791,7 +791,7 @@ struct AmbientView: View {
                     Spacer()
                     ProgressView()
                         .scaleEffect(1.2)
-                    Text("Loading synced lyrics...")
+                    Text(localization.string("ambient.lyrics_loading"))
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.7))
                     Spacer()
@@ -803,10 +803,10 @@ struct AmbientView: View {
                     Image(systemName: "quote.bubble.fill")
                         .font(.system(size: 38))
                         .foregroundStyle(.white.opacity(0.25))
-                    Text("No synced lyrics found")
+                    Text(localization.string("ambient.lyrics_not_found"))
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.8))
-                    Text("Instrumental or unlisted track")
+                    Text(localization.string("ambient.lyrics_instrumental"))
                         .font(.system(size: 12, weight: .regular, design: .rounded))
                         .foregroundStyle(.white.opacity(0.5))
                     Spacer()
@@ -945,6 +945,16 @@ struct AmbientView: View {
                 duration: info.duration,
                 source: source
             )
+        } else {
+            lyricsModel.reset()
+        }
+    }
+
+    private func themeLabel(_ theme: AmbientTheme) -> String {
+        switch theme {
+        case .vinyl: return localization.string("ambient.theme.vinyl")
+        case .cassette: return localization.string("ambient.theme.cassette")
+        case .glass: return localization.string("ambient.theme.glass")
         }
     }
 
