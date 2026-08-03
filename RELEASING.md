@@ -7,6 +7,6 @@
 5. Set the Apple ID, team ID, and app-specific password environment variables and run `make notarize`.
 6. Open the stapled DMG on a clean macOS user account and manually verify Spotify, Apple Music, Automation, and Accessibility flows.
 
-`make archive` and `make dmg` require `DEVELOPER_IDENTITY`. `make notarize` additionally requires `APPLE_ID`, `TEAM_ID`, and `APP_PASSWORD`.
+`make archive` and `make dmg` require `DEVELOPER_IDENTITY`. `make notarize` prefers the keychain profile `NOTARY_PROFILE`; alternatively `APPLE_ID`, `TEAM_ID`, and `APP_PASSWORD` are supported.
 
 Notarization is required for every DMG distributed outside the repository. CI never uses these credentials and does not produce releases.

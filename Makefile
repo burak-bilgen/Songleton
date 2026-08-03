@@ -10,7 +10,8 @@ DEBUG_APP    = $(DERIVED_DATA)/$(APP_NAME).app
 # Release build directory.
 RELEASE_DIR  = build/Release
 RELEASE_APP  = $(RELEASE_DIR)/$(APP_NAME).app
-DMG_NAME     = $(APP_NAME)-1.0.dmg
+VERSION      := $(shell xcodebuild -project $(PROJECT) -scheme $(SCHEME) -showBuildSettings 2>/dev/null | grep ' MARKETING_VERSION' | head -1 | awk '{print $$3}')
+DMG_NAME     = $(APP_NAME)-$(VERSION).dmg
 DMG_PATH     = build/$(DMG_NAME)
 ARCHIVE_PATH = build/$(APP_NAME).xcarchive
 ARCHIVE_APP  = $(ARCHIVE_PATH)/Products/Applications/$(APP_NAME).app
@@ -119,12 +120,15 @@ quality: test
 	@xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration Debug build \
 		CODE_SIGNING_ALLOWED=NO SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
 
-## Create a notarized release DMG (Apple credentials required).
+## Create a notarized release DMG. Prefer a keychain profile (NOTARY_PROFILE); APPLE_ID+TEAM_ID+APP_PASSWORD remain supported.
 notarize: dmg
-	@test -n "$(APPLE_ID)" || (echo "APPLE_ID is required" && exit 1)
-	@test -n "$(TEAM_ID)" || (echo "TEAM_ID is required" && exit 1)
-	@test -n "$(APP_PASSWORD)" || (echo "APP_PASSWORD is required" && exit 1)
-	@xcrun notarytool submit "$(DMG_PATH)" --apple-id "$(APPLE_ID)" --team-id "$(TEAM_ID)" --password "$(APP_PASSWORD)" --wait
+	@if [ -n "$(NOTARY_PROFILE)" ]; then \
+		xcrun notarytool submit "$(DMG_PATH)" --keychain-profile "$(NOTARY_PROFILE)" --wait; \
+	elif [ -n "$(APPLE_ID)" ] && [ -n "$(TEAM_ID)" ] && [ -n "$(APP_PASSWORD)" ]; then \
+		xcrun notarytool submit "$(DMG_PATH)" --apple-id "$(APPLE_ID)" --team-id "$(TEAM_ID)" --password "$(APP_PASSWORD)" --wait; \
+	else \
+		echo "NOTARY_PROFILE (keychain profile) or APPLE_ID + TEAM_ID + APP_PASSWORD required" && exit 1; \
+	fi
 	@xcrun stapler staple "$(DMG_PATH)"
 
 .PHONY: run build-debug fresh kill restart logs dmg build-release archive clean test coverage quality notarize
