@@ -69,12 +69,23 @@ final class MouseGestureManager: ObservableObject {
         AXIsProcessTrusted()
     }
 
+    func updateMonitoring() {
+        let shouldMonitor = SettingsModel.shared.horizontalGesturesEnabled
+            || SettingsModel.shared.verticalGesturesEnabled
+
+        if shouldMonitor {
+            start()
+        } else {
+            stop()
+        }
+    }
+
     func start() {
         guard eventTap == nil else {
             logger.debug("Global mouse monitor is already running")
             return
         }
-        guard requestAccessibilityAccess() else {
+        guard requestAccessibilityAccess(promptForPermission: false) else {
             logger.warning("Accessibility permission is not granted; global mouse monitor was not started")
             return
         }
@@ -112,11 +123,12 @@ final class MouseGestureManager: ObservableObject {
     }
 
     @discardableResult
-    func requestAccessibilityAccess() -> Bool {
+    func requestAccessibilityAccess(promptForPermission: Bool = true) -> Bool {
         guard !AXIsProcessTrusted() else {
             logger.debug("Accessibility permission is granted")
             return true
         }
+        guard promptForPermission else { return false }
         let promptKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         logger.notice("Requesting Accessibility permission")
         return AXIsProcessTrustedWithOptions([promptKey: true] as CFDictionary)
@@ -148,7 +160,6 @@ final class MouseGestureManager: ObservableObject {
     }
 
     fileprivate func handleGlobalMouseLocation(_ location: CGPoint, flags: CGEventFlags, now: Date) {
-        guard SettingsModel.shared.circularGesturesEnabled else { return }
         if now.timeIntervalSince(lastEventLogDate) >= 1.0 {
             lastEventLogDate = now
             logger.debug("Global mouse move event received")
@@ -267,7 +278,10 @@ final class MouseGestureManager: ObservableObject {
             view?.layer?.setAffineTransform(CGAffineTransform(translationX: 0, y: 18))
         } completionHandler: { [weak self, weak panel] in
             panel?.orderOut(nil)
-            self?.volumeGestureWindow = nil
+            Task { @MainActor [weak self, weak panel] in
+                guard let self, self.volumeGestureWindow === panel else { return }
+                self.volumeGestureWindow = nil
+            }
         }
         logger.info("Volume gesture ended at \(self.gestureVolume, privacy: .public)%")
     }

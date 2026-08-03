@@ -22,10 +22,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         false
     }
 
-    func applicationDidBecomeActive(_ notification: Notification) {
-        MouseGestureManager.shared.start()
-    }
-
     private func registerCustomFonts() {
         guard let url = Bundle.main.url(forResource: "Audiowide-Regular", withExtension: "ttf") else { return }
         CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
