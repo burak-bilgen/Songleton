@@ -77,9 +77,14 @@ final class SettingsModel: ObservableObject {
     }
 
     let defaults: UserDefaults
+    private let launchAtLoginApplier: ((Bool) throws -> Void)?
 
-    init(userDefaults: UserDefaults = .standard) {
+    init(
+        userDefaults: UserDefaults = .standard,
+        launchAtLoginApplier: ((Bool) throws -> Void)? = nil
+    ) {
         self.defaults = userDefaults
+        self.launchAtLoginApplier = launchAtLoginApplier
         userDefaults.register(defaults: [
             "showArtistInMenuBar": true,
             "menuBarWidth": 80.0,
@@ -94,7 +99,11 @@ final class SettingsModel: ObservableObject {
         showArtistInMenuBar = userDefaults.bool(forKey: "showArtistInMenuBar")
         menuBarWidth = min(300, max(80, userDefaults.double(forKey: "menuBarWidth")))
         menuBarFont = MenuBarFont(rawValue: userDefaults.string(forKey: "menuBarFont") ?? "") ?? .system
-        launchAtLogin = SMAppService.mainApp.status == .enabled
+        if launchAtLoginApplier != nil {
+            launchAtLogin = userDefaults.bool(forKey: "launchAtLogin")
+        } else {
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
         showTrackNotifications = userDefaults.bool(forKey: "showTrackNotifications")
         horizontalGesturesEnabled = userDefaults.bool(forKey: "horizontalGesturesEnabled")
         verticalGesturesEnabled = userDefaults.bool(forKey: "verticalGesturesEnabled")
@@ -104,7 +113,9 @@ final class SettingsModel: ObservableObject {
 
     func applyLaunchAtLogin() {
         do {
-            if launchAtLogin {
+            if let launchAtLoginApplier {
+                try launchAtLoginApplier(launchAtLogin)
+            } else if launchAtLogin {
                 try SMAppService.mainApp.register()
             } else {
                 try SMAppService.mainApp.unregister()

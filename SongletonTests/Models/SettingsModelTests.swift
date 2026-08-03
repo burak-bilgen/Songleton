@@ -7,7 +7,7 @@ final class SettingsModelTests {
     func setUp() {
         userDefaults = UserDefaults(suiteName: "SongletonTestsSuite")!
         userDefaults.removePersistentDomain(forName: "SongletonTestsSuite")
-        settings = SettingsModel(userDefaults: userDefaults)
+        settings = SettingsModel(userDefaults: userDefaults, launchAtLoginApplier: { _ in })
     }
 
     func tearDown() {
@@ -60,7 +60,7 @@ final class SettingsModelTests {
         assertAccuracy(userDefaults.double(forKey: "lyricsOffset"), 1.5, accuracy: 0.001)
 
         // Create new instance with same userDefaults
-        let newSettings = SettingsModel(userDefaults: userDefaults)
+        let newSettings = SettingsModel(userDefaults: userDefaults, launchAtLoginApplier: { _ in })
         assertFalse(newSettings.showArtistInMenuBar)
         assertEqual(newSettings.menuBarWidth, 150.0)
         assertEqual(newSettings.menuBarFont, .audiowide)
@@ -71,9 +71,11 @@ final class SettingsModelTests {
     }
 
     func testLaunchAtLoginToggle() {
-        let currentStatus = settings.launchAtLogin
-        settings.launchAtLogin = !currentStatus
-        assertEqual(userDefaults.bool(forKey: "launchAtLogin"), !currentStatus)
+        var applied: [Bool] = []
+        let mock = SettingsModel(userDefaults: userDefaults, launchAtLoginApplier: { applied.append($0) })
+        mock.launchAtLogin = true
+        mock.launchAtLogin = false
+        assertEqual(applied, [true, false])
     }
 
     func testStoredValuesAreClamped() {
