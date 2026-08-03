@@ -39,13 +39,14 @@ final class AmbientModeManager: ObservableObject {
             defer: false,
             screen: screen
         )
-        window.level = .normal
+        window.level = .screenSaver
         window.backgroundColor = .black
         window.isOpaque = true
         window.hasShadow = false
         window.isMovableByWindowBackground = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
         window.contentView = NSHostingView(rootView: ambientView)
+        window.setFrame(screen.frame, display: true)
 
         self.window = window
         self.isPresented = true
@@ -55,10 +56,10 @@ final class AmbientModeManager: ObservableObject {
         window.makeFirstResponder(window.contentView)
         NSApp.activate(ignoringOtherApps: true)
 
-        // Local monitor for ESC key to exit
-        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        // Local monitor for ESC key to exit via smooth CRT closing animation
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if event.keyCode == 53 { // ESC
-                self?.dismiss()
+                NotificationCenter.default.post(name: Notification.Name("triggerAmbientCloseAnimation"), object: nil)
                 return nil
             }
             return event
@@ -75,37 +76,10 @@ final class AmbientModeManager: ObservableObject {
         window = nil
         isPresented = false
         NSApp.setActivationPolicy(.accessory)
+        MenuBarManager.shared.setStatusItemsVisible(true)
     }
 
-    private var wasShortcutPressed = false
-
     private func setupGlobalShortcutMonitor() {
-        // Toggle Ambient Mode when Option + Command + Shift modifier combination is pressed
-        NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
-            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            let isPressed = flags.contains([.command, .option, .shift])
-            if isPressed && self?.wasShortcutPressed == false {
-                self?.wasShortcutPressed = true
-                Task { @MainActor in
-                    self?.toggle()
-                }
-            } else if !isPressed {
-                self?.wasShortcutPressed = false
-            }
-        }
-
-        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
-            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            let isPressed = flags.contains([.command, .option, .shift])
-            if isPressed && self?.wasShortcutPressed == false {
-                self?.wasShortcutPressed = true
-                Task { @MainActor in
-                    self?.toggle()
-                }
-            } else if !isPressed {
-                self?.wasShortcutPressed = false
-            }
-            return event
-        }
+        // Shortcut monitor removed per user preference. Ambient Mode is accessed via Menu Bar and Hover Panel.
     }
 }
