@@ -79,16 +79,15 @@ final class MouseGestureManager: ObservableObject {
             return
         }
 
-        let mouseMovedMask = CGEventMask(
-            (1 << CGEventType.mouseMoved.rawValue) |
-            (1 << CGEventType.leftMouseDown.rawValue) |
-            (1 << CGEventType.leftMouseUp.rawValue) |
-            (1 << CGEventType.rightMouseDown.rawValue) |
-            (1 << CGEventType.rightMouseUp.rawValue) |
-            (1 << CGEventType.leftMouseDragged.rawValue) |
-            (1 << CGEventType.rightMouseDragged.rawValue) |
-            (1 << CGEventType.flagsChanged.rawValue)
-        )
+        let eventTypes: [CGEventType] = [
+            .mouseMoved, .leftMouseDown, .leftMouseUp,
+            .rightMouseDown, .rightMouseUp, .leftMouseDragged,
+            .rightMouseDragged, .flagsChanged
+        ]
+        var mouseMovedMask: CGEventMask = 0
+        for type in eventTypes {
+            mouseMovedMask |= (1 << type.rawValue)
+        }
         let userInfo = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
