@@ -243,14 +243,16 @@ final class NowPlayingModel: ObservableObject {
 
                 if case .loaded(let info, let src) = result.state {
                     let key = "\(src)|\(info.track)|\(info.artist)"
-                    if key != lastLoadedKey {
+                    let previousKey = lastLoadedKey
+                    if key != previousKey {
                         lastLoadedKey = key
                         let recent = RecentTrack(track: info.track, artist: info.artist, source: src, playedAt: Date())
                         recentTracks.insert(recent, at: 0)
                         if recentTracks.count > 20 { recentTracks = Array(recentTracks.prefix(20)) }
                         let srcLower = src.lowercased()
                         let isDesktopMusicApp = srcLower.contains("spotify") || srcLower.contains("music")
-                        if SettingsModel.shared.showTrackNotifications,
+                        if previousKey != nil,
+                           SettingsModel.shared.showTrackNotifications,
                            !MenuBarManager.shared.isHoverPopoverShown,
                            !AmbientModeManager.shared.isPresented,
                            isDesktopMusicApp {

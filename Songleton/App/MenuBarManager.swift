@@ -37,33 +37,21 @@ final class MenuBarManager: NSObject {
         volPopover.contentViewController = hostingController
         self.volumePopover = volPopover
 
-        // AppKit places status items from right to left as they are created.
-        // To achieve [Song Title] [Next Track ▶] [Previous Track ◀] from left to right:
-        // 1. Create bwdItem (Rightmost)
-        // 2. Create fwdItem (Middle)
-        // 3. Create mainItem (Leftmost)
-
-        // 1. Previous track item (Rightmost).
-        let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
-        if let button = bwdItem.button {
+        // IMPORTANT: Keep the status-item initialization and visibility order
+        // below unchanged. NSStatusBar's insertion behavior is not intuitive
+        // on macOS, and this ordering is intentionally tuned for the visual
+        // order of these items in the menu bar.
+        // 1. Next track item.
+        let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
+        if let button = fwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: nil)
             button.target = self
             button.action = #selector(bwdTapped)
             button.toolTip = LocalizationManager.shared.string("menu.previous_track")
         }
-        self.bwdStatusItem = bwdItem
-
-        // 2. Next track item (Middle).
-        let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
-        if let button = fwdItem.button {
-            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
-            button.target = self
-            button.action = #selector(fwdTapped)
-            button.toolTip = LocalizationManager.shared.string("menu.next_track")
-        }
         self.fwdStatusItem = fwdItem
 
-        // 3. Album artwork and track label item (Leftmost).
+        // 2. Track label item.
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabel = MenuBarMainLabelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
         let hosting = NSHostingView(rootView: mainLabel)
@@ -92,13 +80,25 @@ final class MenuBarManager: NSObject {
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // Always ensure menu bar status items remain visible
-        setStatusItemsVisible(true)
+        // 3. Previous track item.
+        let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
+        if let button = bwdItem.button {
+            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
+            button.target = self
+            button.action = #selector(fwdTapped)
+            button.toolTip = LocalizationManager.shared.string("menu.next_track")
+        }
+        self.bwdStatusItem = bwdItem
+
+        // Menu bar controls stay hidden until the gesture tutorial is skipped
+        // or completed.
+        setStatusItemsVisible(false)
 
         NowPlayingModel.shared.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 self?.updateStatusItemVisibility(for: state)
+                MouseGestureManager.shared.updateMonitoring()
             }
             .store(in: &cancellables)
 
@@ -133,19 +133,42 @@ final class MenuBarManager: NSObject {
     }
 
     private func updateStatusItemVisibility(for state: NowPlayingModel.State) {
-        setStatusItemsVisible(true)
+        let playerIsAvailable: Bool
+        if case .loaded = state {
+            playerIsAvailable = true
+        } else {
+            playerIsAvailable = false
+        }
+        setStatusItemsVisible(playerIsAvailable)
     }
 
     func refreshNavButtonVisibility() {
-        setStatusItemsVisible(true)
+        let playerIsAvailable: Bool
+        if case .loaded = NowPlayingModel.shared.state {
+            playerIsAvailable = true
+        } else {
+            playerIsAvailable = false
+        }
+        setStatusItemsVisible(playerIsAvailable)
     }
 
     func setStatusItemsVisible(_ isVisible: Bool) {
-        let navVisible = isVisible && SettingsModel.shared.showMenuBarNavButtons
-        mainStatusItem?.isVisible = isVisible
+        let tutorialResolved = GestureTutorialManager.shared.hasCompletedTutorial
+        let playerIsAvailable: Bool
+        if case .loaded = NowPlayingModel.shared.state {
+            playerIsAvailable = true
+        } else {
+            playerIsAvailable = false
+        }
+        let effectiveVisibility = isVisible && tutorialResolved && playerIsAvailable
+        let navVisible = effectiveVisibility && SettingsModel.shared.showMenuBarNavButtons
+        // NSStatusBar inserts newly visible items toward the leading side.
+        // Reveal in reverse visual order so the track label stays between the
+        // previous and next buttons on the menu bar.
         bwdStatusItem?.isVisible = navVisible
+        mainStatusItem?.isVisible = effectiveVisibility
         fwdStatusItem?.isVisible = navVisible
-        if isVisible { updateWidth() }
+        if effectiveVisibility { updateWidth() }
     }
 
     private var isBlockedByGuide: Bool {
@@ -187,9 +210,10 @@ final class MenuBarManager: NSObject {
             return
         }
         
-        // Left-Click -> Open Ambient Mode
+        // Left-click on the track name toggles playback. Ambient Mode remains
+        // on right-click, so the track item has one predictable primary action.
         closeVolumePopoverImmediately()
-        AmbientModeManager.shared.show()
+        NowPlayingModel.shared.togglePlayPause()
     }
 
     @objc private func openSettingsMenu() {

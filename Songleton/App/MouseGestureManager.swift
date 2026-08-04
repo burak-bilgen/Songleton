@@ -58,6 +58,7 @@ final class MouseGestureManager: ObservableObject {
     private var edgeGestureStartedAt = Date.distantPast
     private var edgeGestureDuration = 0.5
     private var lastTriggeredAt = Date.distantPast
+    @Published private(set) var isAccessibilityTrusted = false
     @Published private(set) var isVolumeGestureActive = false
     @Published private(set) var gestureVolume = 50
     @Published private(set) var edgeGestureProgress = 0.0
@@ -71,7 +72,9 @@ final class MouseGestureManager: ObservableObject {
     private var lastEventLogDate = Date.distantPast
     private var lastProcessedMoveDate = Date.distantPast
 
-    init() {}
+    init() {
+        refreshAccessibilityStatus()
+    }
 
     func simulateEdgeGestureProgress(_ progress: CGFloat) {
         edgeGestureProgress = progress
@@ -89,14 +92,20 @@ final class MouseGestureManager: ObservableObject {
         gestureVolume = volume
     }
 
-    var isAccessibilityTrusted: Bool {
-        AXIsProcessTrusted()
+    func refreshAccessibilityStatus() {
+        isAccessibilityTrusted = AXIsProcessTrusted()
     }
 
     func updateMonitoring() {
+        refreshAccessibilityStatus()
+        guard isMusicPlayerAvailable else {
+            logger.info("Gesture monitoring suppressed because no supported music player is running")
+            stop()
+            return
+        }
         let isOnboardingOpen = NSApp.windows.contains(where: { $0.identifier?.rawValue == "onboardingWindow" && $0.isVisible })
-        if isOnboardingOpen || GestureTutorialManager.shared.isPresented {
-            logger.info("Gesture monitoring suppressed during onboarding or tutorial")
+        if isOnboardingOpen || GestureTutorialManager.shared.isPresented || !GestureTutorialManager.shared.hasCompletedTutorial {
+            logger.info("Gesture monitoring suppressed until the gesture tutorial is resolved")
             stop()
             return
         }
@@ -109,6 +118,13 @@ final class MouseGestureManager: ObservableObject {
         } else {
             stop()
         }
+    }
+
+    private var isMusicPlayerAvailable: Bool {
+        if case .loaded = NowPlayingModel.shared.state {
+            return true
+        }
+        return false
     }
 
     func start() {
@@ -155,14 +171,17 @@ final class MouseGestureManager: ObservableObject {
 
     @discardableResult
     func requestAccessibilityAccess(promptForPermission: Bool = true) -> Bool {
-        guard !AXIsProcessTrusted() else {
+        refreshAccessibilityStatus()
+        guard !isAccessibilityTrusted else {
             logger.debug("Accessibility permission is granted")
             return true
         }
         guard promptForPermission else { return false }
         let promptKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         logger.notice("Requesting Accessibility permission")
-        return AXIsProcessTrustedWithOptions([promptKey: true] as CFDictionary)
+        let result = AXIsProcessTrustedWithOptions([promptKey: true] as CFDictionary)
+        refreshAccessibilityStatus()
+        return result
     }
 
     func stop() {
