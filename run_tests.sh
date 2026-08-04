@@ -25,6 +25,7 @@ SWIFTC_ARGS=(
   -framework Foundation \
   -framework SwiftUI \
   -framework AppKit \
+  -framework AVFoundation \
   -framework ApplicationServices \
   -framework ServiceManagement \
   -parse-as-library \

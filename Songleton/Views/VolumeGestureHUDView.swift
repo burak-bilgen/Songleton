@@ -2,11 +2,12 @@ import SwiftUI
 
 struct VolumeGestureHUDView: View {
     @ObservedObject var manager: MouseGestureManager
+    var visualMaximum: CGFloat = 100
 
     var body: some View {
         GeometryReader { geometry in
             let height = geometry.size.height - 24
-            let progress = CGFloat(manager.gestureVolume) / 100
+            let progress = min(1, CGFloat(manager.gestureVolume) / max(1, visualMaximum))
 
             ZStack(alignment: .bottom) {
                 Capsule()
@@ -49,19 +50,10 @@ struct CursorGestureOverlayView: View {
     @State private var isBursting = false
     @State private var burstScale: CGFloat = 0.5
     @State private var burstOpacity: Double = 0.0
+    @State private var successMarkScale: CGFloat = 0.35
+    @State private var successMarkOpacity: Double = 0.0
     @State private var isCancelling = false
     @State private var cancelShrink = false
-
-    private let particleOffsets: [CGSize] = [
-        CGSize(width: 0, height: -18),
-        CGSize(width: 13, height: -13),
-        CGSize(width: 18, height: 0),
-        CGSize(width: 13, height: 13),
-        CGSize(width: 0, height: 18),
-        CGSize(width: -13, height: 13),
-        CGSize(width: -18, height: 0),
-        CGSize(width: -13, height: -13)
-    ]
 
     private var iconName: String {
         switch zone {
@@ -80,20 +72,6 @@ struct CursorGestureOverlayView: View {
                 .opacity(burstOpacity)
                 .shadow(color: burstAccent.opacity(0.8), radius: 12)
 
-            // Expanding Particles Shockwave
-            ForEach(Array(particleOffsets.enumerated()), id: \.offset) { _, offset in
-                Circle()
-                    .fill(burstAccent)
-                    .frame(width: 5, height: 5)
-                    .offset(
-                        x: isBursting ? offset.width : 0,
-                        y: isBursting ? offset.height : 0
-                    )
-                    .scaleEffect(isBursting ? 1.4 : 0.2)
-                    .opacity(burstOpacity * 0.9)
-                    .shadow(color: burstAccent, radius: 6)
-            }
-
             // Central Dark Card Circle
             Circle()
                 .fill(Color.black.opacity(isCancelling ? 0.82 : 0.86))
@@ -102,6 +80,7 @@ struct CursorGestureOverlayView: View {
                         .fill((isCancelling ? cancelAccent : burstAccent).opacity(isCancelling ? 0.38 : (isBursting ? 0.6 : 0.14)))
                         .blur(radius: 7)
                 )
+                .scaleEffect(isBursting ? 1.10 : 1)
 
             Circle()
                 .stroke(
@@ -124,15 +103,32 @@ struct CursorGestureOverlayView: View {
                 .font(.system(size: 14, weight: .bold))
                 .foregroundStyle(isCancelling ? cancelAccent : .white)
                 .shadow(color: isCancelling ? cancelAccent : burstAccent, radius: 8)
-                .scaleEffect(isBursting ? 1.45 : (isCancelling ? 0.4 : 1))
+                .scaleEffect(isBursting ? 0.35 : (isCancelling ? 0.4 : 1))
+                .opacity(isBursting ? 0 : 1)
 
-            // Central Glowing Blob Burst
-            Circle()
-                .fill(burstAccent)
-                .frame(width: 24, height: 24)
-                .scaleEffect(burstScale * 0.85)
-                .opacity(burstOpacity * 0.75)
-                .shadow(color: burstAccent, radius: 10)
+            // Pop-style success blob and checkmark.
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.white, burstAccent, burstAccent.opacity(0.2)],
+                            center: .center,
+                            startRadius: 1,
+                            endRadius: 22
+                        )
+                    )
+                    .frame(width: 34, height: 34)
+                    .scaleEffect(successMarkScale)
+                    .opacity(successMarkOpacity)
+                    .shadow(color: burstAccent, radius: 14)
+
+                Image(systemName: "checkmark")
+                    .font(.system(size: 17, weight: .black))
+                    .foregroundStyle(.white)
+                    .scaleEffect(successMarkScale)
+                    .opacity(successMarkOpacity)
+                    .shadow(color: .black.opacity(0.35), radius: 2)
+            }
         }
         .frame(width: 44, height: 44)
         .frame(width: 112, height: 112)
@@ -143,6 +139,8 @@ struct CursorGestureOverlayView: View {
                 isBursting = false
                 burstScale = 0.5
                 burstOpacity = 0.0
+                successMarkScale = 0.35
+                successMarkOpacity = 0.0
                 isCancelling = false
                 cancelShrink = false
             }
@@ -151,9 +149,22 @@ struct CursorGestureOverlayView: View {
             isBursting = true
             burstScale = 0.5
             burstOpacity = 1.0
-            withAnimation(.easeOut(duration: 0.35)) {
-                burstScale = 1.25
+            successMarkScale = 0.35
+            successMarkOpacity = 0.0
+
+            withAnimation(.spring(response: 0.26, dampingFraction: 0.58)) {
+                burstScale = 0.95
+                successMarkScale = 1.0
+                successMarkOpacity = 1.0
+            }
+            withAnimation(.easeOut(duration: 0.34).delay(0.10)) {
+                burstScale = 1.55
                 burstOpacity = 0.0
+                successMarkScale = 1.18
+                successMarkOpacity = 0.0
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.58) {
+                isBursting = false
             }
         }
         .onChange(of: manager.edgeGestureCancelBurst) { _, _ in
