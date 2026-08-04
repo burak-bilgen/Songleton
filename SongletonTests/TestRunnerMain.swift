@@ -25,6 +25,22 @@ struct TestRunnerMain {
         print("▶ Running LyricsServiceTests...")
         lyricsTests.runAllTests()
 
+        let mouseGestureTests = MouseGestureManagerTests()
+        print("▶ Running MouseGestureManagerTests...")
+        mouseGestureTests.runAllTests()
+
+        let notificationLayoutTests = TrackNotificationLayoutTests()
+        print("▶ Running TrackNotificationLayoutTests...")
+        notificationLayoutTests.runAllTests()
+
+        let spotifyDiscoveryTests = SpotifyDiscoveryCatalogTests()
+        print("▶ Running SpotifyDiscoveryCatalogTests...")
+        spotifyDiscoveryTests.runAllTests()
+
+        let tutorialResolutionTests = GestureTutorialResolutionTests()
+        print("▶ Running GestureTutorialResolutionTests...")
+        tutorialResolutionTests.runAllTests()
+
         let localizationTests = LocalizationModelTests()
         print("▶ Running LocalizationModelTests...")
         localizationTests.runAllTests()

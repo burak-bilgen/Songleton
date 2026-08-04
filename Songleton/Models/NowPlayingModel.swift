@@ -115,6 +115,26 @@ final class NowPlayingModel: ObservableObject {
     func seekTo(_ position: Double) { send { try $0.seekTo(position) } }
     func toggleShuffle() { send { try $0.toggleShuffle() } }
 
+    func playSpotifyPlaylist(_ playlist: SpotifyDiscoveryPlaylist) {
+        guard let spotify = activeController as? SpotifyController else { return }
+
+        Task { [weak self] in
+            do {
+                try await self?.commandQueue.execute {
+                    try spotify.playPlaylist(
+                        uri: playlist.uri,
+                        startingTrackURI: playlist.startingTrackURI
+                    )
+                }
+            } catch is CancellationError {
+                return
+            } catch {
+                print("Spotify playlist command failed: \(error)")
+            }
+            self?.refresh()
+        }
+    }
+
     func cycleRepeatMode() {
         guard case .loaded(let info, let src) = state else { return }
 

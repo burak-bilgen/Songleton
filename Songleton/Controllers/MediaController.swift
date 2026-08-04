@@ -215,6 +215,26 @@ final class SpotifyController: MediaController {
         let isRep = (mode != .off)
         try AppleScriptRunner.run("tell application \"Spotify\" to set repeating to \(isRep)")
     }
+
+    nonisolated func playPlaylist(uri: String, startingTrackURI: String) throws {
+        guard uri.hasPrefix("spotify:playlist:"), startingTrackURI.hasPrefix("spotify:track:") else {
+            throw MediaControllerError.unsupportedCommand
+        }
+        guard isRunning else { throw MediaControllerError.appNotRunning }
+        guard AutomationPermission.isGranted(bundleID: bundleID) else {
+            throw MediaControllerError.permissionDenied
+        }
+
+        // Spotify's dictionary requires a track URI plus a playlist context.
+        // Set shuffle first so playback immediately continues within that
+        // playlist in a shuffled order.
+        try AppleScriptRunner.run("""
+        tell application "Spotify"
+            set shuffling to true
+            play track "\(startingTrackURI)" in context "\(uri)"
+        end tell
+        """)
+    }
 }
 
 final class AppleMusicController: @unchecked Sendable, MediaController {

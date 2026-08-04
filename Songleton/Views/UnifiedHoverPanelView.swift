@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 struct UnifiedHoverPanelView: View {
     @ObservedObject var model = NowPlayingModel.shared
@@ -26,6 +26,7 @@ struct UnifiedHoverPanelView: View {
     @State private var quitButtonScale: CGFloat = 1.0
     @State private var isMutePressed: Bool = false
     @State private var hoveredButtonID: String? = nil
+    @State private var hoveredPlaylistID: String? = nil
 
     // Gentle Artwork Breathing State
     @State private var isArtworkBreathing: Bool = false
@@ -182,6 +183,7 @@ struct UnifiedHoverPanelView: View {
             .scaleEffect(isMutePressed ? 0.82 : (hoveredButtonID == "mute" ? 1.1 : 1.0))
             .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
             .onHover { isHovered in hoveredButtonID = isHovered ? "mute" : nil }
+            .accessibilityLabel(activeVolume == 0 ? localization.string("control.unmute") : localization.string("control.mute"))
 
             CustomSliderView(
                 value: Binding(
@@ -216,7 +218,7 @@ struct UnifiedHoverPanelView: View {
         }
     }
 
-    // Ambient Mode Button — labeled pill, pinned to the top-right corner of the panel
+    // Ambient Mode Button: labeled pill, pinned to the top-right corner of the panel
     private var ambientButton: some View {
         Button {
             withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { ambientButtonScale = 0.82 }
@@ -244,9 +246,10 @@ struct UnifiedHoverPanelView: View {
         .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
         .onHover { isHovered in hoveredButtonID = isHovered ? "ambient" : nil }
         .help(localization.string("ambient.short_label"))
+        .accessibilityLabel(localization.string("ambient.short_label"))
     }
 
-    // Quit Button — small power circle, always visible so the app can be fully quit
+    // Quit Button: small power circle, always visible so the app can be fully quit
     private var quitButton: some View {
         Button {
             withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { quitButtonScale = 0.82 }
@@ -268,9 +271,10 @@ struct UnifiedHoverPanelView: View {
         .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
         .onHover { isHovered in hoveredButtonID = isHovered ? "quit" : nil }
         .help(localization.string("menu.quit"))
+        .accessibilityLabel(localization.string("menu.quit"))
     }
 
-    // Settings Button — circular gear, pinned to the top-right corner of the panel
+    // Settings Button: circular gear, pinned to the top-right corner of the panel
     private var settingsButton: some View {
         Button {
             withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { settingsButtonScale = 0.82 }
@@ -287,6 +291,7 @@ struct UnifiedHoverPanelView: View {
         .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
         .onHover { isHovered in hoveredButtonID = isHovered ? "settings" : nil }
         .help(localization.string("settings.title"))
+        .accessibilityLabel(localization.string("settings.title"))
     }
 
     // MARK: - Now Playing Section
@@ -371,6 +376,7 @@ struct UnifiedHoverPanelView: View {
                     .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                     .onHover { isHovered in hoveredButtonID = isHovered ? "shuffle" : nil }
                     .help(localization.string("control.shuffle"))
+                    .accessibilityLabel(localization.string("control.shuffle"))
 
                     // Backward Button
                     Button {
@@ -387,6 +393,7 @@ struct UnifiedHoverPanelView: View {
                     .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                     .onHover { isHovered in hoveredButtonID = isHovered ? "prev" : nil }
                     .help(localization.string("menu.previous_track"))
+                    .accessibilityLabel(localization.string("menu.previous_track"))
 
                     // Play / Pause Button (Hero: filled with theme color + glow)
                     Button {
@@ -420,6 +427,7 @@ struct UnifiedHoverPanelView: View {
                     .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                     .onHover { isHovered in hoveredButtonID = isHovered ? "play" : nil }
                     .help(info.isPlaying ? localization.string("control.pause") : localization.string("control.play"))
+                    .accessibilityLabel(info.isPlaying ? localization.string("control.pause") : localization.string("control.play"))
 
                     // Forward Button
                     Button {
@@ -436,6 +444,7 @@ struct UnifiedHoverPanelView: View {
                     .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                     .onHover { isHovered in hoveredButtonID = isHovered ? "next" : nil }
                     .help(localization.string("menu.next_track"))
+                    .accessibilityLabel(localization.string("menu.next_track"))
 
                     // Repeat Button (3 States: Off, All, One)
                     Button {
@@ -458,13 +467,118 @@ struct UnifiedHoverPanelView: View {
                     .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hoveredButtonID)
                     .onHover { isHovered in hoveredButtonID = isHovered ? "repeat" : nil }
                     .help(localization.string("control.repeat"))
+                    .accessibilityLabel(localization.string("control.repeat"))
             }
             .padding(.top, 2)
 
             // Volume Slider Row
             volumeRow
                 .padding(.top, 2)
+
+            if source.lowercased().contains("spotify") {
+                spotifyDiscoverySection
+            }
         }
+    }
+
+    private var spotifyDiscoverySection: some View {
+        let playlists = SpotifyDiscoveryCatalog.playlists()
+        let marketName = SpotifyDiscoveryCatalog.marketName(for: Locale.autoupdatingCurrent)
+
+        return VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 7) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color(red: 29 / 255, green: 185 / 255, blue: 84 / 255))
+
+                Text(localization.string("spotify.discovery_title"))
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.88))
+
+                Spacer()
+
+                Text(marketName)
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.42))
+                    .lineLimit(1)
+            }
+
+            Text(localization.string("spotify.discovery_hint"))
+                .font(.system(size: 9, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.42))
+
+            ForEach(playlists) { playlist in
+                spotifyPlaylistRow(playlist)
+            }
+        }
+        .padding(.top, 5)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(localization.string("spotify.discovery_title"))
+    }
+
+    private func spotifyPlaylistRow(_ playlist: SpotifyDiscoveryPlaylist) -> some View {
+        let accent = playlistAccent(for: playlist)
+
+        return Button {
+            model.playSpotifyPlaylist(playlist)
+        } label: {
+            HStack(spacing: 9) {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [accent.opacity(0.95), accent.opacity(0.42)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 34, height: 34)
+                    .overlay {
+                        Image(systemName: "music.note.list")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                    .shadow(color: accent.opacity(0.28), radius: 5, y: 2)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(playlist.title)
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.92))
+                        .lineLimit(1)
+                    Text(playlist.subtitle)
+                        .font(.system(size: 9, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.50))
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 4)
+
+                Image(systemName: "shuffle")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(hoveredPlaylistID == playlist.id ? .black : accent)
+                    .frame(width: 27, height: 27)
+                    .background(
+                        hoveredPlaylistID == playlist.id ? accent : accent.opacity(0.13),
+                        in: Circle()
+                    )
+            }
+            .padding(.horizontal, 7)
+            .frame(height: 43)
+            .background(
+                hoveredPlaylistID == playlist.id ? Color.white.opacity(0.11) : Color.white.opacity(0.045),
+                in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .stroke(hoveredPlaylistID == playlist.id ? accent.opacity(0.55) : .white.opacity(0.08), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered in
+            hoveredPlaylistID = isHovered ? playlist.id : nil
+        }
+        .help(localization.string("spotify.discovery_play_hint"))
+        .accessibilityLabel(playlist.title)
+        .accessibilityHint(localization.string("spotify.discovery_play_hint"))
     }
 
     // MARK: - Not Running
@@ -538,6 +652,16 @@ struct UnifiedHoverPanelView: View {
             Image(systemName: icon)
                 .font(.system(size: iconSize, weight: .bold))
                 .foregroundStyle(isActive ? accent : .white.opacity(0.85))
+        }
+    }
+
+    private func playlistAccent(for playlist: SpotifyDiscoveryPlaylist) -> Color {
+        switch playlist.accentIndex {
+        case 0: Color(red: 29 / 255, green: 185 / 255, blue: 84 / 255)
+        case 1: SongletonTheme.cyan
+        case 2: SongletonTheme.violet
+        case 3: SongletonTheme.pink
+        default: Color(red: 0.96, green: 0.68, blue: 0.23)
         }
     }
 

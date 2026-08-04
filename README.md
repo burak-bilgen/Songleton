@@ -1,82 +1,162 @@
 # Songleton
 
-Songleton is a native macOS music companion that lives in the menu bar and adds a cinematic, full-screen listening experience to Spotify and Apple Music.
+## Your music, one move away.
 
-It gives you fast playback controls, album artwork, synced lyrics, configurable mouse gestures, ambient visual themes, and a sleep timer without replacing your music player.
+Songleton is the native macOS companion for Spotify and Apple Music. It keeps the track you are listening to in the menu bar, turns the edges of your screen into deliberate controls, and gives music a focused home when you want one.
+
+No separate music library. No account layer. No floating player that competes with your work. Songleton controls the app you already use and disappears when there is nothing to control.
 
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111827?style=for-the-badge&logo=apple&logoColor=white)
 ![Swift](https://img.shields.io/badge/Swift-5-orange?style=for-the-badge&logo=swift&logoColor=white)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-Native-6D5DFB?style=for-the-badge&logo=swift&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-23%20passing-20C997?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-38BDF8?style=for-the-badge)
 
-## Contents
+## Why Songleton exists
 
-- [What Songleton Does](#what-songleton-does)
-- [Requirements](#requirements)
-- [Install and Launch](#install-and-launch)
-- [First Launch and Permissions](#first-launch-and-permissions)
-- [Daily Use](#daily-use)
-- [Ambient Mode](#ambient-mode)
-- [Mouse Gestures](#mouse-gestures)
-- [Keyboard Shortcuts](#keyboard-shortcuts)
-- [Settings](#settings)
-- [Lyrics](#lyrics)
-- [Troubleshooting](#troubleshooting)
-- [Privacy](#privacy)
-- [Build and Development](#build-and-development)
-- [License](#license)
+Music controls should be near, not noisy. Songleton puts the song title, previous, next, and play or pause controls in the menu bar. Hover once for the full controller. Hold the cursor at an edge when you need to move fast. Open Ambient Mode when the music deserves the screen.
 
-## What Songleton Does
+It is designed for people who work, write, code, design, or browse with music on all day and do not want to keep switching back to the player.
 
-### Menu bar control center
+## What you get
 
-Songleton stays out of the way until you need it. The menu bar shows the current track and, optionally, the artist. Previous and next buttons can be displayed beside the track label.
+| Surface | What it does |
+| --- | --- |
+| Menu bar | Shows the current track only while Spotify or Apple Music has usable playback. Previous, next, and title controls remain one click away. |
+| Hover panel | Artwork, playback, shuffle, repeat, mute, volume, settings, Ambient Mode, and Spotify discovery in one compact panel. |
+| Screen gestures | Previous, next, play or pause, and volume without finding a button. Clear visual feedback prevents accidental triggers. |
+| New-track HUD | A non-activating track notification that enters from the selected screen edge, keeps its glow intact, and never steals focus. |
+| Ambient Mode | A full-screen music scene with Vinyl, Cassette, and Glass themes, lyrics, seek, sleep timer, and keyboard controls. |
+| Guided setup | Human onboarding, permission recovery, and a synchronized visual tutorial before controls become active. |
 
-The main menu bar item supports these actions:
+## Menu bar, without menu bar nonsense
 
-- Left-click the track area to play or pause.
-- Hover over the track area to open the full control panel.
-- Right-click to enter Ambient Mode immediately.
-- Option-right-click to open the Settings and Quit menu.
+Songleton reveals itself only when a supported player has a track ready. When Spotify and Apple Music are both idle, the menu bar stays clean and gesture monitoring is inactive.
 
-### Hover control panel
+| Action | Result |
+| --- | --- |
+| Left-click the track title | Play or pause |
+| Hover the track title | Open the full control panel |
+| Right-click the track title | Enter Ambient Mode |
+| Option-right-click the track title | Open Settings, onboarding, or Quit |
+| Previous / next buttons | Move through the queue |
 
-The hover panel provides:
+The three status items intentionally use a non-obvious AppKit initialization order. Do not reorder their creation or visibility calls without testing on a real macOS menu bar. AppKit is being AppKit.
 
-- Current album artwork, track, artist, and player source.
-- Play/pause, previous, and next controls.
-- Volume slider and mute control.
-- Shuffle and repeat controls where supported by the active player.
-- Seekable progress bar with elapsed and remaining time.
-- Copyable track information.
-- A direct Ambient Mode button.
-- A direct Settings button.
-- A Quit button that closes Songleton completely.
+## The hover panel
 
-Double-clicking the album artwork opens Ambient Mode. The panel uses the artwork's dominant color for its visual accents.
+Hover the song title and Songleton expands into a compact control room:
 
-### Track change notifications
+- Live artwork, title, artist, and player-aware color.
+- Previous, next, play or pause, shuffle, repeat, mute, and volume.
+- Tooltips and VoiceOver labels for every actionable control.
+- Ambient Mode, Settings, and Quit without a separate window.
+- Spotify picks at the bottom whenever Spotify is the active player.
 
-When the track changes, Songleton can show a non-activating notification in the top-right corner. It does not steal keyboard focus from the application you are using. Notifications can be disabled in Settings.
+### Spotify picks
+
+When Spotify is active, the hover panel offers five one-click playlists. Songleton uses the Mac region setting to choose a compact curated catalog, with a Turkey-specific starting set and a global fallback. Select a playlist and Songleton tells the already-running Spotify desktop app to enable shuffle and begin that playlist.
+
+This does not require a Songleton account, Spotify OAuth flow, IP geolocation, or a hidden web scraper. The Spotify app itself still needs to be installed, running, authorized for Automation, and signed in as usual. The catalog is intentionally curated rather than advertised as a live Spotify ranking feed.
+
+## Screen-edge gestures
+
+Songleton makes quick controls spatial. Hold the pointer at an edge long enough to commit, then get out of the way.
+
+| Gesture | Result |
+| --- | --- |
+| Hold at the left screen edge | Previous track |
+| Hold at the right screen edge | Next track |
+| Hold at the top screen edge | Play or pause |
+| Hold both mouse buttons and drag vertically | Change volume |
+| Hold Command + Option and drag vertically | Change volume |
+
+The default hold duration is `0.65s`. Top-edge play or pause intentionally resolves a little faster. Leave the edge before the ring fills and the action cancels. Gesture groups can be disabled independently in Settings, which also stops their monitoring work.
+
+Global gestures require Accessibility permission, an available supported player, and an explicitly completed or skipped tutorial. Closing the tutorial does not silently unlock controls.
+
+## New-track HUD
+
+Songleton can greet a track change without interrupting the app in front of you.
+
+- It is a non-activating panel. Your keyboard focus stays where it was.
+- It appears on the display under the pointer.
+- Choose any of eight useful placements: three across the top, left and right center, or three across the bottom.
+- Each placement enters and exits through its nearest screen edge. Corner placements never take a weird diagonal route.
+- The notification card stays close to the chosen edge while its transparent panel gives the outer glow enough room to breathe.
+- Long titles expand and wrap within the available display width instead of being chopped into a useless ellipsis.
+- Settings includes a clear placement selector, an appearance sample, and a full-screen preview button.
+
+## Ambient Mode
+
+Ambient Mode opens on the display under the pointer. It hides the Dock and menu bar while active, then restores the desktop when you leave. It is not a fake visualizer bolted onto the app. It is the same player state, controls, volume, artwork, and lyrics in a calmer place.
+
+Choose the mood:
+
+| Theme | Character |
+| --- | --- |
+| Vinyl | Artwork-led record scene |
+| Cassette | Mechanical retro texture |
+| Glass | Minimal color and cover art |
+
+While Ambient Mode is focused:
+
+| Shortcut | Result |
+| --- | --- |
+| Space | Play or pause |
+| Left / Right Arrow | Previous / next |
+| Up / Down Arrow | Change volume |
+| L | Show or hide synced lyrics |
+| T | Cycle visual theme |
+| Esc | Exit Ambient Mode |
+
+The interface fades when idle and comes back when you move the pointer. Reduce Motion is respected, so continuous movement and the CRT exit are softened or skipped when macOS asks for less animation.
+
+## Onboarding and tutorial
+
+First launch is intentionally not a permission ambush. Songleton explains what it does, shows the menu bar behavior, and asks only for the permissions each feature needs.
+
+If setup closes before permissions are granted, Songleton opens a focused recovery window on the next launch instead of pretending the app is ready. Until setup and the tutorial are resolved, controls and gestures stay off.
+
+The interactive tutorial demonstrates the complete flow with its own deterministic music data:
+
+1. Cancel an edge gesture by leaving the edge.
+2. Hold the right edge to skip to the next track.
+3. Hold the top edge to pause, watch the gesture finish, then resume.
+4. Change volume with mouse or keyboard-assisted drag.
+5. Hover the menu bar title to reveal the control panel.
+6. Right-click the title to enter Ambient Mode.
+
+Its soundtrack begins only after the tutorial begins, crossfades at the visible track-change moment, pauses for the pause demo, resumes after the gesture resolves, and follows the volume demo at a restrained level. The demo works even when no real player is open.
+
+## Lyrics, language, and accessibility
+
+- Synced LRC lyrics when available, plain lyrics as a fallback.
+- Adjustable lyric timing offset.
+- Turkish, English, or macOS system language.
+- VoiceOver labels, tooltips, visible focus states, and Reduce Motion support.
+- UI previews never depend on a real song, so Settings and tutorial states remain understandable.
+
+## Privacy
+
+Songleton is deliberately local-first.
+
+- Playback control uses macOS Apple Events with your permission.
+- Songleton does not ask you to create an account.
+- It has no analytics, advertising, tracking, or listening-history upload.
+- Artwork comes from the active player or its artwork URL.
+- Lyrics are fetched from [LRCLIB](https://lrclib.net/) using only the current track, artist, album, and duration needed for lookup.
+- Spotify picks use the Mac region setting, not physical location or IP-based geolocation.
+- Passwords, player credentials, local files, and listening history are never uploaded.
 
 ## Requirements
 
 - macOS 14 or newer.
-- Spotify and/or Apple Music installed for playback control.
-- Accessibility permission for global mouse gestures.
-- Automation permission for each music player you want Songleton to control.
-- An internet connection only when fetching lyrics from LRCLIB.
+- Spotify and/or Apple Music installed.
+- Automation permission for every player Songleton should control.
+- Accessibility permission for global gestures.
+- Internet access only when lyrics need to be fetched from LRCLIB.
 
-Songleton does not play music itself. Spotify or Apple Music must be running and have a current track available.
-
-## Install and Launch
-
-### From a release
-
-Open the Songleton DMG, drag Songleton to Applications, and launch it. Release builds are Developer ID-signed and notarized by Apple, so macOS opens them without a security warning.
-
-### From source
+## Build from source
 
 ```bash
 git clone <repository-url>
@@ -84,267 +164,32 @@ cd Songleton
 make
 ```
 
-`make` builds the Debug target and launches the application. The equivalent explicit command is:
+`make` builds the Debug app and launches it. Songleton is a menu bar app, so there is no conventional main window waiting to greet you.
+
+Useful development commands:
 
 ```bash
-make run
-```
-
-Songleton is a menu bar application, so it may not open a traditional main window after launch.
-
-## First Launch and Permissions
-
-The first launch opens a five-step onboarding flow with an animated welcome, guided feature cards, and permission shortcuts. You can use it to understand the controls and grant the required permissions.
-
-### Automation permission
-
-Automation permission allows Songleton to read the current track and send playback commands to Spotify and Apple Music through macOS Apple Events.
-
-When prompted, allow Songleton to control the player. If you use both players, grant access to both. You can review the status from Settings under Permissions.
-
-### Accessibility permission
-
-Accessibility permission enables global mouse monitoring for edge and volume gestures. Songleton uses this permission to observe mouse movement and button state; it does not need to control other applications' content.
-
-If the permission is not granted during onboarding:
-
-1. Open Songleton Settings.
-2. Open the Accessibility permission row.
-3. Enable Songleton in System Settings > Privacy & Security > Accessibility.
-4. Return to Songleton and try the gesture again.
-
-You can skip permissions and grant them later. Menu bar controls and Ambient Mode can still be used where the corresponding player permission is available.
-
-## Daily Use
-
-1. Start Spotify or Apple Music and play a track.
-2. Look for Songleton in the menu bar.
-3. Hover over the track label to open the control panel.
-4. Use the panel for playback, seeking, volume, shuffle, repeat, and Ambient Mode.
-5. Use the edge gestures or keyboard shortcuts when you want hands-free control.
-
-Songleton automatically selects the active player. If both players are running, it prefers the player that is currently playing. If neither is playing, it can use a paused player as a fallback.
-
-## Ambient Mode
-
-Ambient Mode turns the current display into a full-screen music visualizer. It hides the menu bar and Dock while active and restores them when you exit.
-
-### How to enter Ambient Mode
-
-- Click the Ambient button in the hover panel.
-- Double-click the album artwork in the hover panel.
-- Right-click the main menu bar item.
-
-### Visual themes
-
-Ambient Mode includes three themes. Press `T` to cycle between them or use the theme control in the ambient toolbar.
-
-| Theme | Description |
-| --- | --- |
-| Vinyl Record | A rotating record player visual with artwork, light sweep, and playback-aware motion. |
-| Cassette Tape | A retro cassette deck with spinning reels and a nostalgic hardware feel. |
-| Pure Glass | A minimal glass composition focused on artwork glow, depth, and transparency. |
-
-The artwork creates a dynamic ambient aura behind the main visual. Playback state affects motion and the record or cassette pauses naturally when the track is paused.
-
-### Ambient controls
-
-Move the pointer to reveal the toolbar. Depending on the selected state, the toolbar provides:
-
-- Play/pause, previous, and next controls.
-- Seek bar with elapsed and total duration.
-- Volume control.
-- Shuffle and repeat controls.
-- Theme selection.
-- Live synced lyrics toggle.
-- Sleep timer.
-
-Press `ESC` to exit. Songleton uses a CRT-inspired closing animation before returning to the menu bar.
-
-### Sleep timer
-
-Open the sleep timer from the Ambient toolbar and choose a duration. The remaining time is shown while the timer is active. When it expires, Songleton stops playback and dims the experience before leaving Ambient Mode.
-
-## Mouse Gestures
-
-Mouse gestures work globally after Accessibility permission is granted. The cursor must rest inside the relevant screen edge zone until the gesture completes.
-
-### Edge gestures
-
-| Gesture | Action |
-| --- | --- |
-| Rest at the left edge | Previous track |
-| Rest at the right edge | Next track |
-| Rest at the top edge | Play or pause |
-
-While an edge gesture is being recognized, a small black-and-white AMOLED cursor orb follows the pointer. Its ring fills as the hold progresses and bursts outward in white when the action is triggered. If the cursor leaves the edge before the hold completes, the orb flashes red and collapses quickly — a cancel cue that is distinct from the success burst. The real cursor is never moved by Songleton.
-
-The default edge hold duration is `0.8s`. The top play/pause gesture is intentionally faster at `0.64s` (80% of the setting). Both values are derived from the Edge hold duration setting, so changing the setting scales the top gesture proportionally.
-
-The edge gesture control is available in Settings under General. It can be adjusted from `0.2s` to `2.0s` in `0.1s` increments.
-
-### Volume gesture
-
-Songleton supports two ways to start a live volume gesture:
-
-- Hold both mouse buttons and drag vertically.
-- Hold `Command + Option` and drag vertically.
-
-Drag up to increase the volume and down to decrease it. A dedicated volume HUD shows the current level while the gesture is active.
-
-### Gesture toggles
-
-Settings contains independent toggles for:
-
-- Horizontal gestures: left and right edge track navigation.
-- Vertical gestures: top-edge play/pause and live volume control.
-
-Disabling a gesture group stops its global monitoring behavior. Re-enable it from Settings when needed.
-
-## Keyboard Shortcuts
-
-Keyboard shortcuts are active in Ambient Mode.
-
-| Shortcut | Action |
-| --- | --- |
-| `Space` | Play or pause |
-| `Left Arrow` | Previous track |
-| `Right Arrow` | Next track |
-| `Up Arrow` | Increase volume by 10% |
-| `Down Arrow` | Decrease volume by 10% |
-| `L` | Show or hide live lyrics |
-| `T` | Cycle Vinyl, Cassette, and Glass themes |
-| `ESC` | Exit Ambient Mode |
-
-## Settings
-
-Open Settings from the hover panel or Option-right-click the main menu bar item.
-
-### General
-
-- Launch at login: start Songleton automatically when macOS starts.
-- Track change notifications: enable or disable non-activating track notifications.
-- Horizontal gestures: enable or disable left/right edge navigation.
-- Vertical gestures: enable or disable top-edge play/pause and live volume gestures.
-- Edge hold duration: configure how long the cursor must rest at an edge before an edge action triggers.
-
-### Language
-
-Choose System, English, or Turkish. Songleton stores the selected language and applies it to the menu, Settings, onboarding, and in-app controls.
-
-### Menu bar
-
-- Show artist name beside the track.
-- Show or hide the previous and next menu bar buttons.
-- Choose the System or Audiowide menu bar font.
-- Set the menu bar track label width.
-
-### Lyrics
-
-Use Lyrics sync offset to compensate when lyrics appear too early or too late. Positive values move the active lyric selection forward; negative values move it backward.
-
-### Permissions
-
-Settings shows the current Automation and Accessibility permission state and links directly to the relevant macOS Privacy & Security page.
-
-## Lyrics
-
-Songleton requests lyrics from [LRCLIB](https://lrclib.net/) using the current track, artist, album, and duration. Synced LRC lyrics are preferred; plain lyrics are supported as a fallback.
-
-To use lyrics:
-
-1. Enter Ambient Mode.
-2. Press `L` or select the lyrics control in the toolbar.
-3. Wait for the lookup to complete.
-
-Lyrics are fetched per track and cleared when playback stops or the track changes. If no result is available, the rest of Ambient Mode remains fully usable.
-
-## Troubleshooting
-
-### Songleton shows no track
-
-- Confirm Spotify or Apple Music is running.
-- Confirm a track is loaded or playing.
-- Open Settings > Permissions and check Automation access.
-- If access was recently changed, restart Songleton and the music player.
-
-### Playback commands do not work
-
-- Grant Automation permission for the specific player.
-- Check that the player is installed using its standard application identity.
-- If both players are open, verify which one is currently playing.
-
-### Edge gestures do not work
-
-- Grant Accessibility permission to Songleton.
-- Confirm the relevant horizontal or vertical gesture toggle is enabled.
-- Hold the pointer directly against the screen edge for the configured duration.
-- Check that another global mouse utility is not intercepting the same events.
-
-### Lyrics are missing or out of sync
-
-- Check your internet connection.
-- Confirm the track metadata matches the player metadata.
-- Adjust Settings > Lyrics > Lyrics sync offset.
-- LRCLIB may not have lyrics for every track.
-
-### Ambient Mode does not respond to the keyboard
-
-- Click once inside Ambient Mode to ensure it is active.
-- Use `ESC` to leave and enter Ambient Mode again.
-- Check that another application is not holding a global keyboard shortcut.
-
-## Privacy
-
-Songleton has no account system, analytics, advertising, tracking, or listening-history upload.
-
-- Track name, artist, album, and duration are sent to LRCLIB only when requesting lyrics.
-- Album artwork is read from the active media player or its artwork URL.
-- Playback control is performed locally through macOS Apple Events.
-- Passwords, personal files, listening history, and player credentials are not uploaded by Songleton.
-
-See [SECURITY.md](SECURITY.md) for reporting security issues.
-
-## Build and Development
-
-Songleton is a native SwiftUI and AppKit application. Media integrations are isolated behind the `MediaController` protocol, with separate Spotify and Apple Music AppleScript controllers.
-
-### Common commands
-
-```bash
-# Build and launch the Debug app
+# Build and launch
 make
 
 # Build without launching
 make build-debug
 
-# Run the native unit test runner
+# Run the native test runner
 make test
 
-# Run tests and build with warnings treated as errors
+# Test and reject compiler warnings
 make quality
 
-# Generate an LLVM coverage report
-make coverage
-
-# Clean build products and Xcode's project build outputs
+# Clear build products
 make clean
+
+# Reset local defaults, caches, and Songleton Automation permission
+make fresh
 ```
 
-### Release commands
-
-Distribution requires a Developer ID identity and Apple notarization credentials. See [RELEASING.md](RELEASING.md) for the complete release process.
-
-```bash
-make archive DEVELOPER_IDENTITY="Developer ID Application: Your Name (TEAMID)"
-make dmg DEVELOPER_IDENTITY="Developer ID Application: Your Name (TEAMID)"
-make notarize DEVELOPER_IDENTITY="Developer ID Application: Your Name (TEAMID)" NOTARY_PROFILE="profile-name"
-```
-
-GitHub Actions runs the quality gate on pull requests and pushes to `main`.
+The native test suite covers settings persistence, notification layout and motion, regional Spotify catalog integrity, player resolution, lyrics parsing, localization behavior, tutorial gating, and the pure screen-edge gesture contract.
 
 ## License
 
-Songleton is distributed under the [MIT License](LICENSE).
-
-The bundled Audiowide typeface is licensed under the [SIL Open Font License 1.1](https://openfontlicense.org/). See the font metadata and repository notices for attribution details.
+Songleton is distributed under the [MIT License](LICENSE). The bundled Audiowide typeface is available under the [SIL Open Font License 1.1](https://openfontlicense.org/).
