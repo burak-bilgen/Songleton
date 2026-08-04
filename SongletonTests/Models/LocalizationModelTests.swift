@@ -29,9 +29,11 @@ final class LocalizationModelTests {
     private func testLanguagePersistenceAndFallback() {
         let defaults = UserDefaults(suiteName: "SongletonLocalizationTests")!
         defaults.removePersistentDomain(forName: "SongletonLocalizationTests")
+        let defaultLocalization = LocalizationManager(userDefaults: defaults)
+        assertEqual(defaultLocalization.language, .system)
         defaults.set("invalid", forKey: "language")
         let localization = LocalizationManager(userDefaults: defaults)
-        assertEqual(localization.language, .turkish)
+        assertEqual(localization.language, .system)
         localization.language = .turkish
         assertEqual(defaults.string(forKey: "language"), "tr")
         defaults.removePersistentDomain(forName: "SongletonLocalizationTests")

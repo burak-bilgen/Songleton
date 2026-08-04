@@ -23,7 +23,7 @@ final class LocalizationManager: ObservableObject {
 
     init(userDefaults: UserDefaults = .standard) {
         defaults = userDefaults
-        language = Language(rawValue: userDefaults.string(forKey: "language") ?? "tr") ?? .turkish
+        language = Language(rawValue: userDefaults.string(forKey: "language") ?? Language.system.rawValue) ?? .system
     }
 
     var locale: Locale {

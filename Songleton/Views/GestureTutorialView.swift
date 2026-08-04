@@ -27,6 +27,9 @@ struct GestureTutorialView: View {
     @State private var isTrackRightClicking = false
     @State private var isAmbientPreviewVisible = false
     @State private var animationTask: Task<Void, Never>? = nil
+    @State private var cursorScale: CGFloat = 1
+    @State private var cursorRotation: Double = -5
+    @State private var isCursorPressed = false
 
     // Mock MouseGestureManager for real overlay component
     @StateObject private var mockManager = MouseGestureManager()
@@ -78,7 +81,7 @@ struct GestureTutorialView: View {
                     }
 
                     if isAmbientPreviewVisible {
-                        TutorialAmbientPreview()
+                        AmbientView(onClose: {})
                             .frame(
                                 width: min(680, geo.size.width - 96),
                                 height: min(410, max(280, geo.size.height * 0.43))
@@ -143,7 +146,7 @@ struct GestureTutorialView: View {
     }
 
     private var usesBottomAnchoredControls: Bool {
-        currentStage == .hoverMenu || currentStage == .ambientMode
+        currentStage == .volumeControl || currentStage == .hoverMenu || currentStage == .ambientMode
     }
 
     private func tutorialPreviewCenterY(for size: CGSize) -> CGFloat {
@@ -338,12 +341,22 @@ struct GestureTutorialView: View {
     // MARK: - Animated Mouse Cursor Element
 
     private func animatedMouseCursor(size: CGSize) -> some View {
-        Image(systemName: "cursorarrow.rays")
-            .font(.system(size: 32, weight: .bold))
-            .foregroundStyle(LinearGradient(colors: [.white, Color(white: 0.88)], startPoint: .top, endPoint: .bottom))
-            .shadow(color: .black.opacity(0.7), radius: 8, x: 2, y: 4)
+        ZStack {
+            Circle()
+                .fill(SongletonTheme.cyan.opacity(isCursorPressed ? 0.28 : 0.0))
+                .frame(width: 42, height: 42)
+                .blur(radius: 4)
+
+            Image(systemName: "cursorarrow")
+                .font(.system(size: 31, weight: .semibold))
+                .foregroundStyle(LinearGradient(colors: [.white, Color(white: 0.82)], startPoint: .top, endPoint: .bottom))
+                .shadow(color: .black.opacity(0.78), radius: 7, x: 2, y: 4)
+                .shadow(color: SongletonTheme.cyan.opacity(isCursorPressed ? 0.65 : 0.18), radius: isCursorPressed ? 12 : 4)
+                .scaleEffect(cursorScale)
+                .rotationEffect(.degrees(cursorRotation), anchor: .topLeading)
+        }
         .position(cursorPosition)
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.75), value: cursorPosition)
+        .accessibilityHidden(true)
     }
 
     // MARK: - Top Header Bar
@@ -516,6 +529,57 @@ struct GestureTutorialView: View {
         }
     }
 
+    private func cursorAnimation(duration: Double) -> Animation {
+        reduceMotion
+            ? .linear(duration: min(duration, 0.18))
+            : .timingCurve(0.18, 0.82, 0.22, 1, duration: duration)
+    }
+
+    private func moveCursor(
+        to point: CGPoint,
+        duration: Double,
+        rotation: Double = -5,
+        scale: CGFloat = 1
+    ) async {
+        withAnimation(cursorAnimation(duration: duration)) {
+            cursorPosition = point
+            cursorRotation = rotation
+            cursorScale = scale
+        }
+        try? await Task.sleep(for: .seconds(duration))
+    }
+
+    private func setCursorPressed(_ pressed: Bool) async {
+        withAnimation(reduceMotion ? nil : .spring(response: 0.18, dampingFraction: 0.62)) {
+            isCursorPressed = pressed
+            cursorScale = pressed ? 0.86 : 1
+            cursorRotation = pressed ? -1 : -5
+        }
+        try? await Task.sleep(for: .milliseconds(pressed ? 120 : 90))
+    }
+
+    private func animateVolume(
+        from start: Int,
+        to end: Int,
+        cursorTarget: CGPoint,
+        duration: Double
+    ) async {
+        withAnimation(cursorAnimation(duration: duration)) {
+            cursorPosition = cursorTarget
+        }
+
+        let step = start <= end ? 1 : -1
+        let values = Array(stride(from: start, through: end, by: step))
+        let interval = max(0.025, duration / Double(max(values.count, 1)))
+
+        for value in values {
+            guard !Task.isCancelled else { return }
+            mockManager.simulateGestureVolume(value)
+            TutorialAudioService.shared.setDemoVolume(value)
+            try? await Task.sleep(for: .seconds(interval))
+        }
+    }
+
     private func runStageAnimation(stage: TutorialStage, size: CGSize) {
         animationTask?.cancel()
         isStageAnimationRunning = true
@@ -531,6 +595,9 @@ struct GestureTutorialView: View {
 
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
         cursorPosition = center
+        cursorScale = 1
+        cursorRotation = -5
+        isCursorPressed = false
 
         animationTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(300))
@@ -538,72 +605,96 @@ struct GestureTutorialView: View {
 
             switch stage {
             case .cancelDemo:
-                // Move cursor to left edge
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.75)) {
-                    cursorPosition = CGPoint(x: 8, y: size.height / 2)
-                }
-                try? await Task.sleep(for: .milliseconds(700))
+                await moveCursor(
+                    to: CGPoint(x: size.width * 0.30, y: size.height * 0.56),
+                    duration: 0.34,
+                    rotation: -8
+                )
+                guard !Task.isCancelled else { return }
+                await moveCursor(
+                    to: CGPoint(x: 10, y: size.height * 0.50),
+                    duration: 0.46,
+                    rotation: -13,
+                    scale: 0.94
+                )
+                try? await Task.sleep(for: .milliseconds(240))
                 guard !Task.isCancelled else { return }
 
-                // Fill progress to 45% then pull away to cancel
                 for p in 0...45 {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
-                    try? await Task.sleep(for: .milliseconds(12))
+                    try? await Task.sleep(for: .milliseconds(14))
                 }
 
-                // Pull back away from edge -> Triggers Cancel Overlay!
-                withAnimation(reduceMotion ? .linear(duration: 0.12) : .easeInOut(duration: 0.45)) {
-                    cursorPosition = CGPoint(x: 160, y: size.height / 2)
-                    mockManager.simulateEdgeGestureCancelBurst()
-                }
+                await moveCursor(
+                    to: CGPoint(x: 164, y: size.height * 0.53),
+                    duration: 0.28,
+                    rotation: 3,
+                    scale: 1.08
+                )
+                mockManager.simulateEdgeGestureCancelBurst()
                 try? await Task.sleep(for: .milliseconds(450))
                 guard !Task.isCancelled else { return }
                 isStageAnimationRunning = false
 
             case .rightEdgeSkip:
-                // Move cursor to right edge
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.75)) {
-                    cursorPosition = CGPoint(x: size.width - 8, y: size.height / 2)
-                }
-                try? await Task.sleep(for: .milliseconds(700))
+                await moveCursor(
+                    to: CGPoint(x: size.width * 0.70, y: size.height * 0.45),
+                    duration: 0.34,
+                    rotation: 4
+                )
+                guard !Task.isCancelled else { return }
+                await moveCursor(
+                    to: CGPoint(x: size.width - 10, y: size.height * 0.50),
+                    duration: 0.46,
+                    rotation: 10,
+                    scale: 0.94
+                )
+                try? await Task.sleep(for: .milliseconds(240))
                 guard !Task.isCancelled else { return }
 
-                // Fill progress to 100%
                 for p in 0...100 {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
-                    // Begin the crossfade only when the action is visibly about
-                    // to complete. The gesture remains the cause, not background
-                    // music that happens to change at random.
                     if p == 72 {
                         TutorialAudioService.shared.switchToSecondTrack()
                     }
-                    try? await Task.sleep(for: .milliseconds(8))
+                    try? await Task.sleep(for: .milliseconds(9))
                 }
 
-                // Trigger Success Burst
                 mockManager.simulateEdgeGestureBurst()
+                await moveCursor(
+                    to: CGPoint(x: size.width - 74, y: size.height * 0.47),
+                    duration: 0.22,
+                    rotation: 3,
+                    scale: 1.04
+                )
                 try? await Task.sleep(for: .milliseconds(650))
                 guard !Task.isCancelled else { return }
                 isStageAnimationRunning = false
 
             case .topEdgePlayPause:
-                // Move cursor to top center
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.75)) {
-                    cursorPosition = CGPoint(x: size.width / 2, y: 8)
-                }
-                try? await Task.sleep(for: .milliseconds(700))
+                await moveCursor(
+                    to: CGPoint(x: size.width * 0.56, y: size.height * 0.32),
+                    duration: 0.38,
+                    rotation: -2
+                )
+                guard !Task.isCancelled else { return }
+                await moveCursor(
+                    to: CGPoint(x: size.width / 2, y: 10),
+                    duration: 0.42,
+                    rotation: -6,
+                    scale: 0.94
+                )
+                try? await Task.sleep(for: .milliseconds(240))
                 guard !Task.isCancelled else { return }
 
-                // Fill progress to 100%
                 for p in 0...100 {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
-                    try? await Task.sleep(for: .milliseconds(8))
+                    try? await Task.sleep(for: .milliseconds(9))
                 }
 
-                // Trigger Play/Pause Burst
                 mockManager.simulateEdgeGestureBurst()
                 mockManager.simulateEdgeGestureProgress(0)
                 TutorialAudioService.shared.pause()
@@ -611,36 +702,34 @@ struct GestureTutorialView: View {
                 try? await Task.sleep(for: .milliseconds(250))
                 guard !Task.isCancelled else { return }
 
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.40)) {
-                    cursorPosition = CGPoint(x: size.width / 2, y: 140)
-                }
-                try? await Task.sleep(for: .seconds(1))
+                await moveCursor(
+                    to: CGPoint(x: size.width * 0.48, y: 142),
+                    duration: 0.34,
+                    rotation: 2
+                )
+                try? await Task.sleep(for: .milliseconds(760))
                 guard !Task.isCancelled else { return }
 
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.60)) {
-                    cursorPosition = CGPoint(x: size.width / 2, y: 8)
-                }
-                try? await Task.sleep(for: .milliseconds(700))
+                await moveCursor(
+                    to: CGPoint(x: size.width * 0.52, y: 54),
+                    duration: 0.28,
+                    rotation: -4
+                )
+                guard !Task.isCancelled else { return }
+                await moveCursor(
+                    to: CGPoint(x: size.width / 2, y: 10),
+                    duration: 0.24,
+                    rotation: -6,
+                    scale: 0.94
+                )
+                try? await Task.sleep(for: .milliseconds(260))
                 guard !Task.isCancelled else { return }
 
                 isPlaybackResuming = true
-                withAnimation(reduceMotion ? .linear(duration: 0.12) : .easeInOut(duration: 0.22)) {
-                    cursorPosition = CGPoint(x: size.width / 2, y: 34)
-                }
-                try? await Task.sleep(for: .milliseconds(240))
-                guard !Task.isCancelled else { return }
-                withAnimation(reduceMotion ? .linear(duration: 0.12) : .easeInOut(duration: 0.22)) {
-                    cursorPosition = CGPoint(x: size.width / 2, y: 8)
-                }
-                try? await Task.sleep(for: .milliseconds(180))
-                guard !Task.isCancelled else { return }
-
-                // Resume is a fresh gesture. Fill the same live ring before
-                // bringing music back so the visual and the audio agree.
                 for p in 0...100 {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
-                    try? await Task.sleep(for: .milliseconds(6))
+                    try? await Task.sleep(for: .milliseconds(8))
                 }
 
                 TutorialAudioService.shared.resume(fadeIn: true)
@@ -653,45 +742,63 @@ struct GestureTutorialView: View {
                 isStageAnimationRunning = false
 
             case .volumeControl:
-                // The real volume HUD is the hero. The cursor and audio follow
-                // the same vertical gesture so the feedback is understandable.
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.65)) {
-                    cursorPosition = CGPoint(x: size.width / 2 + 150, y: size.height / 2 - 145)
-                }
-                try? await Task.sleep(for: .milliseconds(700))
+                let volumeX = size.width / 2 + 150
+                let topY = size.height / 2 - 192
+                let bottomY = size.height / 2 - 56
+
+                await moveCursor(
+                    to: CGPoint(x: volumeX + 70, y: topY - 34),
+                    duration: 0.38,
+                    rotation: 4
+                )
+                guard !Task.isCancelled else { return }
+                await moveCursor(
+                    to: CGPoint(x: volumeX, y: topY),
+                    duration: 0.24,
+                    rotation: -4,
+                    scale: 0.96
+                )
+                await setCursorPressed(true)
                 guard !Task.isCancelled else { return }
 
-                for v in stride(from: 8, through: 0, by: -1) {
-                    guard !Task.isCancelled else { return }
-                    mockManager.simulateGestureVolume(v)
-                    TutorialAudioService.shared.setDemoVolume(v)
-                    cursorPosition.y += 5
-                    try? await Task.sleep(for: .milliseconds(28))
-                }
+                await animateVolume(
+                    from: 8,
+                    to: 0,
+                    cursorTarget: CGPoint(x: volumeX, y: bottomY),
+                    duration: 0.74
+                )
                 try? await Task.sleep(for: .milliseconds(350))
                 guard !Task.isCancelled else { return }
-                for v in stride(from: 0, through: 20, by: 1) {
-                    guard !Task.isCancelled else { return }
-                    mockManager.simulateGestureVolume(v)
-                    TutorialAudioService.shared.setDemoVolume(v)
-                    cursorPosition.y -= 5
-                    try? await Task.sleep(for: .milliseconds(24))
-                }
-                for v in stride(from: 20, through: 8, by: -1) {
-                    guard !Task.isCancelled else { return }
-                    mockManager.simulateGestureVolume(v)
-                    TutorialAudioService.shared.setDemoVolume(v)
-                    cursorPosition.y += 4
-                    try? await Task.sleep(for: .milliseconds(24))
-                }
+                await animateVolume(
+                    from: 0,
+                    to: 20,
+                    cursorTarget: CGPoint(x: volumeX, y: topY),
+                    duration: 1.02
+                )
+                guard !Task.isCancelled else { return }
+                await animateVolume(
+                    from: 20,
+                    to: 8,
+                    cursorTarget: CGPoint(x: volumeX, y: topY + 82),
+                    duration: 0.58
+                )
+                await setCursorPressed(false)
                 isStageAnimationRunning = false
 
             case .hoverMenu:
-                // Move to the dummy menu bar item, then hold long enough for hover to open.
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.85)) {
-                    cursorPosition = CGPoint(x: size.width / 2, y: 54)
-                }
-                try? await Task.sleep(for: .milliseconds(850))
+                await moveCursor(
+                    to: CGPoint(x: size.width * 0.58, y: size.height * 0.27),
+                    duration: 0.42,
+                    rotation: -2
+                )
+                guard !Task.isCancelled else { return }
+                await moveCursor(
+                    to: CGPoint(x: size.width / 2, y: 54),
+                    duration: 0.38,
+                    rotation: -5,
+                    scale: 0.95
+                )
+                try? await Task.sleep(for: .milliseconds(560))
                 guard !Task.isCancelled else { return }
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
                     isHoverPanelVisible = true
@@ -704,18 +811,28 @@ struct GestureTutorialView: View {
                 isStageAnimationRunning = false
 
             case .ambientMode:
-                // Right-click the same dummy track item to reveal Ambient Mode.
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.85)) {
-                    cursorPosition = CGPoint(x: size.width / 2, y: 54)
-                }
-                try? await Task.sleep(for: .milliseconds(850))
+                await moveCursor(
+                    to: CGPoint(x: size.width * 0.56, y: size.height * 0.26),
+                    duration: 0.40,
+                    rotation: -2
+                )
+                guard !Task.isCancelled else { return }
+                await moveCursor(
+                    to: CGPoint(x: size.width / 2, y: 54),
+                    duration: 0.36,
+                    rotation: -5,
+                    scale: 0.95
+                )
+                try? await Task.sleep(for: .milliseconds(420))
                 guard !Task.isCancelled else { return }
                 isHoverPanelVisible = true
-                withAnimation(.easeInOut(duration: 0.25)) {
+                await setCursorPressed(true)
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
                     isTrackRightClicking = true
                 }
-                try? await Task.sleep(for: .milliseconds(500))
+                try? await Task.sleep(for: .milliseconds(240))
                 guard !Task.isCancelled else { return }
+                await setCursorPressed(false)
                 withAnimation(.spring(response: 0.65, dampingFraction: 0.8)) {
                     isAmbientPreviewVisible = true
                 }

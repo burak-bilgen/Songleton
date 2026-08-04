@@ -118,9 +118,9 @@ final class NowPlayingModel: ObservableObject {
     func playSpotifyPlaylist(_ playlist: SpotifyDiscoveryPlaylist) {
         guard let spotify = activeController as? SpotifyController else { return }
 
-        Task { [weak self] in
+        Task {
             do {
-                try await self?.commandQueue.execute {
+                try await commandQueue.execute {
                     try spotify.playPlaylist(
                         uri: playlist.uri,
                         startingTrackURI: playlist.startingTrackURI
@@ -131,7 +131,6 @@ final class NowPlayingModel: ObservableObject {
             } catch {
                 print("Spotify playlist command failed: \(error)")
             }
-            self?.refresh()
         }
     }
 

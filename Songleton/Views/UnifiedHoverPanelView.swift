@@ -483,9 +483,8 @@ struct UnifiedHoverPanelView: View {
 
     private var spotifyDiscoverySection: some View {
         let playlists = SpotifyDiscoveryCatalog.playlists()
-        let marketName = SpotifyDiscoveryCatalog.marketName(for: Locale.autoupdatingCurrent)
 
-        return VStack(alignment: .leading, spacing: 7) {
+        return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 7) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 11, weight: .bold))
@@ -496,33 +495,32 @@ struct UnifiedHoverPanelView: View {
                     .foregroundStyle(.white.opacity(0.88))
 
                 Spacer()
-
-                Text(marketName)
-                    .font(.system(size: 9, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.42))
-                    .lineLimit(1)
             }
 
-            Text(localization.string("spotify.discovery_hint"))
-                .font(.system(size: 9, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.42))
-
-            ForEach(playlists) { playlist in
-                spotifyPlaylistRow(playlist)
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    ForEach(playlists) { playlist in
+                        spotifyPlaylistTile(playlist)
+                    }
+                }
+                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity)
         }
         .padding(.top, 5)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(localization.string("spotify.discovery_title"))
     }
 
-    private func spotifyPlaylistRow(_ playlist: SpotifyDiscoveryPlaylist) -> some View {
+    private func spotifyPlaylistTile(_ playlist: SpotifyDiscoveryPlaylist) -> some View {
         let accent = playlistAccent(for: playlist)
+        let isHovered = hoveredPlaylistID == playlist.id
 
         return Button {
             model.playSpotifyPlaylist(playlist)
         } label: {
-            HStack(spacing: 9) {
+            VStack(spacing: 5) {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(
                         LinearGradient(
@@ -531,46 +529,33 @@ struct UnifiedHoverPanelView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 34, height: 34)
+                    .frame(width: 42, height: 38)
                     .overlay {
-                        Image(systemName: "music.note.list")
+                        Image(systemName: isHovered ? "play.fill" : "music.note.list")
                             .font(.system(size: 13, weight: .bold))
                             .foregroundStyle(.white)
+                            .contentTransition(.symbolEffect(.replace))
                     }
-                    .shadow(color: accent.opacity(0.28), radius: 5, y: 2)
+                    .shadow(color: accent.opacity(isHovered ? 0.48 : 0.28), radius: isHovered ? 8 : 5, y: 2)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(playlist.title)
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .lineLimit(1)
-                    Text(playlist.subtitle)
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.50))
-                        .lineLimit(1)
-                }
-
-                Spacer(minLength: 4)
-
-                Image(systemName: "shuffle")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(hoveredPlaylistID == playlist.id ? .black : accent)
-                    .frame(width: 27, height: 27)
-                    .background(
-                        hoveredPlaylistID == playlist.id ? accent : accent.opacity(0.13),
-                        in: Circle()
-                    )
+                Text(playlist.title)
+                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.90))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .frame(height: 20, alignment: .top)
             }
-            .padding(.horizontal, 7)
-            .frame(height: 43)
+            .frame(width: 58, height: 71)
             .background(
-                hoveredPlaylistID == playlist.id ? Color.white.opacity(0.11) : Color.white.opacity(0.045),
-                in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+                isHovered ? Color.white.opacity(0.12) : Color.white.opacity(0.045),
+                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .stroke(hoveredPlaylistID == playlist.id ? accent.opacity(0.55) : .white.opacity(0.08), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(isHovered ? accent.opacity(0.65) : .white.opacity(0.08), lineWidth: 1)
             }
+            .scaleEffect(isHovered ? 1.03 : 1.0)
+            .animation(.spring(response: 0.24, dampingFraction: 0.72), value: isHovered)
         }
         .buttonStyle(.plain)
         .onHover { isHovered in

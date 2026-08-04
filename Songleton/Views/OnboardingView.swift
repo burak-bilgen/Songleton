@@ -129,34 +129,34 @@ struct OnboardingView: View {
             HStack(alignment: .center, spacing: 12) {
                 Spacer()
 
-                // Right Side: Prominent Language Selector Menu
                 Menu {
-                    Button(action: {
-                        withAnimation { localization.language = .turkish }
-                    }) {
-                        HStack {
-                            Text("🇹🇷 " + localization.string("language.turkish"))
-                            if localization.language == .turkish { Image(systemName: "checkmark") }
-                        }
-                    }
-                    Button(action: {
-                        withAnimation { localization.language = .english }
-                    }) {
-                        HStack {
-                            Text("🇬🇧 " + localization.string("language.english"))
-                            if localization.language == .english { Image(systemName: "checkmark") }
-                        }
+                    Section(localization.string("onboarding.language_picker_title")) {
+                        languageMenuOption(.system, title: localization.string("language.system"))
+                        languageMenuOption(.english, title: localization.string("language.english"))
+                        languageMenuOption(.turkish, title: localization.string("language.turkish"))
                     }
                 } label: {
                     HStack(alignment: .center, spacing: 8) {
-                        Text(languageFlagIcon)
-                            .font(.system(size: 18))
-                        Text(localization.string("onboarding.language_picker_title"))
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                        Image(systemName: "globe")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(SongletonTheme.cyan)
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(localization.string("onboarding.language_picker_title"))
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.58))
+                            Text(selectedLanguageTitle)
+                                .font(.system(size: 12, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                        }
+
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.48))
                     }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
+                    .padding(.leading, 11)
+                    .padding(.trailing, 10)
+                    .padding(.vertical, 8)
                     .background(
                         LinearGradient(
                             colors: [SongletonTheme.cyan.opacity(0.35), SongletonTheme.violet.opacity(0.35)],
@@ -172,10 +172,39 @@ struct OnboardingView: View {
         }
     }
 
-    private var languageFlagIcon: String {
+    private var selectedLanguageTitle: String {
         switch localization.language {
-        case .turkish: return "🇹🇷"
-        default: return "🇬🇧"
+        case .system:
+            return "\(localization.string("language.system")) · \(systemLanguageTitle)"
+        case .english:
+            return localization.string("language.english")
+        case .turkish:
+            return localization.string("language.turkish")
+        }
+    }
+
+    private var systemLanguageTitle: String {
+        switch localization.resolvedLanguageCode {
+        case "tr": return localization.string("language.turkish")
+        default: return localization.string("language.english")
+        }
+    }
+
+    private func languageMenuOption(_ language: LocalizationManager.Language, title: String) -> some View {
+        Button {
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                localization.language = language
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: language == .system ? "desktopcomputer" : "textformat")
+                    .foregroundStyle(language == localization.language ? SongletonTheme.cyan : .secondary)
+                Text(title)
+                Spacer()
+                if language == localization.language {
+                    Image(systemName: "checkmark")
+                }
+            }
         }
     }
 

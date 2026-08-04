@@ -226,13 +226,15 @@ final class SpotifyController: MediaController {
         }
 
         // Spotify's dictionary requires a track URI plus a playlist context.
-        // Set shuffle first so playback immediately continues within that
-        // playlist in a shuffled order.
+        // Do not wait for a reply: waiting makes Spotify briefly foreground
+        // itself on some macOS versions before returning to Songleton.
         try AppleScriptRunner.run("""
-        tell application "Spotify"
-            set shuffling to true
-            play track "\(startingTrackURI)" in context "\(uri)"
-        end tell
+        ignoring application responses
+            tell application id "com.spotify.client"
+                set shuffling to true
+                play track "\(startingTrackURI)" in context "\(uri)"
+            end tell
+        end ignoring
         """)
     }
 }

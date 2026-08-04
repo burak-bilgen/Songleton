@@ -54,7 +54,7 @@ Hover the song title and Songleton expands into a compact control room:
 
 ### Spotify picks
 
-When Spotify is active, the hover panel offers five one-click playlists. Songleton uses the Mac region setting to choose a compact curated catalog, with a Turkey-specific starting set and a global fallback. Select a playlist and Songleton tells the already-running Spotify desktop app to enable shuffle and begin that playlist.
+When Spotify is active, the hover panel offers five compact one-click playlists. The catalog contains only verified Spotify editorial playlists, never community copies that happen to share a chart name. Select a playlist and Songleton tells the already-running Spotify desktop app to enable shuffle and begin that playlist without opening a browser or intentionally bringing Spotify to the front.
 
 This does not require a Songleton account, Spotify OAuth flow, IP geolocation, or a hidden web scraper. The Spotify app itself still needs to be installed, running, authorized for Automation, and signed in as usual. The catalog is intentionally curated rather than advertised as a live Spotify ranking feed.
 
@@ -145,7 +145,7 @@ Songleton is deliberately local-first.
 - It has no analytics, advertising, tracking, or listening-history upload.
 - Artwork comes from the active player or its artwork URL.
 - Lyrics are fetched from [LRCLIB](https://lrclib.net/) using only the current track, artist, album, and duration needed for lookup.
-- Spotify picks use the Mac region setting, not physical location or IP-based geolocation.
+- Spotify picks use a small built-in editorial catalog. Songleton does not use physical location, IP geolocation, or a hidden Spotify web scraper.
 - Passwords, player credentials, local files, and listening history are never uploaded.
 
 ## Requirements
@@ -156,10 +156,28 @@ Songleton is deliberately local-first.
 - Accessibility permission for global gestures.
 - Internet access only when lyrics need to be fetched from LRCLIB.
 
+## Website and releases
+
+The animated product site lives in [`docs/index.html`](docs/index.html). It is a dependency-free static page built for GitHub Pages, so there is no separate hosting account, framework deployment, or domain to manage.
+
+After pushing this repository, enable **Settings > Pages > Build and deployment > Source: GitHub Actions** once. The included workflow deploys every change to `main` that touches `docs/`, and GitHub serves the site at `https://burak-bilgen.github.io/Songleton/`.
+
+The release path is deliberately strict:
+
+```bash
+# Build, sign, notarize, and package the DMG with the release credentials.
+make notarize
+
+# Replace the staged checksum in the Homebrew cask with the actual DMG checksum.
+./scripts/update-homebrew-cask.sh build/Songleton-1.0.dmg
+```
+
+Then commit the generated checksum, create the matching `v1.0` GitHub Release, and attach `Songleton-1.0.dmg`. The cask at [`homebrew-tap/Casks/songleton.rb`](homebrew-tap/Casks/songleton.rb) intentionally starts with `sha256 :no_check`; it is a release staging file, not a claim that an unsigned artifact is ready to install. The exact Homebrew steps are in [`homebrew-tap/README.md`](homebrew-tap/README.md).
+
 ## Build from source
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/burak-bilgen/Songleton.git
 cd Songleton
 make
 ```
@@ -188,7 +206,7 @@ make clean
 make fresh
 ```
 
-The native test suite covers settings persistence, notification layout and motion, regional Spotify catalog integrity, player resolution, lyrics parsing, localization behavior, tutorial gating, and the pure screen-edge gesture contract.
+The native test suite covers settings persistence, notification layout and motion, Spotify editorial catalog integrity, player resolution, lyrics parsing, localization behavior, tutorial gating, and the pure screen-edge gesture contract.
 
 ## License
 
