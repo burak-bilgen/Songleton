@@ -31,7 +31,7 @@ final class LocalizationModelTests {
         defaults.removePersistentDomain(forName: "SongletonLocalizationTests")
         defaults.set("invalid", forKey: "language")
         let localization = LocalizationManager(userDefaults: defaults)
-        assertEqual(localization.language, .system)
+        assertEqual(localization.language, .turkish)
         localization.language = .turkish
         assertEqual(defaults.string(forKey: "language"), "tr")
         defaults.removePersistentDomain(forName: "SongletonLocalizationTests")

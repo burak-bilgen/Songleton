@@ -16,6 +16,11 @@ struct SettingsView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 18) {
                     headerSection
+
+                    if model.automationStatus != .granted {
+                        permissionWarningBanner
+                    }
+
                     generalSection
                     languageSection
                     menuBarSection
@@ -226,6 +231,22 @@ struct SettingsView: View {
                         .foregroundStyle(SongletonTheme.cyan)
 
                     Spacer()
+
+                    Button {
+                        NotificationCenter.default.post(name: Notification.Name("showGestureTutorial"), object: nil)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 9, weight: .bold))
+                            Text("Demo / İnteraktif Rehber")
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                        }
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 4)
+                        .background(SongletonTheme.cyan, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 VStack(spacing: 8) {
@@ -560,36 +581,85 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Footer
+    // MARK: - Permission Warning Banner
 
-    private var footerSection: some View {
-        HStack(spacing: 10) {
-            Link(destination: URL(string: "https://github.com/burak-bilgen")!) {
-                HStack(spacing: 5) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(SongletonTheme.cyan.opacity(0.8))
-                    Text("Made by Burak")
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.35))
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.25))
-                }
+    private var permissionWarningBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(Color(red: 1.0, green: 0.75, blue: 0.2))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("İzinler Eksik!")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text("Müziğinizi kontrol edebilmek için lütfen otomasyon izni verin.")
+                    .font(.system(size: 11.5, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.75))
             }
-            .buttonStyle(.plain)
-            .onHover { hovering in
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    hoveredSection = hovering ? "footer" : nil
-                }
-            }
-            .help("github.com/burak-bilgen")
 
             Spacer()
 
-            Text("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
+            Button {
+                NotificationCenter.default.post(name: Notification.Name("showOnboardingGuide"), object: nil)
+            } label: {
+                Text("İzin Ver 🚀")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(red: 1.0, green: 0.65, blue: 0.0), in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(14)
+        .background(Color(red: 1.0, green: 0.75, blue: 0.2).opacity(0.14), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color(red: 1.0, green: 0.75, blue: 0.2).opacity(0.4), lineWidth: 1.2))
+    }
+
+    // MARK: - Footer
+
+    private var footerSection: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 12) {
+                Button {
+                    NotificationCenter.default.post(name: Notification.Name("showGestureTutorial"), object: nil)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: 12, weight: .bold))
+                        Text("Gösterimi İzle 🎬")
+                            .font(.system(size: 11.5, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(SongletonTheme.cyan)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(SongletonTheme.cyan.opacity(0.12), in: Capsule())
+                    .overlay(Capsule().stroke(SongletonTheme.cyan.opacity(0.35), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    NotificationCenter.default.post(name: Notification.Name("showOnboardingGuide"), object: nil)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 11, weight: .bold))
+                        Text("Kurulum Ekranı 🚀")
+                            .font(.system(size: 11.5, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(.white.opacity(0.85))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Color.white.opacity(0.08), in: Capsule())
+                    .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text("Songleton v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
                 .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.2))
+                .foregroundStyle(.white.opacity(0.3))
         }
         .padding(.top, 4)
     }

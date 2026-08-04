@@ -110,6 +110,14 @@ enum AutomationPermission {
         let target = NSAppleEventDescriptor(bundleIdentifier: bundleID)
         return AEDeterminePermissionToAutomateTarget(target.aeDesc, typeWildCard, typeWildCard, askUser)
     }
+
+    nonisolated static func isGranted(bundleID: String) -> Bool {
+        let err = status(bundleID: bundleID, askUser: false)
+        if err == noErr || err == -600 || err == -609 {
+            return true
+        }
+        return UserDefaults.standard.bool(forKey: "permission_\(bundleID)")
+    }
 }
 
 protocol MediaController: Sendable {
@@ -145,11 +153,13 @@ extension MediaController {
 
     private nonisolated func sendCommand(_ command: String) throws {
         guard isRunning else { throw MediaControllerError.appNotRunning }
+        guard AutomationPermission.isGranted(bundleID: bundleID) else { throw MediaControllerError.permissionDenied }
         try AppleScriptRunner.run("tell application \"\(scriptAppName)\" to \(command)")
     }
 
     nonisolated func runInfoScript(_ body: String) throws -> NSAppleEventDescriptor {
         guard isRunning else { throw MediaControllerError.appNotRunning }
+        guard AutomationPermission.isGranted(bundleID: bundleID) else { throw MediaControllerError.permissionDenied }
         return try AppleScriptRunner.run("tell application \"\(scriptAppName)\"\n\(body)\nend tell")
     }
 }

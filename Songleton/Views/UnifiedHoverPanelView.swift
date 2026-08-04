@@ -320,9 +320,6 @@ struct UnifiedHoverPanelView: View {
                             value: isArtworkBreathing
                         )
                         .onAppear { isArtworkBreathing = true }
-                        .onTapGesture(count: 2) {
-                            AmbientModeManager.shared.show()
-                        }
                 } else {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.white.opacity(0.08))

@@ -1012,10 +1012,11 @@ struct AmbientView: View {
         isClosing = true
 
         // Fade the whole window out in sync with the CRT collapse so the exit melts away.
+        let targetWindow = NSApp.windows.first(where: { $0.level == .floating }) ?? NSApp.keyWindow
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.55
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
-            NSApp.keyWindow?.animator().alphaValue = 0.0
+            targetWindow?.animator().alphaValue = 0.0
         }
 
         withAnimation(.spring(response: 0.28, dampingFraction: 0.84)) {

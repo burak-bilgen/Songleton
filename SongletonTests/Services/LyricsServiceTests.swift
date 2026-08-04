@@ -6,6 +6,7 @@ final class LyricsServiceTests {
         runTest(name: "testLRCSupportsMultipleTimestamps", test: testLRCSupportsMultipleTimestamps)
         runTest(name: "testLRCFiltersMetadataAndMalformedLines", test: testLRCFiltersMetadataAndMalformedLines)
         runTest(name: "testPlainLyricsParsing", test: testPlainLyricsParsing)
+        runTest(name: "testTrackTitleCleaning", test: testTrackTitleCleaning)
     }
 
     private func runTest(name: String, test: () -> Void) {
@@ -41,5 +42,12 @@ final class LyricsServiceTests {
         assertEqual(lines.map(\.text), ["First line", "Second line", "Third"])
         assertEqual(lines.map(\.timestamp), [0, 4, 8])
         assertTrue(LyricsService.parsePlainLyrics(" \n\n").isEmpty)
+    }
+
+    private func testTrackTitleCleaning() {
+        assertEqual(LyricsService.cleanTrackTitle("Starboy (feat. Daft Punk)"), "Starboy")
+        assertEqual(LyricsService.cleanTrackTitle("Blinding Lights (Remastered 2020)"), "Blinding Lights")
+        assertEqual(LyricsService.cleanTrackTitle("Hotel California [Live]"), "Hotel California")
+        assertEqual(LyricsService.cleanTrackTitle("Smooth Criminal - Remastered"), "Smooth Criminal")
     }
 }

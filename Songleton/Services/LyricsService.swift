@@ -6,6 +6,43 @@ final class LyricsService {
     private init() {}
 
     func fetchSyncedLyrics(track: String, artist: String, album: String? = nil, duration: Double? = nil) async -> [LyricLine]? {
+        // First try exact fetch with provided track name
+        if let result = await fetchFromAPI(track: track, artist: artist, album: album, duration: duration) {
+            return result
+        }
+
+        // Fallback 1: Try with cleaned track title (removing feat, remaster, live tags)
+        let cleanedTrack = Self.cleanTrackTitle(track)
+        if cleanedTrack != track, let result = await fetchFromAPI(track: cleanedTrack, artist: artist, album: album, duration: duration) {
+            return result
+        }
+
+        // Fallback 2: Search LRCLIB /api/search with query string
+        let searchQuery = "\(cleanedTrack) \(artist)"
+        if let result = await searchFromAPI(query: searchQuery, duration: duration) {
+            return result
+        }
+
+        return nil
+    }
+
+    static func cleanTrackTitle(_ title: String) -> String {
+        var cleaned = title
+        // Remove parenthetical & bracketed extras like (feat. X), (Remastered 2021), [Live], - Remastered
+        let patterns = [
+            "\\(feat\\..*?\\)", "\\(with.*?\\)", "\\(remastered.*?\\)", "\\(live.*?\\)",
+            "\\[feat\\..*?\\]", "\\[remastered.*?\\]", "\\[live.*?\\]",
+            "\\-.*?remastered.*$", "\\-.*?live.*$"
+        ]
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
+                cleaned = regex.stringByReplacingMatches(in: cleaned, range: NSRange(location: 0, length: (cleaned as NSString).length), withTemplate: "")
+            }
+        }
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func fetchFromAPI(track: String, artist: String, album: String?, duration: Double?) async -> [LyricLine]? {
         var components = URLComponents(string: "https://lrclib.net/api/get")
         var queryItems = [
             URLQueryItem(name: "track_name", value: track),
@@ -20,6 +57,52 @@ final class LyricsService {
         components?.queryItems = queryItems
         guard let url = components?.url else { return nil }
 
+        return await performLyricsRequest(url: url)
+    }
+
+    private func searchFromAPI(query: String, duration: Double?) async -> [LyricLine]? {
+        var components = URLComponents(string: "https://lrclib.net/api/search")
+        components?.queryItems = [URLQueryItem(name: "q", value: query)]
+        guard let url = components?.url else { return nil }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Songleton macOS/1.0", forHTTPHeaderField: "User-Agent")
+        request.timeoutInterval = 6.0
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                return nil
+            }
+
+            guard let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]], !jsonArray.isEmpty else {
+                return nil
+            }
+
+            // Find best matching search result based on duration if available
+            var bestResult: [String: Any]? = jsonArray.first
+            if let duration, duration > 0 {
+                let closest = jsonArray.min(by: { a, b in
+                    let durA = a["duration"] as? Double ?? 0
+                    let durB = b["duration"] as? Double ?? 0
+                    return abs(durA - duration) < abs(durB - duration)
+                })
+                if let closest { bestResult = closest }
+            }
+
+            if let syncedLrc = bestResult?["syncedLyrics"] as? String, !syncedLrc.isEmpty {
+                return Self.parseLRC(syncedLrc)
+            } else if let plainLrc = bestResult?["plainLyrics"] as? String, !plainLrc.isEmpty {
+                return Self.parsePlainLyrics(plainLrc)
+            }
+        } catch {
+            return nil
+        }
+        return nil
+    }
+
+    private func performLyricsRequest(url: URL) async -> [LyricLine]? {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Songleton macOS/1.0", forHTTPHeaderField: "User-Agent")

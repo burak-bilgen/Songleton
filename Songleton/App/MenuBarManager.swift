@@ -37,9 +37,13 @@ final class MenuBarManager: NSObject {
         volPopover.contentViewController = hostingController
         self.volumePopover = volPopover
 
-        // AppKit appends status items from left to right.
+        // AppKit places status items from right to left as they are created.
+        // To achieve [Song Title] [Next Track ▶] [Previous Track ◀] from left to right:
+        // 1. Create bwdItem (Rightmost)
+        // 2. Create fwdItem (Middle)
+        // 3. Create mainItem (Leftmost)
 
-        // Previous track item.
+        // 1. Previous track item (Rightmost).
         let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
         if let button = bwdItem.button {
             button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: nil)
@@ -49,7 +53,17 @@ final class MenuBarManager: NSObject {
         }
         self.bwdStatusItem = bwdItem
 
-        // Album artwork and track label item.
+        // 2. Next track item (Middle).
+        let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
+        if let button = fwdItem.button {
+            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
+            button.target = self
+            button.action = #selector(fwdTapped)
+            button.toolTip = LocalizationManager.shared.string("menu.next_track")
+        }
+        self.fwdStatusItem = fwdItem
+
+        // 3. Album artwork and track label item (Leftmost).
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabel = MenuBarMainLabelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
         let hosting = NSHostingView(rootView: mainLabel)
@@ -77,16 +91,6 @@ final class MenuBarManager: NSObject {
         }
         mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
-
-        // Next track item.
-        let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
-        if let button = fwdItem.button {
-            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
-            button.target = self
-            button.action = #selector(fwdTapped)
-            button.toolTip = LocalizationManager.shared.string("menu.next_track")
-        }
-        self.fwdStatusItem = fwdItem
 
         // Always ensure menu bar status items remain visible
         setStatusItemsVisible(true)
@@ -144,16 +148,27 @@ final class MenuBarManager: NSObject {
         if isVisible { updateWidth() }
     }
 
+    private var isBlockedByGuide: Bool {
+        let isOnboardingOpen = NSApp.windows.contains(where: { $0.identifier?.rawValue == "onboardingWindow" && $0.isVisible })
+        return isOnboardingOpen || GestureTutorialManager.shared.isPresented
+    }
+
     @objc private func mainItemClicked() {
+        if isBlockedByGuide { return }
+
         if let event = NSApp.currentEvent, (event.type == .rightMouseUp || event.type == .rightMouseDown) {
             closeVolumePopoverImmediately()
 
-            // Option/Alt key held -> Show Context Menu (Settings, Quit)
+            // Option/Alt key held -> Show Context Menu (Settings, Onboarding, Quit)
             if event.modifierFlags.contains(.option) {
                 let menu = NSMenu()
                 let settingsItem = NSMenuItem(title: LocalizationManager.shared.string("menu.settings"), action: #selector(openSettingsMenu), keyEquivalent: ",")
                 settingsItem.target = self
                 menu.addItem(settingsItem)
+
+                let onboardingItem = NSMenuItem(title: LocalizationManager.shared.string("menu.onboarding"), action: #selector(openOnboardingGuide), keyEquivalent: "o")
+                onboardingItem.target = self
+                menu.addItem(onboardingItem)
 
                 menu.addItem(NSMenuItem.separator())
 
@@ -171,19 +186,39 @@ final class MenuBarManager: NSObject {
             AmbientModeManager.shared.show()
             return
         }
-        closeVolumePopoverImmediately()
-        NowPlayingModel.shared.togglePlayPause()
-    }
-
-    @objc private func openAmbientMode() {
+        
+        // Left-Click -> Open Ambient Mode
         closeVolumePopoverImmediately()
         AmbientModeManager.shared.show()
     }
 
     @objc private func openSettingsMenu() {
-        closeVolumePopoverImmediately()
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        if NSApp.windows.contains(where: { $0.title.contains("Songleton") || $0.identifier?.rawValue == "settings" }) {
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let settingsView = SettingsView(settings: SettingsModel.shared)
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 600),
+            styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.identifier = NSUserInterfaceItemIdentifier("settings")
+        window.title = LocalizationManager.shared.string("settings.title")
+        window.contentView = NSHostingView(rootView: settingsView)
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = true
+        window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func openOnboardingGuide() {
+        NotificationCenter.default.post(name: Notification.Name("showOnboardingGuide"), object: nil)
     }
 
     @objc private func quitApp() {
@@ -191,16 +226,19 @@ final class MenuBarManager: NSObject {
     }
 
     @objc private func bwdTapped() {
+        if isBlockedByGuide { return }
         closeVolumePopoverImmediately()
         NowPlayingModel.shared.previousTrack()
     }
 
     @objc private func fwdTapped() {
+        if isBlockedByGuide { return }
         closeVolumePopoverImmediately()
         NowPlayingModel.shared.nextTrack()
     }
 
     func showVolumePopover() {
+        if isBlockedByGuide { return }
         guard let volPopover = volumePopover, mainStatusItem?.button != nil else { return }
         closeWorkItem?.cancel()
 

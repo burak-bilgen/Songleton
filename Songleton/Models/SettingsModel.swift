@@ -97,7 +97,7 @@ final class SettingsModel: ObservableObject {
             "showTrackNotifications": true,
             "horizontalGesturesEnabled": true,
             "verticalGesturesEnabled": true,
-            "edgeGestureHoldDuration": 0.8,
+            "edgeGestureHoldDuration": 0.65,
             "showMenuBarNavButtons": true,
             "lyricsOffset": 0.9
         ])

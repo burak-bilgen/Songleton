@@ -40,7 +40,7 @@ final class SettingsModelTests {
         assertTrue(settings.showTrackNotifications, "showTrackNotifications should default to true")
         assertTrue(settings.horizontalGesturesEnabled, "horizontalGesturesEnabled should default to true")
         assertTrue(settings.verticalGesturesEnabled, "verticalGesturesEnabled should default to true")
-        assertAccuracy(settings.edgeGestureHoldDuration, 0.8, accuracy: 0.001, "edgeGestureHoldDuration should default to 0.8")
+        assertAccuracy(settings.edgeGestureHoldDuration, 0.65, accuracy: 0.001, "edgeGestureHoldDuration should default to 0.65")
         assertAccuracy(settings.lyricsOffset, 0.9, accuracy: 0.001, "lyricsOffset should default to 0.9")
     }
 

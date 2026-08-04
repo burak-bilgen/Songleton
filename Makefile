@@ -34,13 +34,19 @@ build-debug:
 
 ## Reset UserDefaults and TCC permissions, then build and launch.
 fresh: build-debug
-	@echo "Resetting UserDefaults..."
+	@echo "Resetting UserDefaults & Containers..."
+	@pkill -9 -x $(APP_NAME) 2>/dev/null || true
 	@defaults delete $(BUNDLE_ID) 2>/dev/null || true
+	@rm -rf ~/Library/Containers/$(BUNDLE_ID) 2>/dev/null || true
+	@rm -rf ~/Library/Preferences/$(BUNDLE_ID).plist 2>/dev/null || true
+	@rm -rf ~/Library/Caches/$(BUNDLE_ID) 2>/dev/null || true
+	@rm -rf ~/Library/HTTPStorages/$(BUNDLE_ID) 2>/dev/null || true
+	@rm -rf ~/Library/Saved\ Application\ State/$(BUNDLE_ID).savedState 2>/dev/null || true
+	@killall cfprefsd 2>/dev/null || true
 	@echo "Resetting TCC Automation permission..."
 	@tccutil reset AppleEvents $(BUNDLE_ID) 2>/dev/null || true
-	@pkill -x $(APP_NAME) 2>/dev/null || true
-	@sleep 0.3
-	@open "$(DEBUG_APP)"
+	@sleep 0.5
+	@open "$(DEBUG_APP)" --args --reset-onboarding
 
 ## Terminate the running application.
 kill:

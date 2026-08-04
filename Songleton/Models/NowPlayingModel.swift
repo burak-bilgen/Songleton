@@ -150,50 +150,72 @@ final class NowPlayingModel: ObservableObject {
         send { try $0.setRepeatMode(nextMode) }
     }
 
+    var hasAnyPlayerPermission: Bool {
+        permissionStatus(for: "com.spotify.client") == .granted ||
+        permissionStatus(for: "com.apple.Music") == .granted
+    }
+
     func checkAutomationPermission(askUser: Bool) {
-        var allGranted = true
+        var anyGranted = false
         var anyDenied = false
 
         for controller in controllers {
-            let status = AutomationPermission.status(bundleID: controller.bundleID, askUser: askUser)
+            let status = permissionStatus(for: controller.bundleID, askUser: askUser)
             switch status {
-            case noErr: continue
-            case OSStatus(errAEEventNotPermitted):
-                allGranted = false
+            case .granted:
+                anyGranted = true
+            case .denied:
                 anyDenied = true
-            default:
-                allGranted = false
+            case .notDetermined:
+                break
             }
         }
 
-        let result: AutomationStatus = allGranted ? .granted : (anyDenied ? .denied : .notDetermined)
+        let result: AutomationStatus = anyGranted ? .granted : (anyDenied ? .denied : .notDetermined)
         automationStatus = result
-        if result == .granted {
+        if anyGranted {
             UserDefaults.standard.set(true, forKey: "hasGrantedAutomation")
         }
     }
 
     func permissionStatus(for bundleID: String, askUser: Bool = false) -> AutomationStatus {
         let status = AutomationPermission.status(bundleID: bundleID, askUser: askUser)
-        switch status {
-        case noErr: return .granted
-        case OSStatus(errAEEventNotPermitted): return .denied
-        default: return .notDetermined
+        if status == noErr {
+            UserDefaults.standard.set(true, forKey: "permission_\(bundleID)")
+            return .granted
+        } else if status == OSStatus(errAEEventNotPermitted) {
+            UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
+            return .denied
         }
+
+        if UserDefaults.standard.bool(forKey: "permission_\(bundleID)") {
+            return .granted
+        }
+
+        return .notDetermined
     }
 
     func requestPermissionFor(bundleID: String) {
         guard let controller = controllers.first(where: { $0.bundleID == bundleID }) else { return }
-        _ = AutomationPermission.status(bundleID: bundleID, askUser: true)
 
         let src = """
         tell application "\(controller.scriptAppName)"
-            get name
+            get player state
         end tell
         """
         if let script = NSAppleScript(source: src) {
             var errDict: NSDictionary?
             _ = script.executeAndReturnError(&errDict)
+            if let errDict = errDict {
+                let code = errDict[NSAppleScript.errorNumber] as? Int ?? 0
+                if code == -1743 {
+                    UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
+                } else {
+                    UserDefaults.standard.set(true, forKey: "permission_\(bundleID)")
+                }
+            } else {
+                UserDefaults.standard.set(true, forKey: "permission_\(bundleID)")
+            }
         }
 
         checkAutomationPermission(askUser: false)
@@ -206,15 +228,6 @@ final class NowPlayingModel: ObservableObject {
         }
         checkAutomationPermission(askUser: false)
         refresh()
-    }
-
-    func copyTrackInfo() -> String? {
-        guard case .loaded(let info, _) = state else { return nil }
-        let text = info.artist.isEmpty ? info.track : "\(info.artist) - \(info.track)"
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setString(text, forType: .string)
-        return text
     }
 
     func refresh() {

@@ -69,14 +69,38 @@ final class MouseGestureManager: ObservableObject {
     private var volumeGestureWindow: NSPanel?
     private let logger = Logger(subsystem: "bilgenworks.app.Songleton", category: "mouse-gesture")
     private var lastEventLogDate = Date.distantPast
+    private var lastProcessedMoveDate = Date.distantPast
 
-    private init() {}
+    init() {}
+
+    func simulateEdgeGestureProgress(_ progress: CGFloat) {
+        edgeGestureProgress = progress
+    }
+
+    func simulateEdgeGestureBurst() {
+        edgeGestureBurst += 1
+    }
+
+    func simulateEdgeGestureCancelBurst() {
+        edgeGestureCancelBurst += 1
+    }
+
+    func simulateGestureVolume(_ volume: Int) {
+        gestureVolume = volume
+    }
 
     var isAccessibilityTrusted: Bool {
         AXIsProcessTrusted()
     }
 
     func updateMonitoring() {
+        let isOnboardingOpen = NSApp.windows.contains(where: { $0.identifier?.rawValue == "onboardingWindow" && $0.isVisible })
+        if isOnboardingOpen || GestureTutorialManager.shared.isPresented {
+            logger.info("Gesture monitoring suppressed during onboarding or tutorial")
+            stop()
+            return
+        }
+
         let shouldMonitor = SettingsModel.shared.horizontalGesturesEnabled
             || SettingsModel.shared.verticalGesturesEnabled
 
@@ -171,10 +195,6 @@ final class MouseGestureManager: ObservableObject {
     }
 
     fileprivate func handleGlobalMouseLocation(_ location: CGPoint, flags: CGEventFlags, now: Date) {
-        if now.timeIntervalSince(lastEventLogDate) >= 1.0 {
-            lastEventLogDate = now
-            logger.debug("Global mouse move event received")
-        }
         let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
         let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
 
@@ -185,6 +205,18 @@ final class MouseGestureManager: ObservableObject {
         } else if isVolumeGestureActive {
             endVolumeGesture()
         }
+
+        // Throttle edge detection checks to ~60Hz (16ms) to avoid CPU overhead on high DPI mice
+        if now.timeIntervalSince(lastProcessedMoveDate) < 0.016 {
+            return
+        }
+        lastProcessedMoveDate = now
+
+        if now.timeIntervalSince(lastEventLogDate) >= 1.0 {
+            lastEventLogDate = now
+            logger.debug("Global mouse move event received")
+        }
+
         handleMouseLocation(NSPoint(x: location.x, y: location.y), now: now)
     }
 
@@ -245,7 +277,7 @@ final class MouseGestureManager: ObservableObject {
             guard let self, self.activeZone == zone else { return }
             let configuredDuration = SettingsModel.shared.edgeGestureHoldDuration
             let duration = zone == .playPause
-                ? configuredDuration * 0.8
+                ? configuredDuration * 0.70
                 : configuredDuration
             self.edgeGestureDuration = duration
             self.edgeGestureStartedAt = Date()
@@ -395,7 +427,7 @@ final class MouseGestureManager: ObservableObject {
 
     private func updateVolumeGesture(at y: CGFloat) {
         guard isVolumeGestureActive else { return }
-        let delta = Int((volumeGestureStartY - y) / 6.0)
+        let delta = Int((volumeGestureStartY - y) / 5.0)
         let newVolume = min(100, max(0, volumeGestureStartValue + delta))
         guard newVolume != gestureVolume else { return }
         gestureVolume = newVolume

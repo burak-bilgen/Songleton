@@ -20,10 +20,7 @@ struct OnboardingView: View {
 
     enum Step: Int, CaseIterable {
         case welcome = 0
-        case hoverAndTriggers = 1
-        case ambientMode = 2
-        case gestures = 3
-        case permissions = 4
+        case permissions = 1
     }
 
     var body: some View {
@@ -32,7 +29,7 @@ struct OnboardingView: View {
 
             VStack(spacing: 0) {
                 headerView
-                    .padding(.top, 30)
+                    .padding(.top, 10)
                     .padding(.horizontal, 26)
 
                 Spacer(minLength: 10)
@@ -41,15 +38,6 @@ struct OnboardingView: View {
                     switch step {
                     case .welcome:
                         welcomeStepView
-                            .transition(pageTransition)
-                    case .hoverAndTriggers:
-                        hoverStepView
-                            .transition(pageTransition)
-                    case .ambientMode:
-                        ambientStepView
-                            .transition(pageTransition)
-                    case .gestures:
-                        gesturesStepView
                             .transition(pageTransition)
                     case .permissions:
                         permissionsStepView
@@ -122,25 +110,26 @@ struct OnboardingView: View {
     // MARK: - Navigation Header & Indicator
 
     private var headerView: some View {
-        VStack(spacing: 14) {
-            HStack {
+        VStack(spacing: 16) {
+            HStack(alignment: .center, spacing: 12) {
+                // Left Side: Back Button
                 if step != .welcome {
                     Button(action: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                             move(to: Step(rawValue: step.rawValue - 1)!)
                         }
                     }) {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 5) {
                             Image(systemName: "chevron.left")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.system(size: 11, weight: .bold))
                             Text(localization.string("common.back"))
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
                         }
-                        .foregroundStyle(.white.opacity(0.6))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.white.opacity(0.07), in: Capsule())
-                        .overlay(Capsule().stroke(Color.white.opacity(0.08), lineWidth: 1))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Color.white.opacity(0.09), in: Capsule())
+                        .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                     .entrance(0, appeared: appeared, delay: 0)
@@ -148,46 +137,54 @@ struct OnboardingView: View {
 
                 Spacer()
 
-                if step != .permissions {
-                    Button(localization.string("onboarding.skip"), action: onFinish)
-                        .buttonStyle(.plain)
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.4))
+                // Right Side: Prominent Language Selector Menu
+                Menu {
+                    Button(action: {
+                        withAnimation { localization.language = .turkish }
+                    }) {
+                        HStack {
+                            Text("🇹🇷 Türkçe")
+                            if localization.language == .turkish { Image(systemName: "checkmark") }
+                        }
+                    }
+                    Button(action: {
+                        withAnimation { localization.language = .english }
+                    }) {
+                        HStack {
+                            Text("🇬🇧 English")
+                            if localization.language == .english { Image(systemName: "checkmark") }
+                        }
+                    }
+                } label: {
+                    HStack(alignment: .center, spacing: 8) {
+                        Text(languageFlagIcon)
+                            .font(.system(size: 18))
+                        Text(localization.string("tutorial.language_picker_title"))
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(
+                        LinearGradient(
+                            colors: [SongletonTheme.cyan.opacity(0.35), SongletonTheme.violet.opacity(0.35)],
+                            startPoint: .leading, endPoint: .trailing
+                        ),
+                        in: Capsule()
+                    )
+                    .overlay(Capsule().stroke(SongletonTheme.cyan.opacity(0.60), lineWidth: 1.2))
+                    .shadow(color: SongletonTheme.cyan.opacity(0.25), radius: 8)
                 }
-            }
-
-            HStack(spacing: 6) {
-                ForEach(Step.allCases, id: \.rawValue) { s in
-                    progressSegment(for: s)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: step)
-                }
+                .menuStyle(.borderlessButton)
             }
         }
     }
 
-    private func progressSegment(for s: Step) -> some View {
-        let fill: LinearGradient
-        if step.rawValue > s.rawValue {
-            fill = SongletonTheme.accentGradient
-        } else if step.rawValue == s.rawValue {
-            fill = LinearGradient(
-                colors: [SongletonTheme.cyan.opacity(0.85), SongletonTheme.violet.opacity(0.85)],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        } else {
-            fill = LinearGradient(colors: [Color.white.opacity(0.09)], startPoint: .leading, endPoint: .trailing)
+    private var languageFlagIcon: String {
+        switch localization.language {
+        case .turkish: return "🇹🇷"
+        default: return "🇬🇧"
         }
-
-        return Capsule()
-            .fill(fill)
-            .frame(height: 4)
-            .overlay(
-                Capsule().stroke(
-                    step.rawValue == s.rawValue ? SongletonTheme.cyan.opacity(0.35) : Color.clear,
-                    lineWidth: 1
-                )
-            )
     }
 
     // MARK: - Step 1: Welcome
@@ -244,8 +241,8 @@ struct OnboardingView: View {
             .entrance(0, appeared: appeared)
 
             VStack(spacing: 8) {
-                Text(localization.string("onboarding.step_1_title"))
-                    .font(.system(size: 27, weight: .bold, design: .rounded))
+                Text(localization.string("onboarding.screen1_title"))
+                    .font(.system(size: 25, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [.white, SongletonTheme.cyan.opacity(0.95), SongletonTheme.violet.opacity(0.95)],
@@ -254,7 +251,7 @@ struct OnboardingView: View {
                         )
                     )
 
-                Text(localization.string("onboarding.step_1_subtitle"))
+                Text(localization.string("onboarding.screen1_subtitle"))
                     .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.55))
                     .multilineTextAlignment(.center)
@@ -266,206 +263,41 @@ struct OnboardingView: View {
             VStack(spacing: 10) {
                 featureCard(
                     id: 1,
-                    icon: "menubar.rectangle",
+                    icon: "hand.point.up.left.fill",
                     color: SongletonTheme.cyan,
-                    title: localization.string("onboarding.feature_live_title"),
-                    desc: localization.string("onboarding.feature_live_hint")
+                    title: localization.string("onboarding.feature_gestures_title"),
+                    desc: localization.string("onboarding.feature_gestures_desc")
                 )
                 .entrance(2, appeared: appeared)
 
                 featureCard(
                     id: 2,
-                    icon: "sparkles",
+                    icon: "menubar.rectangle",
                     color: SongletonTheme.violet,
-                    title: localization.string("onboarding.feature_lyrics_title"),
-                    desc: localization.string("onboarding.feature_lyrics_hint")
+                    title: localization.string("onboarding.feature_menubar_title"),
+                    desc: localization.string("onboarding.feature_menubar_desc")
                 )
                 .entrance(3, appeared: appeared)
 
                 featureCard(
                     id: 3,
-                    icon: "bolt.horizontal.fill",
+                    icon: "sparkles.tv.fill",
                     color: SongletonTheme.pink,
-                    title: localization.string("onboarding.feature_control_title"),
-                    desc: localization.string("onboarding.feature_control_hint")
+                    title: localization.string("onboarding.feature_ambient_title"),
+                    desc: localization.string("onboarding.feature_ambient_desc")
                 )
                 .entrance(4, appeared: appeared)
             }
 
             actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
-                move(to: .hoverAndTriggers)
+                move(to: .permissions)
             }
             .entrance(5, appeared: appeared)
             .modifier(GlowPulse(pulse: pulseIcon))
         }
     }
 
-    // MARK: - Step 2: Hover Panel & Triggers
-
-    private var hoverStepView: some View {
-        VStack(spacing: 20) {
-            badgeIcon("hand.point.up.left.fill", color: SongletonTheme.cyan)
-                .entrance(0, appeared: appeared)
-
-            VStack(spacing: 6) {
-                Text(localization.string("onboarding.step_2_title"))
-                    .font(.system(size: 21, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                Text(localization.string("onboarding.step_2_subtitle"))
-                    .font(.system(size: 12.5, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .entrance(1, appeared: appeared)
-
-            VStack(spacing: 10) {
-                featureCard(
-                    id: 4,
-                    icon: "computermouse.fill",
-                    color: SongletonTheme.cyan,
-                    title: localization.string("onboarding.right_click_title"),
-                    desc: localization.string("onboarding.right_click_hint")
-                )
-                .entrance(2, appeared: appeared)
-
-                featureCard(
-                    id: 5,
-                    icon: "hand.tap.fill",
-                    color: SongletonTheme.violet,
-                    title: localization.string("onboarding.double_click_title"),
-                    desc: localization.string("onboarding.double_click_hint")
-                )
-                .entrance(3, appeared: appeared)
-
-                featureCard(
-                    id: 6,
-                    icon: "doc.on.doc.fill",
-                    color: SongletonTheme.pink,
-                    title: localization.string("onboarding.tip_copy_title"),
-                    desc: localization.string("onboarding.tip_copy_hint")
-                )
-                .entrance(4, appeared: appeared)
-            }
-
-            actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
-                move(to: .ambientMode)
-            }
-            .entrance(5, appeared: appeared)
-        }
-    }
-
-    // MARK: - Step 3: Ambient Mode & Shortcuts
-
-    private var ambientStepView: some View {
-        VStack(spacing: 18) {
-            badgeIcon("sparkles.tv.fill", color: SongletonTheme.violet)
-                .entrance(0, appeared: appeared)
-
-            VStack(spacing: 4) {
-                Text(localization.string("onboarding.step_3_title"))
-                    .font(.system(size: 21, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                Text(localization.string("onboarding.step_3_subtitle"))
-                    .font(.system(size: 12.5, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .entrance(1, appeared: appeared)
-
-            VStack(spacing: 7) {
-                shortcutRow(keys: [keyCapView("Space", width: 52)], desc: localization.string("shortcut.play_pause"))
-                shortcutRow(keys: [keyCapView("←"), keyCapView("→")], desc: localization.string("shortcut.prev_next_track"))
-                shortcutRow(keys: [keyCapView("↑"), keyCapView("↓")], desc: localization.string("shortcut.volume_control"))
-                shortcutRow(keys: [keyCapView("L")], desc: localization.string("shortcut.toggle_lyrics"))
-                shortcutRow(keys: [keyCapView("T")], desc: localization.string("shortcut.cycle_themes"))
-                shortcutRow(keys: [keyCapView("ESC")], desc: localization.string("shortcut.exit_ambient"))
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(SongletonTheme.card.opacity(0.75))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(
-                        LinearGradient(
-                            colors: [SongletonTheme.violet.opacity(0.22), Color.white.opacity(0.06)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            )
-            .entrance(2, appeared: appeared)
-
-            actionButton(title: localization.string("common.continue"), color: SongletonTheme.violet) {
-                move(to: .gestures)
-            }
-            .entrance(3, appeared: appeared)
-        }
-    }
-
-    // MARK: - Step 4: Screen Edge & Mouse Gestures
-
-    private var gesturesStepView: some View {
-        VStack(spacing: 18) {
-            badgeIcon("hand.raised.fill", color: SongletonTheme.pink)
-                .entrance(0, appeared: appeared)
-
-            VStack(spacing: 4) {
-                Text(localization.string("onboarding.step_4_title"))
-                    .font(.system(size: 21, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                Text(localization.string("onboarding.step_4_subtitle"))
-                    .font(.system(size: 12.5, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .entrance(1, appeared: appeared)
-
-            VStack(spacing: 8) {
-                gestureItem(
-                    icon: "chevron.left",
-                    color: SongletonTheme.cyan,
-                    title: localization.string("gesture.left_action"),
-                    desc: gestureDescription("gesture.left_desc")
-                )
-                gestureItem(
-                    icon: "chevron.right",
-                    color: SongletonTheme.violet,
-                    title: localization.string("gesture.right_action"),
-                    desc: gestureDescription("gesture.right_desc")
-                )
-                gestureItem(
-                    icon: "chevron.up",
-                    color: SongletonTheme.pink,
-                    title: localization.string("gesture.top_action"),
-                    desc: gestureDescription("gesture.top_desc")
-                )
-                gestureItem(
-                    icon: "speaker.wave.2.fill",
-                    color: SongletonTheme.cyan,
-                    title: localization.string("gesture.volume_action"),
-                    desc: localization.string("gesture.volume_desc")
-                )
-            }
-            .entrance(2, appeared: appeared)
-
-            actionButton(title: localization.string("common.continue"), color: SongletonTheme.pink) {
-                move(to: .permissions)
-            }
-            .entrance(3, appeared: appeared)
-        }
-    }
-
-    // MARK: - Step 5: Permissions & Launch
+    // MARK: - Step 2: Permissions & Launch
 
     private var permissionsStepView: some View {
         VStack(spacing: 20) {
@@ -473,11 +305,11 @@ struct OnboardingView: View {
                 .entrance(0, appeared: appeared)
 
             VStack(spacing: 6) {
-                Text(localization.string("onboarding.step_5_title"))
-                    .font(.system(size: 21, weight: .bold, design: .rounded))
+                Text(localization.string("onboarding.screen2_title"))
+                    .font(.system(size: 23, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text(localization.string("onboarding.step_5_subtitle"))
-                    .font(.system(size: 12.5, weight: .medium, design: .rounded))
+                Text(localization.string("onboarding.screen2_subtitle"))
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.55))
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -493,13 +325,20 @@ struct OnboardingView: View {
             .entrance(2, appeared: appeared)
 
             VStack(spacing: 10) {
-                actionButton(title: localization.string("common.start"), color: SongletonTheme.cyan, action: onFinish)
+                let isGranted = model.automationStatus == .granted
+                actionButton(
+                    title: localization.string("common.start"),
+                    color: isGranted ? SongletonTheme.cyan : .gray,
+                    action: onFinish
+                )
+                .disabled(!isGranted)
+                .opacity(isGranted ? 1.0 : 0.45)
 
-                if model.automationStatus != .granted {
+                if !isGranted {
                     Button(action: model.requestPermissionByScript) {
                         Text(localization.string("permission.request_all"))
                             .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.4))
+                            .foregroundStyle(SongletonTheme.cyan)
                     }
                     .buttonStyle(.plain)
                 }
@@ -814,20 +653,34 @@ struct OnboardingView: View {
 
     private func actionButton(title: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .background(
-                    LinearGradient(
-                        colors: [color, color.opacity(0.78)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-                )
-                .foregroundStyle(.black.opacity(0.88))
-                .shadow(color: color.opacity(0.28), radius: 8, y: 4)
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [color, color.opacity(0.85)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.white.opacity(0.50), .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+
+                Text(title)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(.black.opacity(0.88))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .shadow(color: color.opacity(0.35), radius: 10, y: 5)
         }
         .buttonStyle(.plain)
     }
@@ -890,14 +743,14 @@ private struct GlowPulse: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .overlay(
+            .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(SongletonTheme.cyan.opacity(pulse ? 0.55 : 0.15), lineWidth: 1.5)
-                    .scaleEffect(pulse ? 1.03 : 0.99)
-                    .blur(radius: 1)
+                    .fill(SongletonTheme.cyan)
+                    .blur(radius: pulse ? 18 : 6)
+                    .opacity(pulse ? 0.50 : 0.15)
+                    .scaleEffect(pulse ? 1.02 : 0.98)
             )
-            .shadow(color: SongletonTheme.cyan.opacity(pulse ? 0.4 : 0.15), radius: pulse ? 12 : 6, y: 0)
-            .animation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true), value: pulse)
+            .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: pulse)
     }
 }
 
