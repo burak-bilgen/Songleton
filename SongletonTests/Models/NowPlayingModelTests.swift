@@ -31,8 +31,8 @@ final class NowPlayingModelTests {
         settings.showArtistInMenuBar = false
         assertFalse(SettingsModel.shared.showArtistInMenuBar)
 
-        // Reset
-        settings.showArtistInMenuBar = true
+        // Reset to the app default.
+        settings.showArtistInMenuBar = false
     }
 
     func testLyricsOffsetIntegration() async {

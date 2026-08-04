@@ -173,7 +173,8 @@ final class MenuBarManager: NSObject {
 
     private var isBlockedByGuide: Bool {
         let isOnboardingOpen = NSApp.windows.contains(where: { $0.identifier?.rawValue == "onboardingWindow" && $0.isVisible })
-        return isOnboardingOpen || GestureTutorialManager.shared.isPresented
+        let isSetupRecoveryOpen = NSApp.windows.contains(where: { $0.identifier?.rawValue == "setupRecoveryWindow" && $0.isVisible })
+        return isOnboardingOpen || isSetupRecoveryOpen || GestureTutorialManager.shared.isPresented
     }
 
     @objc private func mainItemClicked() {

@@ -104,7 +104,8 @@ final class MouseGestureManager: ObservableObject {
             return
         }
         let isOnboardingOpen = NSApp.windows.contains(where: { $0.identifier?.rawValue == "onboardingWindow" && $0.isVisible })
-        if isOnboardingOpen || GestureTutorialManager.shared.isPresented || !GestureTutorialManager.shared.hasCompletedTutorial {
+        let isSetupRecoveryOpen = NSApp.windows.contains(where: { $0.identifier?.rawValue == "setupRecoveryWindow" && $0.isVisible })
+        if isOnboardingOpen || isSetupRecoveryOpen || GestureTutorialManager.shared.isPresented || !GestureTutorialManager.shared.hasCompletedTutorial {
             logger.info("Gesture monitoring suppressed until the gesture tutorial is resolved")
             stop()
             return
@@ -420,15 +421,30 @@ final class MouseGestureManager: ObservableObject {
 
     private func edgeZone(at location: NSPoint) -> EdgeZone? {
         guard let screen = NSScreen.screens.first(where: { $0.frame.contains(location) }) else { return nil }
-        let frame = screen.frame
-        let settings = SettingsModel.shared
+        return Self.edgeZone(
+            at: location,
+            in: screen.frame,
+            horizontalEnabled: SettingsModel.shared.horizontalGesturesEnabled,
+            verticalEnabled: SettingsModel.shared.verticalGesturesEnabled
+        )
+    }
 
-        if settings.horizontalGesturesEnabled {
-            if location.x <= frame.minX + 4 { return .previous }
-            if location.x >= frame.maxX - 4 { return .next }
+    /// Event-tap coordinates use a top-down global Y axis in the live gesture
+    /// path, so the visual top edge maps to the screen frame's minimum Y here.
+    /// Kept pure so this real-device contract stays covered by tests.
+    static func edgeZone(
+        at location: NSPoint,
+        in frame: NSRect,
+        horizontalEnabled: Bool,
+        verticalEnabled: Bool,
+        edgeInset: CGFloat = 4
+    ) -> EdgeZone? {
+        if horizontalEnabled {
+            if location.x <= frame.minX + edgeInset { return .previous }
+            if location.x >= frame.maxX - edgeInset { return .next }
         }
-        if settings.verticalGesturesEnabled {
-            if location.y <= frame.minY + 4 { return .playPause }
+        if verticalEnabled, location.y <= frame.minY + edgeInset {
+            return .playPause
         }
         return nil
     }

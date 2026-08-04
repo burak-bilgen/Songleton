@@ -32,11 +32,7 @@ struct TutorialPromptView: View {
                         .frame(width: 68, height: 68)
                         .overlay(Circle().stroke(SongletonTheme.cyan.opacity(0.6), lineWidth: 1.5))
 
-                    Image(systemName: "hand.point.up.left.fill")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(
-                            LinearGradient(colors: [SongletonTheme.cyan, .white], startPoint: .top, endPoint: .bottom)
-                        )
+                    SongletonBrandMark(size: 42)
                 }
 
                 // Titles

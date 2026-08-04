@@ -7,8 +7,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     static private(set) var shared: AppDelegate?
 
     private var onboardingWindow: NSWindow?
+    private var setupRecoveryWindow: NSWindow?
     private var isFinishingOnboarding = false
-    private var isAbortingOnboarding = false
+    private var isClosingSetupRecovery = false
 
     override init() {
         super.init()
@@ -45,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if forceReset {
             UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
             UserDefaults.standard.removeObject(forKey: "hasCompletedGestureTutorial")
+            UserDefaults.standard.removeObject(forKey: "gestureTutorialResolution")
         }
 
         let hasOnboarded = forceReset ? false : UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
@@ -74,7 +76,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func centerWindow(_ window: NSWindow) {
-        guard let screen = window.screen ?? NSScreen.main ?? NSScreen.screens.first else {
+        let pointerLocation = NSEvent.mouseLocation
+        let pointerScreen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
+        guard let screen = window.screen ?? pointerScreen ?? NSScreen.main ?? NSScreen.screens.first else {
             window.center()
             return
         }
@@ -89,7 +93,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         onboardingWindow != nil
     }
 
+    var isSetupRecoveryWindowOpen: Bool {
+        setupRecoveryWindow != nil
+    }
+
     func showOnboarding() {
+        closeSetupRecoveryWindow()
         if let window = onboardingWindow {
             NSApp.setActivationPolicy(.regular)
             centerWindow(window)
@@ -152,6 +161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func finishOnboarding() {
         isFinishingOnboarding = true
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        closeSetupRecoveryWindow()
 
         if NowPlayingModel.shared.automationStatus == .granted {
             UserDefaults.standard.set(true, forKey: "hasGrantedAutomation")
@@ -174,21 +184,74 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             return
         }
 
-        isAbortingOnboarding = true
-        NSApp.terminate(nil)
+        onboardingWindow?.close()
     }
 
-    func windowWillClose(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow, window === onboardingWindow else { return }
-        onboardingWindow = nil
-
-        if isAbortingOnboarding {
-            isAbortingOnboarding = false
+    private func showSetupRecovery() {
+        if let window = setupRecoveryWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
             return
         }
 
+        let content = SetupRecoveryView(
+            onContinue: { [weak self] in self?.showOnboarding() },
+            onQuit: { NSApp.terminate(nil) }
+        )
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 360),
+            styleMask: [.titled, .closable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.identifier = NSUserInterfaceItemIdentifier("setupRecoveryWindow")
+        window.title = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Songleton"
+        window.contentView = NSHostingView(rootView: content)
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = true
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        setupRecoveryWindow = window
+
+        NSApp.setActivationPolicy(.regular)
+        centerWindow(window)
+        window.alphaValue = 0
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.25
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().alphaValue = 1
+        }
+        MouseGestureManager.shared.updateMonitoring()
+    }
+
+    private func closeSetupRecoveryWindow() {
+        guard let window = setupRecoveryWindow else { return }
+        isClosingSetupRecovery = true
+        window.close()
+        setupRecoveryWindow = nil
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow else { return }
+
+        if window === setupRecoveryWindow {
+            setupRecoveryWindow = nil
+            if isClosingSetupRecovery {
+                isClosingSetupRecovery = false
+            } else {
+                NSApp.terminate(nil)
+            }
+            return
+        }
+
+        guard window === onboardingWindow else { return }
+        onboardingWindow = nil
+
         if !isFinishingOnboarding && !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
-            NSApp.terminate(nil)
+            showSetupRecovery()
             return
         }
 

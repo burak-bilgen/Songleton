@@ -7,10 +7,12 @@ final class TutorialAudioService {
 
     private var player: AVAudioPlayer?
     private var preparedPlayers: [Int: AVAudioPlayer] = [:]
-    private var fadeTask: Task<Void, Never>?
+    private var transitionTask: Task<Void, Never>?
+    private var volumeTask: Task<Void, Never>?
     private var notificationTokens: [NSObjectProtocol] = []
     private var sessionIsActive = false
     private var wasPlayingBeforeInterruption = false
+    private var sessionGeneration = 0
     private(set) var currentTrack: Int?
     private(set) var targetVolume: Float = 0.08
 
@@ -57,6 +59,7 @@ final class TutorialAudioService {
     }
 
     func beginSession() {
+        sessionGeneration += 1
         sessionIsActive = true
         wasPlayingBeforeInterruption = false
         preparePlayers()
@@ -97,13 +100,16 @@ final class TutorialAudioService {
     func setDemoVolume(_ volume: Int) {
         let clamped = Float(min(max(volume, 0), 20)) / 100
         targetVolume = clamped
+        volumeTask?.cancel()
         player?.setVolume(clamped, fadeDuration: 0.05)
     }
 
     func stop() {
+        sessionGeneration += 1
         sessionIsActive = false
         wasPlayingBeforeInterruption = false
-        fadeTask?.cancel()
+        transitionTask?.cancel()
+        volumeTask?.cancel()
         let cachedPlayers = Array(preparedPlayers.values)
         preparedPlayers.removeAll()
         guard let player else {
@@ -115,9 +121,10 @@ final class TutorialAudioService {
         let startingVolume = player.volume
         self.player = nil
         currentTrack = nil
-        fadeTask = Task { @MainActor [weak self, player] in
+        let generation = sessionGeneration
+        volumeTask = Task { @MainActor [weak self, player] in
             await self?.animateVolume(on: player, from: startingVolume, to: 0, duration: 0.45)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, self?.sessionGeneration == generation else { return }
             player.stop()
             cachedPlayers.filter { $0 !== player }.forEach { $0.stop() }
         }
@@ -161,7 +168,8 @@ final class TutorialAudioService {
             return
         }
 
-        fadeTask?.cancel()
+        transitionTask?.cancel()
+        volumeTask?.cancel()
         let oldPlayer = player
         let oldVolume = oldPlayer?.volume ?? 0
 
@@ -183,7 +191,8 @@ final class TutorialAudioService {
             currentTrack = track
 
             let targetVolume = self.targetVolume
-            fadeTask = Task { @MainActor [weak self, oldPlayer, newPlayer] in
+            let generation = sessionGeneration
+            transitionTask = Task { @MainActor [weak self, oldPlayer, newPlayer] in
                 await self?.animateCrossfade(
                     from: oldPlayer,
                     oldVolume: oldVolume,
@@ -191,7 +200,7 @@ final class TutorialAudioService {
                     newVolume: targetVolume,
                     duration: fadeIn ? 1.35 : 0.5
                 )
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, self?.sessionGeneration == generation else { return }
                 oldPlayer?.stop()
             }
         } catch {
@@ -200,9 +209,11 @@ final class TutorialAudioService {
     }
 
     private func fade(_ player: AVAudioPlayer, from: Float, to: Float, duration: Double) {
-        fadeTask?.cancel()
-        fadeTask = Task { @MainActor [weak self, weak player] in
+        volumeTask?.cancel()
+        let generation = sessionGeneration
+        volumeTask = Task { @MainActor [weak self, weak player] in
             await self?.animateVolume(on: player, from: from, to: to, duration: duration)
+            guard !Task.isCancelled, self?.sessionGeneration == generation else { return }
         }
     }
 

@@ -5,10 +5,9 @@ enum TutorialStage: Int, CaseIterable, Identifiable {
     case cancelDemo = 0
     case rightEdgeSkip = 1
     case topEdgePlayPause = 2
-    case volumeKeyboard = 3
-    case volumeMouse = 4
-    case hoverMenu = 5
-    case ambientMode = 6
+    case volumeControl = 3
+    case hoverMenu = 4
+    case ambientMode = 5
 
     var id: Int { rawValue }
 }
@@ -16,19 +15,17 @@ enum TutorialStage: Int, CaseIterable, Identifiable {
 struct GestureTutorialView: View {
     @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    var onClose: () -> Void
+    var onComplete: () -> Void
+    var onDismiss: () -> Void
 
     @State private var currentStage: TutorialStage = .cancelDemo
     @State private var cursorPosition: CGPoint = .zero
-    @State private var isBothButtonsPressed = false
-    @State private var isKeyboardPressed = false
-    @State private var showVolumeHUD = false
     @State private var isStageAnimationRunning = true
     @State private var isPlaybackPaused = false
     @State private var isPlaybackResuming = false
-    @State private var isDummyMenuHovered = false
-    @State private var isDummyRightClicking = false
-    @State private var showDummyAmbient = false
+    @State private var isHoverPanelVisible = false
+    @State private var isTrackRightClicking = false
+    @State private var isAmbientPreviewVisible = false
     @State private var animationTask: Task<Void, Never>? = nil
 
     // Mock MouseGestureManager for real overlay component
@@ -51,37 +48,49 @@ struct GestureTutorialView: View {
 
                 // 2. Animated Demonstration Canvas
                 ZStack {
-                    // Hotspot Screen Edge Guides
-                    edgeHotspotIndicators(size: geo.size)
+                    if isEdgeGestureStage {
+                        edgeHotspotIndicators(size: geo.size)
+                        edgeGestureStatus
+                            .position(x: geo.size.width / 2, y: geo.size.height / 2 - 115)
+                            .zIndex(5)
+                    }
 
-                    // Real App Volume HUD View & Control Visuals (CENTERED TOGETHER IN SCREEN MIDDLE)
-                    if currentStage == .volumeKeyboard || currentStage == .volumeMouse {
-                        HStack(spacing: 36) {
-                            if currentStage == .volumeKeyboard {
-                                animatedKeyboardOverlay
-                            } else {
-                                LargeMouseDiagramView(isBothPressed: isBothButtonsPressed)
-                            }
-
-                            VolumeGestureHUDView(manager: mockManager, visualMaximum: 20)
-                        }
-                        .position(
-                            x: geo.size.width / 2,
-                            y: geo.size.height / 2 - 190
-                        )
-                        .zIndex(20)
-                        .transition(.scale(scale: 0.95).combined(with: .opacity))
+                    if currentStage == .volumeControl {
+                        volumeControlCanvas
+                            .position(x: geo.size.width / 2, y: geo.size.height / 2 - 145)
+                            .zIndex(20)
+                            .transition(.scale(scale: 0.95).combined(with: .opacity))
                     }
 
                     if currentStage == .hoverMenu || currentStage == .ambientMode {
-                        dummyMenuBarView
+                        tutorialMenuBarPreview
                             .position(x: geo.size.width / 2, y: 54)
                             .zIndex(25)
                     }
 
-                    if showDummyAmbient {
-                        dummyAmbientView
-                            .position(x: geo.size.width / 2, y: geo.size.height / 2 - 70)
+                    if currentStage == .hoverMenu && isHoverPanelVisible {
+                        TutorialHoverPanelPreview()
+                            .scaleEffect(0.88)
+                            .allowsHitTesting(false)
+                            .position(x: geo.size.width / 2, y: tutorialPreviewCenterY(for: geo.size))
+                            .zIndex(24)
+                            .transition(.scale(scale: 0.92).combined(with: .opacity))
+                    }
+
+                    if isAmbientPreviewVisible {
+                        TutorialAmbientPreview()
+                            .frame(
+                                width: min(680, geo.size.width - 96),
+                                height: min(410, max(280, geo.size.height * 0.43))
+                            )
+                            .allowsHitTesting(false)
+                            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                            )
+                            .shadow(color: .black.opacity(0.60), radius: 30, y: 16)
+                            .position(x: geo.size.width / 2, y: tutorialPreviewCenterY(for: geo.size))
                             .zIndex(24)
                     }
 
@@ -94,10 +103,7 @@ struct GestureTutorialView: View {
                         .position(edgeOverlayPosition(for: currentStage, size: geo.size))
                     }
 
-                    // Animated Vector Mouse Cursor (Visible in edge stages and volumeKeyboard)
-                    if currentStage != .volumeMouse {
-                        animatedMouseCursor(size: geo.size)
-                    }
+                    animatedMouseCursor(size: geo.size)
 
                     if currentStage == .topEdgePlayPause && isPlaybackPaused {
                         Label(localization.string("tutorial.playback_paused"), systemImage: "pause.fill")
@@ -122,22 +128,7 @@ struct GestureTutorialView: View {
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
 
-                // 3. Header and centered control panel
-                VStack {
-                    topBarView
-                        .padding(.horizontal, 36)
-                        .padding(.top, 28)
-
-                    Spacer()
-
-                    stageControlCard(size: geo.size)
-                        .offset(y: currentStage.rawValue >= TutorialStage.volumeKeyboard.rawValue
-                            ? geo.size.height * 0.15
-                            : 0)
-                        .zIndex(10)
-
-                    Spacer()
-                }
+                tutorialChrome(size: geo.size)
             }
             .onAppear {
                 cursorPosition = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
@@ -151,193 +142,99 @@ struct GestureTutorialView: View {
         }
     }
 
-    // MARK: - Large Animated Keyboard Cap Overlay
-
-    private var animatedKeyboardOverlay: some View {
-        VStack(spacing: 14) {
-            Text(localization.string("tutorial.volume_keyboard_header"))
-                .font(.system(size: 15, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
-
-            HStack(spacing: 16) {
-                keyCapView(symbol: "⌘", label: "Command", isPressed: true)
-                Text("+")
-                    .font(.system(size: 20, weight: .black, design: .rounded))
-                    .foregroundStyle(SongletonTheme.cyan)
-                keyCapView(symbol: "⌥", label: "Option", isPressed: true)
-            }
-
-            HStack(spacing: 8) {
-                instructionStep(number: "1", text: localization.string("tutorial.keyboard_step_one"))
-                Image(systemName: "arrow.right")
-                    .foregroundStyle(.white.opacity(0.45))
-                instructionStep(number: "2", text: localization.string("tutorial.keyboard_step_two"))
-            }
-
-            Text(localization.string("tutorial.keyboard_drag_hint"))
-                .font(.system(size: 13, weight: .bold, design: .rounded))
-                .foregroundStyle(SongletonTheme.cyan)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(Color.black.opacity(0.7), in: Capsule())
-                .overlay(Capsule().stroke(SongletonTheme.cyan.opacity(0.6), lineWidth: 1))
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 18)
-        .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(SongletonTheme.cyan.opacity(0.60), lineWidth: 1.5))
-        .shadow(color: SongletonTheme.cyan.opacity(0.40), radius: 24)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(localization.string("tutorial.volume_keyboard_desc"))
+    private var usesBottomAnchoredControls: Bool {
+        currentStage == .hoverMenu || currentStage == .ambientMode
     }
 
-    private func keyCapView(symbol: String, label: String, isPressed: Bool) -> some View {
-        VStack(spacing: 3) {
-            Text(symbol)
-                .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(isPressed ? SongletonTheme.cyan : .white)
-
-            Text(label)
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundStyle(isPressed ? .white : .white.opacity(0.6))
-        }
-        .frame(width: 82, height: 64)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(isPressed ? SongletonTheme.cyan.opacity(0.35) : Color.white.opacity(0.12))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(isPressed ? SongletonTheme.cyan : Color.white.opacity(0.2), lineWidth: 1.5)
-        )
-        .shadow(color: isPressed ? SongletonTheme.cyan.opacity(0.5) : .clear, radius: 12)
+    private func tutorialPreviewCenterY(for size: CGSize) -> CGFloat {
+        min(size.height * 0.34, 330)
     }
 
-    private func instructionStep(number: String, text: String) -> some View {
-        HStack(spacing: 6) {
-            Text(number)
-                .font(.system(size: 11, weight: .black, design: .rounded))
-                .frame(width: 20, height: 20)
-                .background(SongletonTheme.cyan, in: Circle())
-                .foregroundStyle(.black)
-            Text(text)
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.85))
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 7)
-        .background(Color.white.opacity(0.07), in: Capsule())
-    }
+    @ViewBuilder
+    private func tutorialChrome(size: CGSize) -> some View {
+        if usesBottomAnchoredControls {
+            VStack(spacing: 0) {
+                topBarView
+                    .padding(.horizontal, 36)
+                    .padding(.top, 28)
 
-    private var dummyMenuBarView: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 10) {
-                Image(systemName: "forward.fill")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(SongletonTheme.cyan)
-                    .frame(width: 24, height: 24)
-                    .background(Color.white.opacity(0.08), in: Circle())
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Midnight Drive")
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                    Text("Neon Coast")
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.5))
-                }
-                Image(systemName: "backward.fill")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(SongletonTheme.cyan)
-                    .frame(width: 24, height: 24)
-                    .background(Color.white.opacity(0.08), in: Circle())
+                Spacer(minLength: 0)
+
+                stageControlCard(size: size)
+                    .padding(.horizontal, 28)
+                    .padding(.bottom, max(34, size.height * 0.055))
+                    .zIndex(30)
             }
-            .padding(.horizontal, 12)
-            .frame(height: 42)
-            .background(Color.black.opacity(0.86), in: Capsule())
-            .overlay(Capsule().stroke(isDummyRightClicking ? SongletonTheme.pink : SongletonTheme.cyan.opacity(0.6), lineWidth: 1.5))
+        } else {
+            VStack {
+                topBarView
+                    .padding(.horizontal, 36)
+                    .padding(.top, 28)
 
-            HStack(spacing: 18) {
-                Label(localization.string("tutorial.next_track_hint"), systemImage: "forward.fill")
-                Label(localization.string("tutorial.track_click_hint"), systemImage: "playpause.fill")
-                Label(localization.string("tutorial.previous_track_hint"), systemImage: "backward.fill")
-            }
-            .font(.system(size: 9, weight: .bold, design: .rounded))
-            .foregroundStyle(.white.opacity(0.82))
-            .padding(.top, 9)
+                Spacer()
 
-            if isDummyMenuHovered && !showDummyAmbient {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Midnight Drive")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                    Text("Neon Coast  •  Tutorial preview")
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.5))
-                    Divider().overlay(Color.white.opacity(0.12))
-                    HStack(spacing: 14) {
-                        Image(systemName: "backward.fill")
-                        Image(systemName: "play.fill")
-                        Image(systemName: "forward.fill")
-                        Image(systemName: "waveform")
-                    }
-                    .foregroundStyle(SongletonTheme.cyan)
-                }
-                .padding(14)
-                .frame(width: 220, alignment: .leading)
-                .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(SongletonTheme.cyan.opacity(0.45), lineWidth: 1))
-                .shadow(color: .black.opacity(0.5), radius: 18, y: 8)
-                .transition(.move(edge: .top).combined(with: .opacity))
+                stageControlCard(size: size)
+                    .zIndex(30)
+
+                Spacer()
             }
         }
-        .animation(.spring(response: 0.45, dampingFraction: 0.82), value: isDummyMenuHovered)
-        .animation(.easeInOut(duration: 0.3), value: isDummyRightClicking)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(localization.string("tutorial.hover_dummy_accessibility"))
     }
 
-    private var dummyAmbientView: some View {
-        VStack(spacing: 16) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [SongletonTheme.violet, SongletonTheme.cyan.opacity(0.8), .black],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 190, height: 190)
-                    .overlay(
-                        VStack(spacing: 8) {
-                            Image(systemName: "waveform")
-                                .font(.system(size: 42, weight: .bold))
-                            Text("AMBIENT")
-                                .font(.system(size: 12, weight: .black, design: .monospaced))
-                        }
-                        .foregroundStyle(.white.opacity(0.9))
-                    )
-                    .shadow(color: SongletonTheme.violet.opacity(0.45), radius: 28)
-            }
+    private var volumeControlCanvas: some View {
+        HStack(spacing: 28) {
+            VStack(alignment: .leading, spacing: 14) {
+                Label(localization.string("tutorial.volume_control_header"), systemImage: "speaker.wave.2.fill")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
 
-            VStack(spacing: 4) {
-                Text("Midnight Drive")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                Text("Neon Coast")
+                Text(localization.string("tutorial.volume_control_desc"))
                     .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.70))
+                    .frame(width: 250, alignment: .leading)
+
+                HStack(spacing: 8) {
+                    tutorialInputPill(symbol: "⌘", label: "Command")
+                    tutorialInputPill(symbol: "⌥", label: "Option")
+                    Image(systemName: "arrow.up.and.down")
+                        .foregroundStyle(SongletonTheme.cyan)
+                    Text(localization.string("tutorial.volume_drag_short"))
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+
+                Label(localization.string("tutorial.volume_mouse_alternative"), systemImage: "computermouse.fill")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.58))
-                Text("City lights blur into the night...")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(SongletonTheme.cyan)
-                    .padding(.top, 4)
             }
+
+            VolumeGestureHUDView(manager: mockManager, visualMaximum: 20)
+                .shadow(color: SongletonTheme.cyan.opacity(0.35), radius: 20)
         }
-        .padding(28)
-        .frame(width: 360)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).stroke(SongletonTheme.cyan.opacity(0.45), lineWidth: 1.5))
-        .shadow(color: .black.opacity(0.6), radius: 32, y: 16)
-        .transition(.scale(scale: 0.85).combined(with: .opacity))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(localization.string("tutorial.ambient_dummy_accessibility"))
+        .padding(24)
+        .background(SongletonTheme.card.opacity(0.90), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(SongletonTheme.cyan.opacity(0.45), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.5), radius: 24, y: 12)
+    }
+
+    private func tutorialInputPill(symbol: String, label: String) -> some View {
+        VStack(spacing: 2) {
+            Text(symbol)
+                .font(.system(size: 20, weight: .bold))
+            Text(label)
+                .font(.system(size: 8, weight: .semibold, design: .rounded))
+        }
+        .foregroundStyle(SongletonTheme.cyan)
+        .frame(width: 58, height: 46)
+        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.white.opacity(0.14), lineWidth: 1))
+    }
+
+    private var tutorialMenuBarPreview: some View {
+        TutorialMenuBarPreview(isRightClicking: isTrackRightClicking)
     }
 
     // MARK: - Zone Mapping for Real App Overlay
@@ -347,7 +244,54 @@ struct GestureTutorialView: View {
         case .cancelDemo: return .previous
         case .rightEdgeSkip: return .next
         case .topEdgePlayPause: return .playPause
-        case .volumeKeyboard, .volumeMouse, .hoverMenu, .ambientMode: return .next
+        case .volumeControl, .hoverMenu, .ambientMode: return .next
+        }
+    }
+
+    private var isEdgeGestureStage: Bool {
+        currentStage == .cancelDemo
+            || currentStage == .rightEdgeSkip
+            || currentStage == .topEdgePlayPause
+    }
+
+    private var edgeGestureStatus: some View {
+        HStack(spacing: 10) {
+            Image(systemName: edgeStatusIcon)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(SongletonTheme.cyan)
+                .frame(width: 30, height: 30)
+                .background(SongletonTheme.cyan.opacity(0.14), in: Circle())
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(localization.string("tutorial.edge_gesture_live"))
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundStyle(SongletonTheme.cyan)
+                Text(edgeStatusText)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.88))
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.black.opacity(0.72), in: Capsule())
+        .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1))
+    }
+
+    private var edgeStatusIcon: String {
+        switch currentStage {
+        case .cancelDemo: "arrow.left"
+        case .rightEdgeSkip: "arrow.right"
+        case .topEdgePlayPause: "arrow.up"
+        case .volumeControl, .hoverMenu, .ambientMode: "cursorarrow.rays"
+        }
+    }
+
+    private var edgeStatusText: String {
+        switch currentStage {
+        case .cancelDemo: localization.string("tutorial.edge_status_cancel")
+        case .rightEdgeSkip: localization.string("tutorial.edge_status_next")
+        case .topEdgePlayPause: localization.string("tutorial.edge_status_playpause")
+        case .volumeControl, .hoverMenu, .ambientMode: ""
         }
     }
 
@@ -359,7 +303,7 @@ struct GestureTutorialView: View {
             return CGPoint(x: size.width - 56, y: size.height / 2)
         case .topEdgePlayPause:
             return CGPoint(x: size.width / 2, y: 56)
-        case .volumeKeyboard, .volumeMouse, .hoverMenu, .ambientMode:
+        case .volumeControl, .hoverMenu, .ambientMode:
             return CGPoint(x: size.width - 56, y: size.height / 2)
         }
     }
@@ -394,25 +338,10 @@ struct GestureTutorialView: View {
     // MARK: - Animated Mouse Cursor Element
 
     private func animatedMouseCursor(size: CGSize) -> some View {
-        ZStack(alignment: .topLeading) {
-            Image(systemName: "cursorarrow.rays")
-                .font(.system(size: 32, weight: .bold))
-                .foregroundStyle(
-                    isBothButtonsPressed
-                        ? LinearGradient(colors: [.orange, .yellow], startPoint: .top, endPoint: .bottom)
-                        : LinearGradient(colors: [.white, Color(white: 0.88)], startPoint: .top, endPoint: .bottom)
-                )
-                .shadow(color: .black.opacity(0.7), radius: 8, x: 2, y: 4)
-
-            if isBothButtonsPressed {
-                HStack(spacing: 3) {
-                    Circle().fill(.orange).frame(width: 8, height: 8)
-                    Circle().fill(.yellow).frame(width: 8, height: 8)
-                }
-                .offset(x: 20, y: -4)
-                .shadow(color: .orange.opacity(0.6), radius: 6)
-            }
-        }
+        Image(systemName: "cursorarrow.rays")
+            .font(.system(size: 32, weight: .bold))
+            .foregroundStyle(LinearGradient(colors: [.white, Color(white: 0.88)], startPoint: .top, endPoint: .bottom))
+            .shadow(color: .black.opacity(0.7), radius: 8, x: 2, y: 4)
         .position(cursorPosition)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.75), value: cursorPosition)
     }
@@ -433,7 +362,7 @@ struct GestureTutorialView: View {
             Spacer()
 
             Button {
-                onClose()
+                onDismiss()
             } label: {
                 HStack(spacing: 6) {
                     Text("ESC")
@@ -459,81 +388,43 @@ struct GestureTutorialView: View {
     // MARK: - Stage Control Card Panel
 
     private func stageControlCard(size: CGSize) -> some View {
-        VStack(spacing: 18) {
-            HStack(spacing: 16) {
-                Button {
-                    if let previous = TutorialStage(rawValue: currentStage.rawValue - 1) {
-                        switchStage(to: previous, size: size)
-                    }
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .bold))
-                        .frame(width: 46, height: 46)
-                        .background(Color.white.opacity(0.10), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .disabled(isStageAnimationRunning || currentStage == .cancelDemo)
-                .opacity(currentStage == .cancelDemo ? 0.3 : 1)
-                .accessibilityLabel(localization.string("tutorial.previous_step"))
-
-                VStack(spacing: 8) {
-                    Text("\(localization.string("tutorial.step_label")) \(currentStage.rawValue + 1) / \(TutorialStage.allCases.count)")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(SongletonTheme.cyan)
-
-                    Text(String(stageTitle(currentStage).dropFirst(3)))
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-
-                    ProgressView(value: Double(currentStage.rawValue + 1), total: Double(TutorialStage.allCases.count))
-                        .tint(SongletonTheme.cyan)
-                        .frame(maxWidth: 260)
-                }
-                .frame(maxWidth: .infinity)
-
-                Button {
-                    if let next = TutorialStage(rawValue: currentStage.rawValue + 1) {
-                        switchStage(to: next, size: size)
-                    }
-                } label: {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 16, weight: .bold))
-                        .frame(width: 46, height: 46)
-                        .background(Color.white.opacity(0.10), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .disabled(isStageAnimationRunning || currentStage == .volumeMouse)
-                .opacity(currentStage == .volumeMouse ? 0.3 : 1)
-                .accessibilityLabel(localization.string("tutorial.next_step"))
+        VStack(spacing: 16) {
+            HStack {
+                Text("\(localization.string("tutorial.step_label")) \(currentStage.rawValue + 1) / \(TutorialStage.allCases.count)")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(SongletonTheme.cyan)
+                Spacer()
+                Text(stageTitle(currentStage))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.62))
             }
 
-            VStack(spacing: 6) {
+            ProgressView(value: Double(currentStage.rawValue + 1), total: Double(TutorialStage.allCases.count))
+                .tint(SongletonTheme.cyan)
+
+            VStack(spacing: 7) {
                 Text(stageHeader(currentStage))
-                    .font(.system(size: 19, weight: .bold, design: .rounded))
-                    .foregroundStyle(SongletonTheme.cyan)
+                    .font(.system(size: 21, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
 
                 Text(stageDescription(currentStage))
                     .font(.system(size: 13.5, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundStyle(.white.opacity(0.68))
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: 560)
-            .accessibilityElement(children: .combine)
 
             HStack(spacing: 8) {
-                Image(systemName: isStageAnimationRunning ? "play.circle.fill" : "arrow.down.circle.fill")
+                Image(systemName: isStageAnimationRunning ? "sparkles" : "checkmark.circle.fill")
                     .foregroundStyle(SongletonTheme.cyan)
                 Text(isStageAnimationRunning
                     ? localization.string("tutorial.demo_running")
                     : localization.string("tutorial.continue_hint"))
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.78))
+                    .foregroundStyle(.white.opacity(0.76))
             }
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: 520)
 
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 Button {
                     runStageAnimation(stage: currentStage, size: size)
                 } label: {
@@ -544,7 +435,7 @@ struct GestureTutorialView: View {
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                     }
                     .foregroundStyle(.white.opacity(0.85))
-                    .frame(minWidth: 160, minHeight: 48)
+                    .frame(minWidth: 168, minHeight: 50)
                     .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -564,7 +455,7 @@ struct GestureTutorialView: View {
                                 .font(.system(size: 13, weight: .bold))
                         }
                         .foregroundStyle(.white)
-                        .frame(minWidth: 190, minHeight: 48)
+                            .frame(minWidth: 210, minHeight: 50)
                         .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -572,7 +463,7 @@ struct GestureTutorialView: View {
                     .accessibilityLabel(localization.string("common.continue"))
                 } else {
                     Button {
-                        onClose()
+                        onComplete()
                     } label: {
                         HStack(spacing: 5) {
                             Image(systemName: "checkmark.circle.fill")
@@ -581,7 +472,7 @@ struct GestureTutorialView: View {
                                 .font(.system(size: 14, weight: .bold, design: .rounded))
                         }
                         .foregroundStyle(.white)
-                        .frame(minWidth: 190, minHeight: 48)
+                            .frame(minWidth: 210, minHeight: 50)
                         .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -590,12 +481,12 @@ struct GestureTutorialView: View {
                 }
             }
         }
-        .padding(.horizontal, 30)
-        .padding(.vertical, 24)
+        .padding(.horizontal, 28)
+        .padding(.vertical, 22)
         .frame(maxWidth: 680)
-        .background(SongletonTheme.card.opacity(0.88), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color.white.opacity(0.15), lineWidth: 1))
-        .shadow(color: .black.opacity(0.6), radius: 20, y: 10)
+        .background(SongletonTheme.card.opacity(0.92), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.white.opacity(0.16), lineWidth: 1))
+        .shadow(color: .black.opacity(0.62), radius: 24, y: 12)
     }
 
     // MARK: - Animation Controller & Sound Triggers
@@ -616,7 +507,7 @@ struct GestureTutorialView: View {
             } else {
                 TutorialAudioService.shared.resume(fadeIn: true)
             }
-        case .topEdgePlayPause, .volumeKeyboard, .volumeMouse, .hoverMenu, .ambientMode:
+        case .topEdgePlayPause, .volumeControl, .hoverMenu, .ambientMode:
             if TutorialAudioService.shared.currentTrack != 2 {
                 TutorialAudioService.shared.switchToSecondTrack()
             } else {
@@ -630,13 +521,10 @@ struct GestureTutorialView: View {
         isStageAnimationRunning = true
         isPlaybackPaused = false
         isPlaybackResuming = false
-        isDummyMenuHovered = false
-        isDummyRightClicking = false
-        showDummyAmbient = false
+        isHoverPanelVisible = false
+        isTrackRightClicking = false
+        isAmbientPreviewVisible = false
         mockManager.simulateEdgeGestureProgress(0)
-        isBothButtonsPressed = false
-        isKeyboardPressed = false
-        showVolumeHUD = false
         mockManager.simulateGestureVolume(8)
         TutorialAudioService.shared.setDemoVolume(8)
         prepareAudio(for: stage)
@@ -681,14 +569,16 @@ struct GestureTutorialView: View {
                 try? await Task.sleep(for: .milliseconds(700))
                 guard !Task.isCancelled else { return }
 
-                // Start the crossfade as soon as the cursor reaches the edge.
-                // The gesture is still visibly completing while the next track enters.
-                TutorialAudioService.shared.switchToSecondTrack()
-
                 // Fill progress to 100%
                 for p in 0...100 {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
+                    // Begin the crossfade only when the action is visibly about
+                    // to complete. The gesture remains the cause, not background
+                    // music that happens to change at random.
+                    if p == 72 {
+                        TutorialAudioService.shared.switchToSecondTrack()
+                    }
                     try? await Task.sleep(for: .milliseconds(8))
                 }
 
@@ -742,8 +632,16 @@ struct GestureTutorialView: View {
                 withAnimation(reduceMotion ? .linear(duration: 0.12) : .easeInOut(duration: 0.22)) {
                     cursorPosition = CGPoint(x: size.width / 2, y: 8)
                 }
-                try? await Task.sleep(for: .milliseconds(300))
+                try? await Task.sleep(for: .milliseconds(180))
                 guard !Task.isCancelled else { return }
+
+                // Resume is a fresh gesture. Fill the same live ring before
+                // bringing music back so the visual and the audio agree.
+                for p in 0...100 {
+                    guard !Task.isCancelled else { return }
+                    mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
+                    try? await Task.sleep(for: .milliseconds(6))
+                }
 
                 TutorialAudioService.shared.resume(fadeIn: true)
                 isPlaybackPaused = false
@@ -754,54 +652,11 @@ struct GestureTutorialView: View {
                 isPlaybackResuming = false
                 isStageAnimationRunning = false
 
-            case .volumeKeyboard:
-                // --- STAGE 4: KEYBOARD SHORTCUT (⌘ + ⌥ + DRAG) ---
-                withAnimation {
-                    isKeyboardPressed = true
-                    isBothButtonsPressed = false
-                    showVolumeHUD = true
-                }
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.75)) {
-                    cursorPosition = CGPoint(x: size.width - 240, y: size.height / 2)
-                }
-                try? await Task.sleep(for: .milliseconds(700))
-                guard !Task.isCancelled else { return }
-
-                // Fade all the way down, pause briefly at silence, then restore gently.
-                for v in stride(from: 8, through: 0, by: -1) {
-                    guard !Task.isCancelled else { return }
-                    mockManager.simulateGestureVolume(v)
-                    TutorialAudioService.shared.setDemoVolume(v)
-                    cursorPosition.y += 4
-                    try? await Task.sleep(for: .milliseconds(24))
-                }
-                try? await Task.sleep(for: .milliseconds(350))
-                guard !Task.isCancelled else { return }
-                for v in stride(from: 0, through: 20, by: 1) {
-                    guard !Task.isCancelled else { return }
-                    mockManager.simulateGestureVolume(v)
-                    TutorialAudioService.shared.setDemoVolume(v)
-                    cursorPosition.y -= 4
-                    try? await Task.sleep(for: .milliseconds(20))
-                }
-                for v in stride(from: 20, through: 8, by: -1) {
-                    guard !Task.isCancelled else { return }
-                    mockManager.simulateGestureVolume(v)
-                    TutorialAudioService.shared.setDemoVolume(v)
-                    cursorPosition.y += 3
-                    try? await Task.sleep(for: .milliseconds(20))
-                }
-                isStageAnimationRunning = false
-
-            case .volumeMouse:
-                // --- STAGE 5: MOUSE DUAL BUTTONS DRAG ---
-                withAnimation {
-                    isKeyboardPressed = false
-                    isBothButtonsPressed = true
-                    showVolumeHUD = true
-                }
-                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.75)) {
-                    cursorPosition = CGPoint(x: size.width - 240, y: size.height / 2 - 40)
+            case .volumeControl:
+                // The real volume HUD is the hero. The cursor and audio follow
+                // the same vertical gesture so the feedback is understandable.
+                withAnimation(reduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.65)) {
+                    cursorPosition = CGPoint(x: size.width / 2 + 150, y: size.height / 2 - 145)
                 }
                 try? await Task.sleep(for: .milliseconds(700))
                 guard !Task.isCancelled else { return }
@@ -810,8 +665,8 @@ struct GestureTutorialView: View {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateGestureVolume(v)
                     TutorialAudioService.shared.setDemoVolume(v)
-                    cursorPosition.y += 4
-                    try? await Task.sleep(for: .milliseconds(24))
+                    cursorPosition.y += 5
+                    try? await Task.sleep(for: .milliseconds(28))
                 }
                 try? await Task.sleep(for: .milliseconds(350))
                 guard !Task.isCancelled else { return }
@@ -819,15 +674,15 @@ struct GestureTutorialView: View {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateGestureVolume(v)
                     TutorialAudioService.shared.setDemoVolume(v)
-                    cursorPosition.y -= 4
-                    try? await Task.sleep(for: .milliseconds(20))
+                    cursorPosition.y -= 5
+                    try? await Task.sleep(for: .milliseconds(24))
                 }
                 for v in stride(from: 20, through: 8, by: -1) {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateGestureVolume(v)
                     TutorialAudioService.shared.setDemoVolume(v)
-                    cursorPosition.y += 3
-                    try? await Task.sleep(for: .milliseconds(20))
+                    cursorPosition.y += 4
+                    try? await Task.sleep(for: .milliseconds(24))
                 }
                 isStageAnimationRunning = false
 
@@ -839,7 +694,7 @@ struct GestureTutorialView: View {
                 try? await Task.sleep(for: .milliseconds(850))
                 guard !Task.isCancelled else { return }
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
-                    isDummyMenuHovered = true
+                    isHoverPanelVisible = true
                 }
                 try? await Task.sleep(for: .milliseconds(1000))
                 guard !Task.isCancelled else { return }
@@ -855,14 +710,14 @@ struct GestureTutorialView: View {
                 }
                 try? await Task.sleep(for: .milliseconds(850))
                 guard !Task.isCancelled else { return }
-                isDummyMenuHovered = true
+                isHoverPanelVisible = true
                 withAnimation(.easeInOut(duration: 0.25)) {
-                    isDummyRightClicking = true
+                    isTrackRightClicking = true
                 }
                 try? await Task.sleep(for: .milliseconds(500))
                 guard !Task.isCancelled else { return }
                 withAnimation(.spring(response: 0.65, dampingFraction: 0.8)) {
-                    showDummyAmbient = true
+                    isAmbientPreviewVisible = true
                 }
                 try? await Task.sleep(for: .milliseconds(1100))
                 guard !Task.isCancelled else { return }
@@ -878,10 +733,9 @@ struct GestureTutorialView: View {
         case .cancelDemo: "1. " + localization.string("tutorial.stage_cancel")
         case .rightEdgeSkip: "2. " + localization.string("menu.next_track")
         case .topEdgePlayPause: "3. " + localization.string("tutorial.stage_playpause")
-        case .volumeKeyboard: "4. " + localization.string("tutorial.stage_keyboard_volume")
-        case .volumeMouse: "5. " + localization.string("tutorial.stage_mouse_volume")
-        case .hoverMenu: "6. " + localization.string("tutorial.stage_hover_menu")
-        case .ambientMode: "7. " + localization.string("tutorial.stage_ambient_mode")
+        case .volumeControl: "4. " + localization.string("tutorial.stage_volume_control")
+        case .hoverMenu: "5. " + localization.string("tutorial.stage_hover_menu")
+        case .ambientMode: "6. " + localization.string("tutorial.stage_ambient_mode")
         }
     }
 
@@ -890,8 +744,7 @@ struct GestureTutorialView: View {
         case .cancelDemo: localization.string("tutorial.cancel_header")
         case .rightEdgeSkip: localization.string("tutorial.next_header")
         case .topEdgePlayPause: localization.string("tutorial.playpause_header")
-        case .volumeKeyboard: localization.string("tutorial.volume_keyboard_header")
-        case .volumeMouse: localization.string("tutorial.volume_mouse_header")
+        case .volumeControl: localization.string("tutorial.volume_control_header")
         case .hoverMenu: localization.string("tutorial.hover_menu_header")
         case .ambientMode: localization.string("tutorial.ambient_mode_header")
         }
@@ -902,8 +755,7 @@ struct GestureTutorialView: View {
         case .cancelDemo: localization.string("tutorial.cancel_desc")
         case .rightEdgeSkip: localization.string("tutorial.next_desc")
         case .topEdgePlayPause: localization.string("tutorial.playpause_desc")
-        case .volumeKeyboard: localization.string("tutorial.volume_keyboard_desc")
-        case .volumeMouse: localization.string("tutorial.volume_mouse_desc")
+        case .volumeControl: localization.string("tutorial.volume_control_desc")
         case .hoverMenu: localization.string("tutorial.hover_menu_desc")
         case .ambientMode: localization.string("tutorial.ambient_mode_desc")
         }

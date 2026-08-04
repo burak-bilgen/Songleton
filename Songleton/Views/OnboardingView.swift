@@ -7,6 +7,7 @@ struct OnboardingView: View {
     @ObservedObject var model: NowPlayingModel
     @ObservedObject private var localization = LocalizationManager.shared
     @ObservedObject private var mouseGestureManager = MouseGestureManager.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let onFinish: () -> Void
     let onAbort: () -> Void
 
@@ -23,7 +24,8 @@ struct OnboardingView: View {
 
     enum Step: Int, CaseIterable {
         case welcome = 0
-        case permissions = 1
+        case controls = 1
+        case permissions = 2
     }
 
     var body: some View {
@@ -42,6 +44,9 @@ struct OnboardingView: View {
                     case .welcome:
                         welcomeStepView
                             .transition(pageTransition)
+                    case .controls:
+                        controlsStepView
+                            .transition(pageTransition)
                     case .permissions:
                         permissionsStepView
                             .transition(pageTransition)
@@ -56,23 +61,25 @@ struct OnboardingView: View {
         .frame(width: 540, height: 680)
         .onAppear {
             model.checkAutomationPermission(askUser: false)
-            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
-                pulseIcon = true
-            }
-            withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
-                noteFloat = true
-            }
-            withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
-                auroraDrift = true
+            if !reduceMotion {
+                withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
+                    pulseIcon = true
+                }
+                withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
+                    noteFloat = true
+                }
+                withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
+                    auroraDrift = true
+                }
             }
             DispatchQueue.main.async {
-                withAnimation(.easeOut(duration: 0.7)) {
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.7)) {
                     rotateRing = true
                 }
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.85)) {
+                withAnimation(reduceMotion ? nil : .spring(response: 0.6, dampingFraction: 0.85)) {
                     appeared = true
                 }
-                withAnimation(.spring(response: 0.65, dampingFraction: 0.82)) {
+                withAnimation(reduceMotion ? nil : .spring(response: 0.65, dampingFraction: 0.82)) {
                     windowReveal = true
                 }
             }
@@ -120,29 +127,6 @@ struct OnboardingView: View {
     private var headerView: some View {
         VStack(spacing: 16) {
             HStack(alignment: .center, spacing: 12) {
-                // Left Side: Back Button
-                if step != .welcome {
-                    Button(action: {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            move(to: Step(rawValue: step.rawValue - 1)!)
-                        }
-                    }) {
-                        HStack(spacing: 5) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 11, weight: .bold))
-                            Text(localization.string("common.back"))
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        }
-                        .foregroundStyle(.white.opacity(0.8))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(Color.white.opacity(0.09), in: Capsule())
-                        .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-                    .entrance(0, appeared: appeared, delay: 0)
-                }
-
                 Spacer()
 
                 // Right Side: Prominent Language Selector Menu
@@ -167,7 +151,7 @@ struct OnboardingView: View {
                     HStack(alignment: .center, spacing: 8) {
                         Text(languageFlagIcon)
                             .font(.system(size: 18))
-                        Text(localization.string("tutorial.language_picker_title"))
+                        Text(localization.string("onboarding.language_picker_title"))
                             .font(.system(size: 13, weight: .bold, design: .rounded))
                     }
                     .foregroundStyle(.white)
@@ -230,17 +214,8 @@ struct OnboardingView: View {
                     .frame(width: 96, height: 96)
                     .shadow(color: .black.opacity(0.6), radius: 14, y: 4)
 
-                if let icon = NSImage(named: NSImage.applicationIconName) {
-                    Image(nsImage: icon)
-                        .resizable()
-                        .frame(width: 88, height: 88)
-                        .clipShape(Circle())
-                        .scaleEffect(pulseIcon ? 1.04 : 0.97)
-                } else {
-                    Image(systemName: "music.note")
-                        .font(.system(size: 36, weight: .semibold))
-                        .foregroundStyle(SongletonTheme.cyan)
-                }
+                SongletonBrandMark(size: 82)
+                    .scaleEffect(pulseIcon ? 1.04 : 0.97)
 
                 floatingNote("music.note", x: -66, y: -14, duration: 2.3)
                 floatingNote("music.quarternote.3", x: 64, y: 10, duration: 3.1)
@@ -298,14 +273,55 @@ struct OnboardingView: View {
             }
 
             actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
-                move(to: .permissions)
+                move(to: .controls)
             }
             .entrance(5, appeared: appeared)
             .modifier(GlowPulse(pulse: pulseIcon))
         }
     }
 
-    // MARK: - Step 2: Permissions & Launch
+    // MARK: - Step 2: How It Works
+
+    private var controlsStepView: some View {
+        VStack(spacing: 16) {
+            TutorialMenuBarPreview(isRightClicking: false)
+                .scaleEffect(1.12)
+                .padding(.top, 18)
+                .entrance(0, appeared: appeared)
+
+            VStack(spacing: 6) {
+                Text(localization.string("onboarding.screen_controls_title"))
+                    .font(.system(size: 23, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text(localization.string("onboarding.screen_controls_subtitle"))
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .entrance(1, appeared: appeared)
+
+            VStack(spacing: 10) {
+                featureCard(id: 4, icon: "cursorarrow.click.2", color: SongletonTheme.cyan,
+                            title: localization.string("onboarding.feature_control_title"),
+                            desc: localization.string("onboarding.feature_control_hint"))
+                featureCard(id: 5, icon: "music.note.list", color: SongletonTheme.violet,
+                            title: localization.string("onboarding.feature_live_title"),
+                            desc: localization.string("onboarding.feature_live_hint"))
+                featureCard(id: 6, icon: "quote.bubble.fill", color: SongletonTheme.pink,
+                            title: localization.string("onboarding.feature_lyrics_title"),
+                            desc: localization.string("onboarding.feature_lyrics_hint"))
+            }
+            .entrance(2, appeared: appeared)
+
+            actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
+                move(to: .permissions)
+            }
+            .entrance(3, appeared: appeared)
+        }
+    }
+
+    // MARK: - Step 3: Permissions & Launch
 
     private var permissionsStepView: some View {
         VStack(spacing: 20) {
@@ -382,11 +398,11 @@ struct OnboardingView: View {
     private func move(to nextStep: Step) {
         transitionDirection = nextStep.rawValue > step.rawValue ? .trailing : .leading
         appeared = false
-        withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+        withAnimation(reduceMotion ? nil : .spring(response: 0.45, dampingFraction: 0.85)) {
             step = nextStep
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.07) {
-            withAnimation(.spring(response: 0.55, dampingFraction: 0.9)) {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.55, dampingFraction: 0.9)) {
                 appeared = true
             }
         }

@@ -7,6 +7,18 @@ final class GestureTutorialManager: ObservableObject {
     static let shared = GestureTutorialManager()
 
     private static let completionKey = "hasCompletedGestureTutorial"
+    private static let resolutionKey = "gestureTutorialResolution"
+
+    enum Resolution: String {
+        case notStarted
+        case completed
+        case skipped
+        case dismissed
+
+        var unlocksControls: Bool {
+            self == .completed || self == .skipped
+        }
+    }
 
     @Published private(set) var isPresented = false
     private var window: NSWindow?
@@ -14,8 +26,21 @@ final class GestureTutorialManager: ObservableObject {
 
     private init() {}
 
+    var resolution: Resolution {
+        if let rawValue = UserDefaults.standard.string(forKey: Self.resolutionKey),
+           let resolution = Resolution(rawValue: rawValue) {
+            return resolution
+        }
+        // Keep existing installations working after the state migration.
+        return UserDefaults.standard.bool(forKey: Self.completionKey) ? .completed : .notStarted
+    }
+
+    var hasResolvedTutorial: Bool {
+        resolution.unlocksControls
+    }
+
     var hasCompletedTutorial: Bool {
-        UserDefaults.standard.bool(forKey: Self.completionKey)
+        hasResolvedTutorial
     }
 
     func show(askFirst: Bool = false) {
@@ -24,12 +49,20 @@ final class GestureTutorialManager: ObservableObject {
         // Close any open popovers or panels before starting tutorial
         MenuBarManager.shared.closeVolumePopoverImmediately()
 
-        let screen = NSScreen.main ?? NSScreen.screens.first
+        // The guide demonstrates screen edges. It must open on the screen the
+        // person is actively using, not whichever display macOS calls main.
+        let pointerLocation = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
+            ?? NSScreen.main
+            ?? NSScreen.screens.first
         guard let screen else { return }
 
-        let containerView = TutorialContainerView(askFirst: askFirst) { [weak self] in
-            self?.dismiss()
-        }
+        let containerView = TutorialContainerView(
+            askFirst: askFirst,
+            onComplete: { [weak self] in self?.dismiss(outcome: .completed) },
+            onSkip: { [weak self] in self?.dismiss(outcome: .skipped) },
+            onDismiss: { [weak self] in self?.dismiss(outcome: .dismissed) }
+        )
 
         let window = NSWindow(
             contentRect: screen.frame,
@@ -66,9 +99,10 @@ final class GestureTutorialManager: ObservableObject {
         }
     }
 
-    func dismiss() {
+    func dismiss(outcome: Resolution = .dismissed) {
         guard isPresented else { return }
         UserDefaults.standard.set(true, forKey: Self.completionKey)
+        UserDefaults.standard.set(outcome.rawValue, forKey: Self.resolutionKey)
         isPresented = false
 
         if let win = window {
@@ -98,7 +132,7 @@ final class GestureTutorialManager: ObservableObject {
     private func setupKeyMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard event.keyCode == 53, self?.isPresented == true else { return event }
-            self?.dismiss()
+            self?.dismiss(outcome: .dismissed)
             return nil
         }
     }
@@ -106,12 +140,21 @@ final class GestureTutorialManager: ObservableObject {
 
 private struct TutorialContainerView: View {
     let askFirst: Bool
-    let onClose: () -> Void
+    let onComplete: () -> Void
+    let onSkip: () -> Void
+    let onDismiss: () -> Void
     @State private var showingPrompt: Bool
 
-    init(askFirst: Bool, onClose: @escaping () -> Void) {
+    init(
+        askFirst: Bool,
+        onComplete: @escaping () -> Void,
+        onSkip: @escaping () -> Void,
+        onDismiss: @escaping () -> Void
+    ) {
         self.askFirst = askFirst
-        self.onClose = onClose
+        self.onComplete = onComplete
+        self.onSkip = onSkip
+        self.onDismiss = onDismiss
         self._showingPrompt = State(initialValue: askFirst)
     }
 
@@ -124,11 +167,11 @@ private struct TutorialContainerView: View {
                             showingPrompt = false
                         }
                     },
-                    onSkip: onClose
+                    onSkip: onSkip
                 )
                 .transition(.scale(scale: 0.95).combined(with: .opacity))
             } else {
-                GestureTutorialView(onClose: onClose)
+                GestureTutorialView(onComplete: onComplete, onDismiss: onDismiss)
                     .transition(.opacity)
             }
         }
