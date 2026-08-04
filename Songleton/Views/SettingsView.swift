@@ -130,6 +130,12 @@ struct SettingsView: View {
                 isOn: $settings.showTrackNotifications
             )
 
+            if settings.showTrackNotifications {
+                sectionDivider
+
+                notificationPositionRow
+            }
+
             sectionDivider
 
             settingsToggleRow(
@@ -773,6 +779,55 @@ struct SettingsView: View {
         .padding(.vertical, 10)
     }
 
+    private var notificationPositionRow: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                iconBadge(systemName: "rectangle.grid.3x3.fill")
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(localization.string("settings.notification_position"))
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text(localization.string("settings.notification_position_hint"))
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.35))
+                }
+
+                Spacer()
+            }
+
+            NotificationPositionSelector(selection: $settings.trackNotificationPosition)
+
+            HStack {
+                Label(
+                    localization.string(settings.trackNotificationPosition.localizationKey),
+                    systemImage: settings.trackNotificationPosition.iconName
+                )
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(SongletonTheme.secondaryText)
+
+                Spacer()
+            }
+
+            NotificationAppearancePreview()
+
+            Button {
+                HUDToastManager.shared.showPreview()
+            } label: {
+                Label(localization.string("settings.preview_notification"), systemImage: "play.circle.fill")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 9)
+                    .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(localization.string("settings.preview_notification_hint"))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
     // MARK: - Permission Helpers
 
     private var automationStatusColor: Color {
@@ -797,5 +852,163 @@ struct SettingsView: View {
         case .denied: return localization.string("permission.denied")
         case .notDetermined: return localization.string("permission.not_granted")
         }
+    }
+}
+
+private struct NotificationPositionSelector: View {
+    @Binding var selection: TrackNotificationPosition
+    @ObservedObject private var localization = LocalizationManager.shared
+    @State private var hoveredPosition: TrackNotificationPosition?
+
+    private let rows: [[TrackNotificationPosition?]] = [
+        [.topLeading, .top, .topTrailing],
+        [.leading, nil, .trailing],
+        [.bottomLeading, .bottom, .bottomTrailing]
+    ]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 5) {
+                Circle().fill(.white.opacity(0.22)).frame(width: 5, height: 5)
+                Circle().fill(.white.opacity(0.14)).frame(width: 5, height: 5)
+                Circle().fill(.white.opacity(0.10)).frame(width: 5, height: 5)
+                Spacer()
+                Text(localization.string("settings.notification_position"))
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.38))
+                Spacer()
+                Circle().fill(.white.opacity(0.12)).frame(width: 6, height: 6)
+            }
+            .padding(.horizontal, 13)
+            .frame(height: 27)
+            .background(.white.opacity(0.035))
+
+            VStack(spacing: 9) {
+                ForEach(rows.indices, id: \.self) { rowIndex in
+                    HStack(spacing: 9) {
+                        ForEach(rows[rowIndex].indices, id: \.self) { columnIndex in
+                            if let position = rows[rowIndex][columnIndex] {
+                                positionButton(position)
+                            } else {
+                                centerPlaceholder
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(11)
+        }
+        .background {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(red: 0.025, green: 0.035, blue: 0.08), Color.black.opacity(0.88)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(SongletonTheme.cyan.opacity(0.28), lineWidth: 1)
+                }
+        }
+        .frame(height: 214)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(localization.string("settings.notification_position"))
+    }
+
+    private func positionButton(_ position: TrackNotificationPosition) -> some View {
+        Button {
+            withAnimation(.spring(response: 0.30, dampingFraction: 0.74)) {
+                selection = position
+            }
+        } label: {
+            VStack(spacing: 5) {
+                Image(systemName: position.iconName)
+                    .font(.system(size: 14, weight: .bold))
+
+                Text(localization.string(position.localizationKey))
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+            }
+            .foregroundStyle(selection == position ? .black : .white.opacity(hoveredPosition == position ? 0.92 : 0.66))
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .background(
+                selection == position ? SongletonTheme.cyan : SongletonTheme.cyan.opacity(hoveredPosition == position ? 0.16 : 0.055),
+                in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .stroke(selection == position ? .white.opacity(0.42) : .white.opacity(0.10), lineWidth: 1)
+            }
+            .shadow(color: selection == position ? SongletonTheme.cyan.opacity(0.28) : .clear, radius: 7, y: 3)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hoveredPosition = $0 ? position : nil }
+        .accessibilityLabel(localization.string(position.localizationKey))
+        .accessibilityValue(selection == position ? "Selected" : "")
+        .accessibilityAddTraits(selection == position ? .isSelected : [])
+    }
+
+    private var centerPlaceholder: some View {
+        VStack(spacing: 4) {
+            Image(systemName: "macbook")
+                .font(.system(size: 18, weight: .medium))
+            Text(localization.string("settings.notification_position_hint"))
+                .font(.system(size: 8, weight: .semibold, design: .rounded))
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+        }
+        .foregroundStyle(.white.opacity(0.20))
+        .frame(maxWidth: .infinity, minHeight: 52)
+    }
+}
+
+private struct NotificationAppearancePreview: View {
+    @ObservedObject private var localization = LocalizationManager.shared
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 5, style: .continuous)
+            .fill(
+                LinearGradient(
+                    colors: [Color(red: 0.08, green: 0.12, blue: 0.21), Color.black.opacity(0.92)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .frame(height: 64)
+            .overlay(alignment: .leading) {
+                HStack(spacing: 10) {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(SongletonTheme.accentGradient)
+                        .frame(width: 42, height: 42)
+                        .overlay {
+                            Image(systemName: "music.note")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(localization.string("notification.preview_track"))
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                        Text(localization.string("notification.preview_artist"))
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.55))
+                            .lineLimit(1)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 11)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(SongletonTheme.cyan.opacity(0.24), lineWidth: 1)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .shadow(color: SongletonTheme.cyan.opacity(0.20), radius: 12, y: 5)
     }
 }

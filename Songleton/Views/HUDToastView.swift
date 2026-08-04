@@ -4,133 +4,157 @@ struct HUDToastView: View {
     let track: String
     let artist: String
     let artwork: NSImage?
+    let layout: TrackNotificationLayout
+    let accentColor: Color?
+    let isPreview: Bool
 
     @ObservedObject private var model = NowPlayingModel.shared
-    @State private var appearOffset: CGFloat = 24
-    @State private var appearOpacity: Double = 0.0
+
+    private let cornerRadius: CGFloat = 18
+
+    init(
+        track: String,
+        artist: String,
+        artwork: NSImage?,
+        layout: TrackNotificationLayout,
+        accentColor: Color? = nil,
+        isPreview: Bool = false
+    ) {
+        self.track = track
+        self.artist = artist
+        self.artwork = artwork
+        self.layout = layout
+        self.accentColor = accentColor
+        self.isPreview = isPreview
+    }
 
     private var themeColor: Color {
-        model.dominantColor
+        accentColor ?? model.dominantColor
+    }
+
+    private var cardShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
     }
 
     var body: some View {
         ZStack {
-            // 1. Glassmorphic Themed Base Container (Gradient tinted with album color)
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        Color(white: 0.12),
+                        Color(white: 0.055),
+                        Color.black.opacity(0.96)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                artworkAura
+
+                LinearGradient(
+                    colors: [.white.opacity(0.08), .clear, .black.opacity(0.18)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                notificationContent
+            }
+            .frame(width: layout.size.width, height: layout.size.height)
+            .clipShape(cardShape)
+            .overlay(
+                cardShape.stroke(
+                    LinearGradient(
+                        colors: [.white.opacity(0.34), themeColor.opacity(0.46), .white.opacity(0.08)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+            )
+            .shadow(color: .black.opacity(0.68), radius: 11, x: 0, y: 7)
+            .shadow(color: themeColor.opacity(0.30), radius: 20, x: 0, y: 8)
+            .shadow(color: themeColor.opacity(0.13), radius: 30, x: 0, y: 9)
+            .shadow(color: themeColor.opacity(0.08), radius: 46, x: 0, y: 10)
+        }
+        .frame(width: layout.panelSize.width, height: layout.panelSize.height)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(artist.isEmpty ? track : "\(track), \(artist)")
+    }
+
+    @ViewBuilder
+    private var artworkAura: some View {
+        if let artwork {
+            Image(nsImage: artwork)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: layout.size.width * 1.14, height: layout.size.height * 1.8)
+                .blur(radius: 30)
+                .saturation(1.35)
+                .opacity(0.28)
+        } else {
+            RadialGradient(
+                colors: [themeColor.opacity(isPreview ? 0.34 : 0.20), .clear],
+                center: .leading,
+                startRadius: 8,
+                endRadius: 150
+            )
+        }
+    }
+
+    private var notificationContent: some View {
+        HStack(spacing: 12) {
+            artworkTile
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(track)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if !artist.isEmpty {
+                    Text(artist)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.72))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(width: layout.textWidth, alignment: .leading)
+            .layoutPriority(1)
+        }
+        .padding(.horizontal, 10)
+    }
+
+    @ViewBuilder
+    private var artworkTile: some View {
+        if let artwork {
+            Image(nsImage: artwork)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 44, height: 44)
+                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .stroke(.white.opacity(0.28), lineWidth: 1)
+                )
+        } else {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [
-                            themeColor.opacity(0.16),
-                            Color(white: 0.07),
-                            Color(white: 0.045)
-                        ],
+                        colors: [themeColor.opacity(0.34), Color.white.opacity(0.08)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
-
-            // 2. Ambient Artwork Aura Glow Layer (Matches Ambient Mode & Hover Panel)
-            if let artwork {
-                Image(nsImage: artwork)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 270, height: 64)
-                    .blur(radius: 40)
-                    .saturation(1.8)
-                    .opacity(0.36)
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            } else {
-                Circle()
-                    .fill(themeColor.opacity(0.25))
-                    .frame(width: 160, height: 160)
-                    .blur(radius: 45)
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            }
-
-            // 3. Bottom-edge glaze so the panel reads as a soft floating card
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [.clear, .white.opacity(0.06)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+                .frame(width: 44, height: 44)
+                .overlay(
+                    Image(systemName: isPreview ? "waveform" : "music.note")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(isPreview ? themeColor : .white.opacity(0.64))
                 )
-
-            // 4. Specular Glass Rim with Dynamic Theme Glow Shadow
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            .white.opacity(0.42),
-                            themeColor.opacity(0.30),
-                            .white.opacity(0.06)
-                        ],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
+                .overlay(
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .stroke(.white.opacity(0.18), lineWidth: 1)
                 )
-                .shadow(color: .black.opacity(0.55), radius: 10, x: 0, y: 6)
-                .shadow(color: themeColor.opacity(0.35), radius: 14, x: 0, y: 8)
-
-            // 4. Toast Content (Thumbnail + Meta)
-            HStack(spacing: 12) {
-                ZStack {
-                    if let artwork {
-                        Image(nsImage: artwork)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 44, height: 44)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [.white.opacity(0.4), .white.opacity(0.1)],
-                                            startPoint: .topLeading, endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 1
-                                    )
-                            )
-                            .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 3)
-                    } else {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color.white.opacity(0.10))
-                            .frame(width: 44, height: 44)
-                            .overlay(
-                                Image(systemName: "music.note")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(Color.white.opacity(0.6))
-                            )
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(track)
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-
-                    if !artist.isEmpty {
-                        Text(artist)
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.75))
-                            .lineLimit(1)
-                    }
-                }
-
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 10)
-        }
-        .frame(width: 270, height: 64)
-        .offset(x: appearOffset)
-        .opacity(appearOpacity)
-        .onAppear {
-            withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) {
-                appearOffset = 0
-                appearOpacity = 1.0
-            }
         }
     }
 }

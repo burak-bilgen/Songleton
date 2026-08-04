@@ -23,6 +23,8 @@ final class SettingsModelTests {
         runTest(name: "testStoredValuesAreClamped", test: testStoredValuesAreClamped)
         runTest(name: "testEdgeGestureHoldDuration", test: testEdgeGestureHoldDuration)
         runTest(name: "testInvalidFontFallsBackToSystem", test: testInvalidFontFallsBackToSystem)
+        runTest(name: "testTrackNotificationPositionPersistence", test: testTrackNotificationPositionPersistence)
+        runTest(name: "testInvalidTrackNotificationPositionFallsBack", test: testInvalidTrackNotificationPositionFallsBack)
     }
 
     private func runTest(name: String, test: () -> Void) {
@@ -34,10 +36,11 @@ final class SettingsModelTests {
     }
 
     func testDefaultValues() {
-        assertTrue(settings.showArtistInMenuBar, "showArtistInMenuBar should default to true")
+        assertFalse(settings.showArtistInMenuBar, "showArtistInMenuBar should default to false")
         assertEqual(settings.menuBarWidth, 80.0, "menuBarWidth should default to 80.0")
         assertEqual(settings.menuBarFont, .system, "menuBarFont should default to .system")
         assertTrue(settings.showTrackNotifications, "showTrackNotifications should default to true")
+        assertEqual(settings.trackNotificationPosition, .bottomTrailing, "trackNotificationPosition should default to bottomTrailing")
         assertTrue(settings.horizontalGesturesEnabled, "horizontalGesturesEnabled should default to true")
         assertTrue(settings.verticalGesturesEnabled, "verticalGesturesEnabled should default to true")
         assertAccuracy(settings.edgeGestureHoldDuration, 0.65, accuracy: 0.001, "edgeGestureHoldDuration should default to 0.65")
@@ -111,5 +114,21 @@ final class SettingsModelTests {
         userDefaults.set("invalid-font", forKey: "menuBarFont")
         let invalidFontSettings = SettingsModel(userDefaults: userDefaults)
         assertEqual(invalidFontSettings.menuBarFont, .system)
+    }
+
+    func testTrackNotificationPositionPersistence() {
+        settings.trackNotificationPosition = .bottomLeading
+        assertEqual(userDefaults.string(forKey: "trackNotificationPosition"), "bottomLeading")
+
+        let reloaded = SettingsModel(userDefaults: userDefaults, launchAtLoginApplier: { _ in })
+        assertEqual(reloaded.trackNotificationPosition, .bottomLeading)
+    }
+
+    func testInvalidTrackNotificationPositionFallsBack() {
+        // "center" was a legacy option. It now falls back safely to the
+        // default instead of leaving users on a removed placement.
+        userDefaults.set("center", forKey: "trackNotificationPosition")
+        let reloaded = SettingsModel(userDefaults: userDefaults, launchAtLoginApplier: { _ in })
+        assertEqual(reloaded.trackNotificationPosition, .bottomTrailing)
     }
 }

@@ -2,6 +2,35 @@ import Combine
 import ServiceManagement
 import SwiftUI
 
+enum TrackNotificationPosition: String, CaseIterable, Identifiable {
+    case topLeading
+    case top
+    case topTrailing
+    case leading
+    case trailing
+    case bottomLeading
+    case bottom
+    case bottomTrailing
+
+    var id: String { rawValue }
+
+    var iconName: String {
+        switch self {
+        case .topLeading: "arrow.up.left"
+        case .top: "arrow.up"
+        case .topTrailing: "arrow.up.right"
+        case .leading: "arrow.left"
+        case .trailing: "arrow.right"
+        case .bottomLeading: "arrow.down.left"
+        case .bottom: "arrow.down"
+        case .bottomTrailing: "arrow.down.right"
+        }
+    }
+
+    var localizationKey: String { "settings.notification_position.\(rawValue)" }
+
+}
+
 final class SettingsModel: ObservableObject {
     static let shared = SettingsModel()
 
@@ -43,6 +72,10 @@ final class SettingsModel: ObservableObject {
 
     @Published var showTrackNotifications: Bool {
         didSet { defaults.set(showTrackNotifications, forKey: "showTrackNotifications") }
+    }
+
+    @Published var trackNotificationPosition: TrackNotificationPosition {
+        didSet { defaults.set(trackNotificationPosition.rawValue, forKey: "trackNotificationPosition") }
     }
 
     @Published var horizontalGesturesEnabled: Bool {
@@ -90,11 +123,12 @@ final class SettingsModel: ObservableObject {
         self.defaults = userDefaults
         self.launchAtLoginApplier = launchAtLoginApplier
         userDefaults.register(defaults: [
-            "showArtistInMenuBar": true,
+            "showArtistInMenuBar": false,
             "menuBarWidth": 80.0,
             "menuBarFont": MenuBarFont.system.rawValue,
             "launchAtLogin": false,
             "showTrackNotifications": true,
+            "trackNotificationPosition": TrackNotificationPosition.bottomTrailing.rawValue,
             "horizontalGesturesEnabled": true,
             "verticalGesturesEnabled": true,
             "edgeGestureHoldDuration": 0.65,
@@ -110,6 +144,9 @@ final class SettingsModel: ObservableObject {
             launchAtLogin = SMAppService.mainApp.status == .enabled
         }
         showTrackNotifications = userDefaults.bool(forKey: "showTrackNotifications")
+        trackNotificationPosition = TrackNotificationPosition(
+            rawValue: userDefaults.string(forKey: "trackNotificationPosition") ?? ""
+        ) ?? .bottomTrailing
         horizontalGesturesEnabled = userDefaults.bool(forKey: "horizontalGesturesEnabled")
         verticalGesturesEnabled = userDefaults.bool(forKey: "verticalGesturesEnabled")
         edgeGestureHoldDuration = min(2, max(0.2, userDefaults.double(forKey: "edgeGestureHoldDuration")))
