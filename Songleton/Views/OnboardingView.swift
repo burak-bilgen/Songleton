@@ -6,7 +6,9 @@ import SwiftUI
 struct OnboardingView: View {
     @ObservedObject var model: NowPlayingModel
     @ObservedObject private var localization = LocalizationManager.shared
+    @ObservedObject private var mouseGestureManager = MouseGestureManager.shared
     let onFinish: () -> Void
+    let onAbort: () -> Void
 
     @State private var step: Step = .welcome
     @State private var appeared = false
@@ -14,6 +16,7 @@ struct OnboardingView: View {
     @State private var rotateRing = false
     @State private var noteFloat = false
     @State private var auroraDrift = false
+    @State private var windowReveal = false
     @State private var hoveredCard: Int? = nil
     @State private var transitionDirection: Edge = .trailing
     @State private var checkmarkPop = false
@@ -69,8 +72,13 @@ struct OnboardingView: View {
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.85)) {
                     appeared = true
                 }
+                withAnimation(.spring(response: 0.65, dampingFraction: 0.82)) {
+                    windowReveal = true
+                }
             }
         }
+        .scaleEffect(windowReveal ? 1 : 0.92)
+        .opacity(windowReveal ? 1 : 0)
     }
 
     // MARK: - Background
@@ -143,7 +151,7 @@ struct OnboardingView: View {
                         withAnimation { localization.language = .turkish }
                     }) {
                         HStack {
-                            Text("🇹🇷 Türkçe")
+                            Text("🇹🇷 " + localization.string("language.turkish"))
                             if localization.language == .turkish { Image(systemName: "checkmark") }
                         }
                     }
@@ -151,7 +159,7 @@ struct OnboardingView: View {
                         withAnimation { localization.language = .english }
                     }) {
                         HStack {
-                            Text("🇬🇧 English")
+                            Text("🇬🇧 " + localization.string("language.english"))
                             if localization.language == .english { Image(systemName: "checkmark") }
                         }
                     }
@@ -190,7 +198,7 @@ struct OnboardingView: View {
     // MARK: - Step 1: Welcome
 
     private var welcomeStepView: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: 16) {
             ZStack {
                 Circle()
                     .fill(
@@ -339,6 +347,13 @@ struct OnboardingView: View {
                         Text(localization.string("permission.request_all"))
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(SongletonTheme.cyan)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: onAbort) {
+                        Text(localization.string("onboarding.skip"))
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.48))
                     }
                     .buttonStyle(.plain)
                 }
@@ -552,6 +567,12 @@ struct OnboardingView: View {
                 Text(statusText(for: status))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(statusColor(for: status))
+                if status != .granted {
+                    Text(localization.string("onboarding.permission_automation_hint"))
+                        .font(.system(size: 9.5, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.38))
+                        .lineLimit(1)
+                }
             }
 
             Spacer()
@@ -567,7 +588,7 @@ struct OnboardingView: View {
                 Button(action: {
                     model.requestPermissionFor(bundleID: bundleID)
                 }) {
-                    Text(localization.string("permission.grant"))
+                    Text(localization.string("onboarding.connect"))
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
@@ -590,7 +611,7 @@ struct OnboardingView: View {
     }
 
     private var accessibilityPermissionCard: some View {
-        let isGranted = MouseGestureManager.shared.isAccessibilityTrusted
+        let isGranted = mouseGestureManager.isAccessibilityTrusted
         return HStack(spacing: 12) {
             ZStack {
                 Circle()
@@ -608,6 +629,12 @@ struct OnboardingView: View {
                 Text(isGranted ? localization.string("permission.granted") : localization.string("permission.not_granted"))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(isGranted ? .green : .white.opacity(0.4))
+                if !isGranted {
+                    Text(localization.string("onboarding.permission_accessibility_hint"))
+                        .font(.system(size: 9.5, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.38))
+                        .lineLimit(1)
+                }
             }
 
             Spacer()
@@ -621,7 +648,7 @@ struct OnboardingView: View {
                     .shadow(color: .green.opacity(0.45), radius: checkmarkPop ? 6 : 0)
             } else {
                 Button(action: requestAccessibilityPermission) {
-                    Text(localization.string("permission.open_accessibility"))
+                    Text(localization.string("onboarding.open_settings"))
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)

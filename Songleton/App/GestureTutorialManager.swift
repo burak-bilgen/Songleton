@@ -6,10 +6,17 @@ import SwiftUI
 final class GestureTutorialManager: ObservableObject {
     static let shared = GestureTutorialManager()
 
+    private static let completionKey = "hasCompletedGestureTutorial"
+
     @Published private(set) var isPresented = false
     private var window: NSWindow?
+    private var keyMonitor: Any?
 
     private init() {}
+
+    var hasCompletedTutorial: Bool {
+        UserDefaults.standard.bool(forKey: Self.completionKey)
+    }
 
     func show(askFirst: Bool = false) {
         guard !isPresented else { return }
@@ -50,6 +57,7 @@ final class GestureTutorialManager: ObservableObject {
         window.makeKeyAndOrderFront(nil)
         window.makeFirstResponder(window.contentView)
         NSApp.activate(ignoringOtherApps: true)
+        setupKeyMonitor()
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.45
@@ -60,6 +68,7 @@ final class GestureTutorialManager: ObservableObject {
 
     func dismiss() {
         guard isPresented else { return }
+        UserDefaults.standard.set(true, forKey: Self.completionKey)
         isPresented = false
 
         if let win = window {
@@ -74,9 +83,24 @@ final class GestureTutorialManager: ObservableObject {
         }
         window = nil
 
+        if let keyMonitor {
+            NSEvent.removeMonitor(keyMonitor)
+            self.keyMonitor = nil
+        }
+
+        TutorialAudioService.shared.stop()
+
         NSApp.setActivationPolicy(.accessory)
         MenuBarManager.shared.setStatusItemsVisible(true)
         MouseGestureManager.shared.updateMonitoring()
+    }
+
+    private func setupKeyMonitor() {
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard event.keyCode == 53, self?.isPresented == true else { return event }
+            self?.dismiss()
+            return nil
+        }
     }
 }
 

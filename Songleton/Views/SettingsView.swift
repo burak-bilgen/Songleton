@@ -238,7 +238,7 @@ struct SettingsView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "play.fill")
                                 .font(.system(size: 9, weight: .bold))
-                            Text("Demo / İnteraktif Rehber")
+                            Text(localization.string("settings.guide_demo"))
                                 .font(.system(size: 10, weight: .bold, design: .rounded))
                         }
                         .foregroundStyle(.black)
@@ -590,10 +590,10 @@ struct SettingsView: View {
                 .foregroundStyle(Color(red: 1.0, green: 0.75, blue: 0.2))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("İzinler Eksik!")
+                Text(localization.string("settings.permissions_missing"))
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text("Müziğinizi kontrol edebilmek için lütfen otomasyon izni verin.")
+                Text(localization.string("settings.permissions_missing_hint"))
                     .font(.system(size: 11.5, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.75))
             }
@@ -603,7 +603,7 @@ struct SettingsView: View {
             Button {
                 NotificationCenter.default.post(name: Notification.Name("showOnboardingGuide"), object: nil)
             } label: {
-                Text("İzin Ver 🚀")
+                Text(localization.string("settings.grant_permissions"))
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
@@ -628,7 +628,7 @@ struct SettingsView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "play.circle.fill")
                             .font(.system(size: 12, weight: .bold))
-                        Text("Gösterimi İzle 🎬")
+                        Text(localization.string("settings.watch_demo"))
                             .font(.system(size: 11.5, weight: .bold, design: .rounded))
                     }
                     .foregroundStyle(SongletonTheme.cyan)
@@ -645,7 +645,7 @@ struct SettingsView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "sparkles")
                             .font(.system(size: 11, weight: .bold))
-                        Text("Kurulum Ekranı 🚀")
+                        Text(localization.string("settings.open_setup"))
                             .font(.system(size: 11.5, weight: .bold, design: .rounded))
                     }
                     .foregroundStyle(.white.opacity(0.85))

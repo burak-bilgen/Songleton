@@ -7,6 +7,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     static private(set) var shared: AppDelegate?
 
     private var onboardingWindow: NSWindow?
+    private var isFinishingOnboarding = false
+    private var isAbortingOnboarding = false
 
     override init() {
         super.init()
@@ -23,7 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.showOnboarding()
             }
         }
@@ -42,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             || ProcessInfo.processInfo.environment["RESET_ONBOARDING"] == "1"
         if forceReset {
             UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+            UserDefaults.standard.removeObject(forKey: "hasCompletedGestureTutorial")
         }
 
         let hasOnboarded = forceReset ? false : UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
@@ -49,7 +52,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 self.showOnboarding()
             }
+        } else if !GestureTutorialManager.shared.hasCompletedTutorial {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                GestureTutorialManager.shared.show(askFirst: true)
+            }
         }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        NowPlayingModel.shared.checkAutomationPermission(askUser: false)
+        MouseGestureManager.shared.refreshAccessibilityStatus()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -92,9 +104,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             return
         }
 
-        let content = OnboardingView(model: .shared) { [weak self] in
-            self?.finishOnboarding()
-        }
+        let content = OnboardingView(
+            model: .shared,
+            onFinish: { [weak self] in self?.finishOnboarding() },
+            onAbort: { [weak self] in self?.abortOnboarding() }
+        )
 
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 540, height: 680),
@@ -117,8 +131,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         onboardingWindow = window
 
         NSApp.setActivationPolicy(.regular)
+        window.alphaValue = 0
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.45
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().alphaValue = 1
+        }
 
         DispatchQueue.main.async {
             NSApp.activate(ignoringOtherApps: true)
@@ -129,6 +150,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func finishOnboarding() {
+        isFinishingOnboarding = true
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
         if NowPlayingModel.shared.automationStatus == .granted {
@@ -145,9 +167,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
 
+    private func abortOnboarding() {
+        if UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
+            onboardingWindow?.close()
+            onboardingWindow = nil
+            return
+        }
+
+        isAbortingOnboarding = true
+        NSApp.terminate(nil)
+    }
+
     func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow, window === onboardingWindow else { return }
         onboardingWindow = nil
+
+        if isAbortingOnboarding {
+            isAbortingOnboarding = false
+            return
+        }
+
+        if !isFinishingOnboarding && !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
+            NSApp.terminate(nil)
+            return
+        }
+
+        isFinishingOnboarding = false
         NSApp.setActivationPolicy(.accessory)
         MouseGestureManager.shared.updateMonitoring()
     }
