@@ -28,7 +28,12 @@ final class AmbientModeManager: ObservableObject {
         // Close the hover popover so it doesn't linger behind the ambient screen.
         MenuBarManager.shared.closeVolumePopoverImmediately()
 
-        let screen = NSScreen.main ?? NSScreen.screens.first
+        // Opening on the display under the pointer matches the menu-bar action
+        // that triggered Ambient Mode and avoids jumping across monitors.
+        let pointerLocation = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
+            ?? NSScreen.main
+            ?? NSScreen.screens.first
         guard let screen else { return }
 
         let ambientView = AmbientView { [weak self] in
@@ -89,6 +94,18 @@ final class AmbientModeManager: ObservableObject {
         NSApp.setActivationPolicy(.accessory)
         showSystemChrome()
         MenuBarManager.shared.setStatusItemsVisible(true)
+    }
+
+    /// Keeps the CRT exit effect scoped to the actual Ambient window. Looking up an
+    /// arbitrary floating window can fade a tutorial or another app-owned overlay.
+    func fadeAmbientWindowForExit() {
+        guard let window else { return }
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.55
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            window.animator().alphaValue = 0.0
+        }
     }
 
     // While ambient is frontmost, hide the system menu bar and Dock (like fullscreen).

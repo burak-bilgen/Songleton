@@ -75,6 +75,7 @@ struct AmbientView: View {
     @ObservedObject var settings = SettingsModel.shared
     @ObservedObject var lyricsModel = LyricsModel.shared
     @ObservedObject private var localization = LocalizationManager.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var onClose: () -> Void
 
     // Theme Mode State
@@ -514,8 +515,10 @@ struct AmbientView: View {
         .onAppear {
             updateClock()
             registerUserActivity()
-            startContinuousRotationTimer()
-            auraPulse = true
+            if !reduceMotion {
+                startContinuousRotationTimer()
+                auraPulse = true
+            }
             if case .loaded(let info, _) = model.state {
                 localVolume = Double(info.volume)
             }
@@ -959,12 +962,17 @@ struct AmbientView: View {
     }
 
     private func cycleThemeMode() {
-        withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
+        let updateTheme = {
             switch selectedTheme {
             case .vinyl: selectedTheme = .cassette
             case .cassette: selectedTheme = .glass
             case .glass: selectedTheme = .vinyl
             }
+        }
+        if reduceMotion {
+            updateTheme()
+        } else {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.78), updateTheme)
         }
     }
 
@@ -991,6 +999,13 @@ struct AmbientView: View {
     }
 
     private func startCRTTurnOnAnimation() {
+        guard !reduceMotion else {
+            openingScale = 1.0
+            openingOpacity = 1.0
+            openingBlur = 0.0
+            crtState = .active
+            return
+        }
         openingScale = 0.82
         openingOpacity = 0.0
         openingBlur = 24.0
@@ -1011,13 +1026,13 @@ struct AmbientView: View {
         guard !isClosing else { return }
         isClosing = true
 
-        // Fade the whole window out in sync with the CRT collapse so the exit melts away.
-        let targetWindow = NSApp.windows.first(where: { $0.level == .floating }) ?? NSApp.keyWindow
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.55
-            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
-            targetWindow?.animator().alphaValue = 0.0
+        guard !reduceMotion else {
+            onClose()
+            return
         }
+
+        // Fade only the Ambient window in sync with the CRT collapse.
+        AmbientModeManager.shared.fadeAmbientWindowForExit()
 
         withAnimation(.spring(response: 0.28, dampingFraction: 0.84)) {
             crtState = .turningOffLine
