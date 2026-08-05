@@ -21,6 +21,9 @@ struct OnboardingView: View {
     @State private var hoveredCard: Int? = nil
     @State private var transitionDirection: Edge = .trailing
     @State private var checkmarkPop = false
+    @State private var orbitSpin = false
+    @State private var orbitReverseSpin = false
+    @State private var readyGlow = false
 
     enum Step: Int, CaseIterable {
         case welcome = 0
@@ -67,6 +70,8 @@ struct OnboardingView: View {
                 withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
                     auroraDrift = true
                 }
+                orbitSpin = true
+                orbitReverseSpin = true
             }
             DispatchQueue.main.async {
                 withAnimation(reduceMotion ? nil : .easeOut(duration: 0.7)) {
@@ -222,6 +227,20 @@ struct OnboardingView: View {
                     .shadow(color: SongletonTheme.violet.opacity(0.45), radius: 10)
 
                 Circle()
+                    .strokeBorder(Color.white.opacity(0.22), style: StrokeStyle(lineWidth: 1.2, dash: [2.5, 10]))
+                    .frame(width: 156, height: 156)
+                    .rotationEffect(.degrees(orbitSpin ? 360 : 0))
+                    .shadow(color: SongletonTheme.cyan.opacity(0.35), radius: 8)
+                    .animation(.linear(duration: 22).repeatForever(autoreverses: false), value: orbitSpin)
+
+                Circle()
+                    .strokeBorder(Color.white.opacity(0.13), style: StrokeStyle(lineWidth: 1, dash: [1.5, 14]))
+                    .frame(width: 172, height: 172)
+                    .rotationEffect(.degrees(orbitReverseSpin ? -360 : 0))
+                    .opacity(orbitReverseSpin ? 1 : 0)
+                    .animation(.linear(duration: 30).repeatForever(autoreverses: false), value: orbitReverseSpin)
+
+                Circle()
                     .fill(SongletonTheme.card)
                     .frame(width: 96, height: 96)
                     .shadow(color: .black.opacity(0.6), radius: 14, y: 4)
@@ -328,6 +347,7 @@ struct OnboardingView: View {
                 )
                 .disabled(!isGranted)
                 .opacity(isGranted ? 1.0 : 0.45)
+                .modifier(GlowPulse(pulse: isGranted && readyGlow, color: .green))
 
                 if !isGranted {
                     Button(action: onAbort) {
@@ -342,10 +362,19 @@ struct OnboardingView: View {
         }
         .onAppear {
             checkmarkPop = false
+            if model.automationStatus == .granted {
+                readyGlow = true
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) {
                     checkmarkPop = true
                 }
+            }
+        }
+        .onChange(of: model.automationStatus) { _, status in
+            guard status == .granted else { return }
+            withAnimation(.easeInOut(duration: 0.7)) {
+                readyGlow = true
             }
         }
     }
@@ -439,61 +468,6 @@ struct OnboardingView: View {
                 hoveredCard = isHovered ? id : nil
             }
         }
-    }
-
-    private func gestureDescription(_ key: String) -> String {
-        let configuredDuration = SettingsModel.shared.edgeGestureHoldDuration
-        let duration = key == "gesture.top_desc"
-            ? configuredDuration * 0.8
-            : configuredDuration
-        let formattedDuration = String(format: "%.1f", locale: localization.locale, duration)
-        return String(format: localization.string(key), locale: localization.locale, formattedDuration)
-    }
-
-    private func shortcutRow(keys: [AnyView], desc: String) -> some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 4) {
-                ForEach(0..<keys.count, id: \.self) { idx in
-                    keys[idx]
-                }
-            }
-            .frame(width: 80, alignment: .leading)
-
-            Text(desc)
-                .font(.system(size: 11.5, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.85))
-
-            Spacer()
-        }
-    }
-
-    private func keyCapView(_ text: String, width: CGFloat = 26) -> AnyView {
-        AnyView(
-            Text(text)
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundStyle(Color.white.opacity(0.95))
-                .frame(height: 22)
-                .frame(minWidth: width)
-                .padding(.horizontal, 4)
-                .background(
-                    LinearGradient(
-                        colors: [Color(white: 0.26), Color(white: 0.13)],
-                        startPoint: .top, endPoint: .bottom
-                    ),
-                    in: RoundedRectangle(cornerRadius: 5, style: .continuous)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .stroke(
-                            LinearGradient(
-                                colors: [.white.opacity(0.45), .white.opacity(0.10)],
-                                startPoint: .top, endPoint: .bottom
-                            ),
-                            lineWidth: 0.8
-                        )
-                )
-                .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
-        )
     }
 
     private func playerPermissionCard(appName: String, bundleID: String, iconName: String, color: Color) -> some View {
@@ -725,12 +699,13 @@ private struct EntranceModifier: ViewModifier {
 
 private struct GlowPulse: ViewModifier {
     let pulse: Bool
+    var color: Color = SongletonTheme.cyan
 
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(SongletonTheme.cyan)
+                    .fill(color)
                     .blur(radius: pulse ? 18 : 6)
                     .opacity(pulse ? 0.50 : 0.15)
                     .scaleEffect(pulse ? 1.02 : 0.98)

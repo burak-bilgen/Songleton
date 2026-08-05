@@ -3,7 +3,7 @@ import AppKit
 
 @MainActor
 final class TutorialAudioService {
-    static let shared = TutorialAudioService()
+    static let shared = AppContainer.shared.tutorialAudio
 
     private var player: AVAudioPlayer?
     private var preparedPlayers: [Int: AVAudioPlayer] = [:]
@@ -16,7 +16,7 @@ final class TutorialAudioService {
     private(set) var currentTrack: Int?
     private(set) var targetVolume: Float = 0.08
 
-    private init() {
+    init() {
         let appCenter = NotificationCenter.default
         notificationTokens.append(appCenter.addObserver(
             forName: NSApplication.didResignActiveNotification,

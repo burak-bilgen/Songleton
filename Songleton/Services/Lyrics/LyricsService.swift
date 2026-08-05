@@ -1,9 +1,9 @@
 import Foundation
 
 final class LyricsService {
-    static let shared = LyricsService()
+    static let shared = AppContainer.shared.lyricsService
 
-    private init() {}
+    init() {}
 
     func fetchSyncedLyrics(track: String, artist: String, album: String? = nil, duration: Double? = nil) async -> [LyricLine]? {
         let safeTrack = RemoteResourceSecurity.sanitizedMetadata(track)

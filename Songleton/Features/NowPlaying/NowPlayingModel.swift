@@ -3,14 +3,6 @@ import Combine
 import OSLog
 import SwiftUI
 
-struct RecentTrack: Identifiable {
-    let id = UUID()
-    let track: String
-    let artist: String
-    let source: String
-    let playedAt: Date
-}
-
 private actor MediaCommandQueue {
     func execute(_ action: @escaping @Sendable () throws -> Void) async throws {
         try Task.checkCancellation()
@@ -27,7 +19,7 @@ private actor AutomationPermissionQueue {
 
 @MainActor
 final class NowPlayingModel: ObservableObject {
-    static let shared = NowPlayingModel()
+    static let shared = AppContainer.shared.nowPlaying
 
     enum State: Sendable {
         case notRunning
@@ -46,7 +38,6 @@ final class NowPlayingModel: ObservableObject {
     @Published private(set) var dominantColor: Color = .accentColor
     @Published var automationStatus: AutomationStatus = .notDetermined
     @Published private(set) var permissionRequestsInFlight: Set<String> = []
-    @Published private(set) var recentTracks: [RecentTrack] = []
 
     let controllers: [any MediaController] = [SpotifyController(), AppleMusicController()]
     private var activeController: (any MediaController)?
@@ -54,26 +45,16 @@ final class NowPlayingModel: ObservableObject {
     private var currentArtworkKey: String?
     private var cancellables = Set<AnyCancellable>()
     private var lastLoadedKey: String?
-    private var lastFetchTime: Date = Date()
     private var timerCancellable: AnyCancellable?
     private let commandQueue = MediaCommandQueue()
     private let automationPermissionQueue = AutomationPermissionQueue()
     private let logger = Logger(subsystem: "bilgenworks.app.Songleton", category: "media-command")
     private var volumeTask: Task<Void, Never>?
+    private let settings: SettingsModel
 
-    var currentPosition: Double {
-        guard case .loaded(let info, _) = state else { return 0 }
-        if info.isPlaying {
-            let elapsed = Date().timeIntervalSince(lastFetchTime)
-            let position = info.position.isFinite ? max(0, info.position) : 0
-            let safeElapsed = elapsed.isFinite ? max(0, elapsed) : 0
-            return min(info.duration > 0 ? info.duration : Double.infinity, position + safeElapsed)
-        }
-        return info.position.isFinite ? max(0, info.position) : 0
-    }
-
-    private init() {
-        SettingsModel.shared.objectWillChange
+    init(settings: SettingsModel) {
+        self.settings = settings
+        settings.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
@@ -87,7 +68,7 @@ final class NowPlayingModel: ObservableObject {
 
     var menuBarTitle: String? {
         guard case .loaded(let info, _) = state else { return nil }
-        if SettingsModel.shared.showArtistInMenuBar && !info.artist.isEmpty {
+        if settings.showArtistInMenuBar && !info.artist.isEmpty {
             return "\(info.artist) - \(info.track)"
         }
         return info.track
@@ -200,9 +181,6 @@ final class NowPlayingModel: ObservableObject {
         }
 
         automationStatus = anyGranted ? .granted : (anyDenied ? .denied : .notDetermined)
-        if anyGranted {
-            UserDefaults.standard.set(true, forKey: "hasGrantedAutomation")
-        }
     }
 
     func permissionStatus(for bundleID: String) -> AutomationStatus {
@@ -300,7 +278,6 @@ final class NowPlayingModel: ObservableObject {
             guard let self else { return }
             if let result {
                 self.state = result.state
-                self.lastFetchTime = Date()
                 self.activeController = result.active
                 await self.syncArtwork(with: result.state)
 
@@ -309,15 +286,10 @@ final class NowPlayingModel: ObservableObject {
                     let previousKey = self.lastLoadedKey
                     if key != previousKey {
                         self.lastLoadedKey = key
-                        let recent = RecentTrack(track: info.track, artist: info.artist, source: src, playedAt: Date())
-                        self.recentTracks.insert(recent, at: 0)
-                        if self.recentTracks.count > 20 {
-                            self.recentTracks = Array(self.recentTracks.prefix(20))
-                        }
                         let srcLower = src.lowercased()
                         let isDesktopMusicApp = srcLower.contains("spotify") || srcLower.contains("music")
                         if previousKey != nil,
-                           SettingsModel.shared.showTrackNotifications,
+                           settings.showTrackNotifications,
                            !MenuBarManager.shared.isHoverPopoverShown,
                            !AmbientModeManager.shared.isPresented,
                            isDesktopMusicApp {

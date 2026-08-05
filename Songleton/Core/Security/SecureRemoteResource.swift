@@ -27,9 +27,7 @@ nonisolated enum RemoteResourceKind: Sendable {
 nonisolated enum SecureNetworkError: Error, Sendable {
     case disallowedURL
     case invalidResponse
-    case unexpectedContentType
     case responseTooLarge
-    case invalidImage
 }
 
 nonisolated enum RemoteResourceSecurity {

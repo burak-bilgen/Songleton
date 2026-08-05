@@ -91,12 +91,12 @@ struct TrackNotificationMotion {
 
 @MainActor
 final class HUDToastManager: NSObject {
-    static let shared = HUDToastManager()
+    static let shared = AppContainer.shared.hudToasts
 
     private var toastWindow: NonActivatingToastPanel?
     private var dismissTask: Task<Void, Never>?
 
-    private override init() {
+    override init() {
         super.init()
     }
 

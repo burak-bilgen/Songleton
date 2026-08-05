@@ -68,7 +68,7 @@ final class MouseGestureManager: ObservableObject {
         case next
     }
 
-    static let shared = MouseGestureManager()
+    static let shared = AppContainer.shared.mouseGestures
 
     fileprivate var eventTap: CFMachPort?
     nonisolated fileprivate let mouseMoveThrottle = MouseMoveThrottle(maximumUpdatesPerSecond: 60)

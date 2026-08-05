@@ -11,7 +11,7 @@ final class LocalizationManager: ObservableObject {
         var id: String { rawValue }
     }
 
-    static let shared = LocalizationManager()
+    static let shared = AppContainer.shared.localization
 
     @Published var language: Language {
         didSet {

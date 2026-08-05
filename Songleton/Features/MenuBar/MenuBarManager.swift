@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 final class MenuBarManager: NSObject, NSWindowDelegate {
-    static let shared = MenuBarManager()
+    static let shared = AppContainer.shared.menuBar
 
     private var bwdStatusItem: NSStatusItem?
     private var mainStatusItem: NSStatusItem?
@@ -17,13 +17,11 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
     private var closeWorkItem: DispatchWorkItem?
     private var globalClickMonitor: Any? = nil
 
-    var mainButton: NSStatusBarButton? { mainStatusItem?.button }
-
     var isHoverPopoverShown: Bool {
         volumePopover?.isShown == true
     }
 
-    private override init() { super.init() }
+    override init() { super.init() }
 
     func setup() {
         guard mainStatusItem == nil else { return }

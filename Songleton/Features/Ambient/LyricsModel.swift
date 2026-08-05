@@ -9,7 +9,7 @@ struct LyricLine: Identifiable, Equatable {
 
 @MainActor
 final class LyricsModel: ObservableObject {
-    static let shared = LyricsModel()
+    static let shared = AppContainer.shared.lyricsModel
 
     @Published var lines: [LyricLine] = []
     @Published var isLoading = false
@@ -17,7 +17,7 @@ final class LyricsModel: ObservableObject {
 
     private var loadTask: Task<Void, Never>?
 
-    private init() {}
+    init() {}
 
     func loadLyrics(track: String, artist: String, album: String? = nil, duration: Double? = nil, source: String = "") {
         let key = "\(source)|\(track)|\(artist)|\(album ?? "")"

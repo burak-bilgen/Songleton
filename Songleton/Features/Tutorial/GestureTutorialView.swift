@@ -214,16 +214,22 @@ struct GestureTutorialView: View {
     }
 
     private func controlClearance(for size: CGSize) -> CGFloat {
-        min(310, max(236, size.height * 0.37))
+        let compact = size.width < 720 || size.height < 760
+        let cardHeight: CGFloat = compact ? 262 : 306
+        return cardHeight + max(20, size.height * 0.045)
     }
 
     private func demoCenterY(for size: CGSize) -> CGFloat {
-        let preferred = max(238, size.height * 0.36)
-        return min(preferred, size.height - controlClearance(for: size) - 10)
+        let preferred = max(224, size.height * 0.36)
+        // Largest demo element is 268pt tall (volume canvas). Reserve its half
+        // height plus a margin so the card never overlaps the demo on short windows.
+        let bounds = size.height - controlClearance(for: size) - 148
+        return min(preferred, bounds)
     }
 
     private func edgeDemoY(for size: CGSize) -> CGFloat {
-        min(size.height * 0.44, size.height - controlClearance(for: size) - 22)
+        let bounds = size.height - controlClearance(for: size) - 70
+        return min(size.height * 0.44, bounds)
     }
 
     @ViewBuilder
@@ -304,7 +310,7 @@ struct GestureTutorialView: View {
         case .cancelDemo: return .previous
         case .rightEdgeSkip: return .next
         case .topEdgePlayPause: return .playPause
-        case .volumeControl, .hoverMenu, .ambientMode: return .next
+        default: return .next
         }
     }
 
@@ -342,7 +348,7 @@ struct GestureTutorialView: View {
         case .cancelDemo: "arrow.left"
         case .rightEdgeSkip: "arrow.right"
         case .topEdgePlayPause: "arrow.up"
-        case .volumeControl, .hoverMenu, .ambientMode: "cursorarrow.rays"
+        default: "cursorarrow.rays"
         }
     }
 
@@ -351,7 +357,7 @@ struct GestureTutorialView: View {
         case .cancelDemo: localization.string("tutorial.edge_status_cancel")
         case .rightEdgeSkip: localization.string("tutorial.edge_status_next")
         case .topEdgePlayPause: localization.string("tutorial.edge_status_playpause")
-        case .volumeControl, .hoverMenu, .ambientMode: ""
+        default: ""
         }
     }
 
@@ -363,8 +369,8 @@ struct GestureTutorialView: View {
             return CGPoint(x: size.width - 56, y: edgeDemoY(for: size))
         case .topEdgePlayPause:
             return CGPoint(x: size.width / 2, y: 56)
-        case .volumeControl, .hoverMenu, .ambientMode:
-            return CGPoint(x: size.width - 56, y: size.height / 2)
+        default:
+            return CGPoint(x: size.width - 56, y: edgeDemoY(for: size))
         }
     }
 
@@ -463,8 +469,9 @@ struct GestureTutorialView: View {
 
     private func stageControlCard(size: CGSize) -> some View {
         let compact = size.width < 720 || size.height < 760
+        let short = size.height < 720
 
-        return VStack(spacing: 16) {
+        return VStack(spacing: compact ? 12 : 16) {
             HStack {
                 Text(String(
                     format: localization.string("tutorial.step_progress_format"),
@@ -495,14 +502,16 @@ struct GestureTutorialView: View {
             }
             .frame(maxWidth: 560)
 
-            HStack(spacing: 8) {
-                Image(systemName: isStageAnimationRunning ? "sparkles" : "checkmark.circle.fill")
-                    .foregroundStyle(SongletonTheme.cyan)
-                Text(isStageAnimationRunning
-                    ? localization.string("tutorial.demo_running")
-                    : localization.string("tutorial.continue_hint"))
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.76))
+            if !short {
+                HStack(spacing: 8) {
+                    Image(systemName: isStageAnimationRunning ? "sparkles" : "checkmark.circle.fill")
+                        .foregroundStyle(SongletonTheme.cyan)
+                    Text(isStageAnimationRunning
+                        ? localization.string("tutorial.demo_running")
+                        : localization.string("tutorial.continue_hint"))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.76))
+                }
             }
 
             Group {
@@ -520,7 +529,7 @@ struct GestureTutorialView: View {
             }
         }
         .padding(.horizontal, compact ? 18 : 28)
-        .padding(.vertical, compact ? 16 : 22)
+        .padding(.vertical, compact ? 12 : 22)
         .frame(maxWidth: 680)
         .background(SongletonTheme.card.opacity(0.92), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.white.opacity(0.16), lineWidth: 1))
@@ -528,63 +537,63 @@ struct GestureTutorialView: View {
     }
 
     private func replayButton(size: CGSize) -> some View {
-                Button {
-                    runStageAnimation(stage: currentStage, size: size)
-                } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 14, weight: .bold))
-                        Text(localization.string("common.try_again"))
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundStyle(.white.opacity(0.85))
-                    .frame(minWidth: 168, maxWidth: .infinity, minHeight: 48)
-                    .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .disabled(isStageAnimationRunning)
-                .accessibilityLabel(localization.string("common.try_again"))
+        Button {
+            runStageAnimation(stage: currentStage, size: size)
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 14, weight: .bold))
+                Text(localization.string("common.try_again"))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(.white.opacity(0.85))
+            .frame(minWidth: 168, maxWidth: .infinity, minHeight: 48)
+            .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(isStageAnimationRunning)
+        .accessibilityLabel(localization.string("common.try_again"))
     }
 
     @ViewBuilder
     private func primaryStageButton(size: CGSize) -> some View {
-                if currentStage.rawValue < TutorialStage.allCases.count - 1 {
-                    Button {
-                        if let next = TutorialStage(rawValue: currentStage.rawValue + 1) {
-                            switchStage(to: next, size: size)
-                        }
-                    } label: {
-                        HStack(spacing: 5) {
-                            Text(isStageAnimationRunning ? localization.string("tutorial.demo_running") : localization.string("common.continue"))
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 13, weight: .bold))
-                        }
-                        .foregroundStyle(.white)
-                            .frame(minWidth: 210, maxWidth: .infinity, minHeight: 48)
-                        .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isStageAnimationRunning)
-                    .accessibilityLabel(localization.string("common.continue"))
-                } else {
-                    Button {
-                        onComplete()
-                    } label: {
-                        HStack(spacing: 5) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 14, weight: .bold))
-                            Text(localization.string("common.start"))
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
-                        }
-                        .foregroundStyle(.white)
-                            .frame(minWidth: 210, maxWidth: .infinity, minHeight: 48)
-                        .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isStageAnimationRunning)
-                    .accessibilityLabel(localization.string("common.start"))
+        if currentStage.rawValue < TutorialStage.allCases.count - 1 {
+            Button {
+                if let next = TutorialStage(rawValue: currentStage.rawValue + 1) {
+                    switchStage(to: next, size: size)
                 }
+            } label: {
+                HStack(spacing: 5) {
+                    Text(isStageAnimationRunning ? localization.string("tutorial.demo_running") : localization.string("common.continue"))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .bold))
+                }
+                .foregroundStyle(.white)
+                .frame(minWidth: 210, maxWidth: .infinity, minHeight: 48)
+                .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(isStageAnimationRunning)
+            .accessibilityLabel(localization.string("common.continue"))
+        } else {
+            Button {
+                onComplete()
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14, weight: .bold))
+                    Text(localization.string("common.start"))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                }
+                .foregroundStyle(.white)
+                .frame(minWidth: 210, maxWidth: .infinity, minHeight: 48)
+                .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(isStageAnimationRunning)
+            .accessibilityLabel(localization.string("common.start"))
+        }
     }
 
     // MARK: - Animation Controller & Sound Triggers
@@ -786,12 +795,12 @@ struct GestureTutorialView: View {
                 for p in 0...100 {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
-                    if p == 72 {
-                        TutorialAudioService.shared.switchToSecondTrack()
-                    }
                     try? await Task.sleep(for: .milliseconds(9))
                 }
 
+                // The track change lands exactly when the ring completes, so the
+                // audio transition is heard at the same instant as the burst.
+                TutorialAudioService.shared.switchToSecondTrack()
                 mockManager.simulateEdgeGestureBurst()
                 await moveCursor(
                     to: CGPoint(x: size.width - 74, y: edgeY - 12),
@@ -845,6 +854,7 @@ struct GestureTutorialView: View {
                 guard !Task.isCancelled else { return }
 
                 isPlaybackResuming = true
+                isPlaybackPaused = false
                 for p in 0...100 {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
@@ -912,9 +922,6 @@ struct GestureTutorialView: View {
                     isHoverPanelVisible = true
                 }
                 try? await Task.sleep(for: .milliseconds(1000))
-                guard !Task.isCancelled else { return }
-                mockManager.simulateEdgeGestureBurst()
-                try? await Task.sleep(for: .milliseconds(500))
                 guard !Task.isCancelled else { return }
                 isStageAnimationRunning = false
 

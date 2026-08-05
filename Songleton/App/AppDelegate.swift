@@ -18,8 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         registerCustomFonts()
-        MenuBarManager.shared.setup()
-        NowPlayingModel.shared.checkAutomationPermission()
+        AppContainer.shared.bootstrap()
 
         NotificationCenter.default.addObserver(
             forName: .songletonShowOnboarding,
@@ -66,6 +65,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         MouseGestureManager.shared.refreshAccessibilityStatus()
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        AppContainer.shared.shutdown()
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
     }
@@ -87,14 +90,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let x = screenFrame.minX + (screenFrame.width - windowSize.width) / 2
         let y = screenFrame.minY + (screenFrame.height - windowSize.height) / 2
         window.setFrameOrigin(NSPoint(x: x, y: y))
-    }
-
-    var isOnboardingWindowOpen: Bool {
-        onboardingWindow != nil
-    }
-
-    var isSetupRecoveryWindowOpen: Bool {
-        setupRecoveryWindow != nil
     }
 
     func showOnboarding() {
@@ -162,10 +157,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         isFinishingOnboarding = true
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         closeSetupRecoveryWindow()
-
-        if NowPlayingModel.shared.automationStatus == .granted {
-            UserDefaults.standard.set(true, forKey: "hasGrantedAutomation")
-        }
 
         onboardingWindow?.close()
         onboardingWindow = nil

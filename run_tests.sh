@@ -9,14 +9,16 @@ mkdir -p "$BUILD_DIR"
 
 echo "🔨 Compiling test suite..."
 
+# Songleton files are discovered recursively: the Xcode project uses a
+# file-system-synchronized root, so this must match the on-disk tree exactly.
 shopt -s nullglob
 SWIFT_FILES=()
-for file in Songleton/*.swift Songleton/App/*.swift Songleton/Controllers/*.swift Songleton/Models/*.swift Songleton/Services/*.swift Songleton/Views/*.swift SongletonTests/*.swift SongletonTests/Controllers/*.swift SongletonTests/Models/*.swift SongletonTests/Services/*.swift SongletonTests/Support/*.swift SongletonTests/Views/*.swift; do
+while IFS= read -r file; do
   case "$file" in
     */SongletonApp.swift|*/AppDelegate.swift) continue ;;
   esac
   SWIFT_FILES+=("$file")
-done
+done < <(find Songleton SongletonTests -name '*.swift' -type f | sort)
 
 EXTRA_FLAGS_VALUE="${SWIFT_EXTRA_FLAGS:-}"
 SWIFTC_ARGS=(

@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 final class AmbientModeManager: ObservableObject {
-    static let shared = AmbientModeManager()
+    static let shared = AppContainer.shared.ambient
 
     @Published private(set) var isPresented = false
     private var window: NSWindow?
@@ -12,7 +12,7 @@ final class AmbientModeManager: ObservableObject {
     private var activeObserver: NSObjectProtocol?
     private var resignObserver: NSObjectProtocol?
 
-    private init() {}
+    init() {}
 
     func toggle() {
         if isPresented {

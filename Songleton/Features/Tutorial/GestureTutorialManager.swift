@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 final class GestureTutorialManager: ObservableObject {
-    static let shared = GestureTutorialManager()
+    static let shared = AppContainer.shared.tutorial
 
     private static let completionKey = "hasCompletedGestureTutorial"
     private static let resolutionKey = "gestureTutorialResolution"
@@ -24,7 +24,7 @@ final class GestureTutorialManager: ObservableObject {
     private var window: NSWindow?
     private var keyMonitor: Any?
 
-    private init() {}
+    init() {}
 
     var resolution: Resolution {
         if let rawValue = UserDefaults.standard.string(forKey: Self.resolutionKey),

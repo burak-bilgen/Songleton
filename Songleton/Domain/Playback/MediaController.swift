@@ -24,7 +24,6 @@ nonisolated struct NowPlayingInfo: Sendable {
 nonisolated enum MediaControllerError: Error, Sendable {
     case appNotRunning
     case permissionDenied
-    case unsupportedCommand
     case scriptFailed(String)
 }
 
