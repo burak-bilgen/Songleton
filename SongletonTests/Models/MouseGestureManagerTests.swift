@@ -4,6 +4,7 @@ import AppKit
 final class MouseGestureManagerTests {
     func runAllTests() {
         runTest(name: "testEdgeZonesUseScreenTopForPlayPause", test: testEdgeZonesUseScreenTopForPlayPause)
+        runTest(name: "testEdgeZonesSupportVerticallyArrangedDisplays", test: testEdgeZonesSupportVerticallyArrangedDisplays)
         runTest(name: "testEdgeZonesRespectEnabledGestureGroups", test: testEdgeZonesRespectEnabledGestureGroups)
     }
 
@@ -18,7 +19,7 @@ final class MouseGestureManagerTests {
 
         assertEqual(
             MouseGestureManager.edgeZone(
-                at: NSPoint(x: 720, y: 1),
+                at: NSPoint(x: 720, y: 899),
                 in: frame,
                 horizontalEnabled: true,
                 verticalEnabled: true
@@ -27,7 +28,7 @@ final class MouseGestureManagerTests {
         )
         assertEqual(
             MouseGestureManager.edgeZone(
-                at: NSPoint(x: 720, y: 899),
+                at: NSPoint(x: 720, y: 1),
                 in: frame,
                 horizontalEnabled: true,
                 verticalEnabled: true
@@ -63,6 +64,29 @@ final class MouseGestureManagerTests {
                 in: frame,
                 horizontalEnabled: true,
                 verticalEnabled: false
+            ),
+            nil
+        )
+    }
+
+    private func testEdgeZonesSupportVerticallyArrangedDisplays() {
+        let upperDisplay = NSRect(x: -200, y: 900, width: 1728, height: 1117)
+
+        assertEqual(
+            MouseGestureManager.edgeZone(
+                at: NSPoint(x: 500, y: upperDisplay.maxY - 1),
+                in: upperDisplay,
+                horizontalEnabled: true,
+                verticalEnabled: true
+            ),
+            .playPause
+        )
+        assertEqual(
+            MouseGestureManager.edgeZone(
+                at: NSPoint(x: 500, y: upperDisplay.minY + 1),
+                in: upperDisplay,
+                horizontalEnabled: true,
+                verticalEnabled: true
             ),
             nil
         )

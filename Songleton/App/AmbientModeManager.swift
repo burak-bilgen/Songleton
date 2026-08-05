@@ -182,9 +182,17 @@ final class AmbientModeManager: ObservableObject {
             let code = event.keyCode
             let chars = event.charactersIgnoringModifiers?.lowercased() ?? ""
 
+            let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let hasCommandModifier = modifiers.contains(.command)
+                || modifiers.contains(.control)
+                || modifiers.contains(.option)
+            let isAmbientShortcut = [49, 53, 123, 124, 125, 126].contains(code)
+                || (!hasCommandModifier && (chars == "l" || chars == "t"))
+            guard isAmbientShortcut else { return event }
+
             DispatchQueue.main.async {
                 NotificationCenter.default.post(
-                    name: Notification.Name("ambientKeyDown"),
+                    name: .songletonAmbientKeyDown,
                     object: nil,
                     userInfo: ["keyCode": code, "chars": chars]
                 )

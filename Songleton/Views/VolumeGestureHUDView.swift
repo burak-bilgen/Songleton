@@ -44,7 +44,6 @@ struct CursorGestureOverlayView: View {
     @ObservedObject var manager: MouseGestureManager
     let zone: MouseGestureManager.EdgeZone
 
-    private let amoledAccent = Color.white
     private let burstAccent = SongletonTheme.cyan
     private let cancelAccent = Color(red: 0.98, green: 0.28, blue: 0.31)
     @State private var isBursting = false

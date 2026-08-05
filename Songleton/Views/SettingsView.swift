@@ -165,7 +165,11 @@ struct SettingsView: View {
                     .tint(SongletonTheme.cyan)
                     .frame(width: 110)
 
-                Text(String(format: "%.1fs", settings.edgeGestureHoldDuration))
+                Text(String(
+                    format: localization.string("settings.seconds_format"),
+                    locale: localization.locale,
+                    settings.edgeGestureHoldDuration
+                ))
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                     .frame(width: 34, alignment: .trailing)
@@ -194,7 +198,7 @@ struct SettingsView: View {
 
                 VStack(spacing: 8) {
                     shortcutRow(
-                        keys: [keyCapView("Space", width: 52)],
+                        keys: [keyCapView(localization.string("key.space"), width: 52)],
                         description: localization.string("shortcut.play_pause")
                     )
 
@@ -239,7 +243,7 @@ struct SettingsView: View {
                     Spacer()
 
                     Button {
-                        NotificationCenter.default.post(name: Notification.Name("showGestureTutorial"), object: nil)
+                        NotificationCenter.default.post(name: .songletonShowGestureTutorial, object: nil)
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "play.fill")
@@ -329,7 +333,7 @@ struct SettingsView: View {
                 .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(isEnabled ? SongletonTheme.cyan.opacity(0.9) : .white.opacity(0.25))
 
-            Text(isEnabled ? "✓" : "✕")
+            Text(verbatim: isEnabled ? "✓" : "✕")
                 .font(.system(size: 10, weight: .bold, design: .rounded))
                 .foregroundStyle(isEnabled ? SongletonTheme.cyan : .white.opacity(0.25))
         }
@@ -339,7 +343,8 @@ struct SettingsView: View {
         let duration = key == "gesture.top_desc"
             ? settings.edgeGestureHoldDuration * 0.8
             : settings.edgeGestureHoldDuration
-        return String(format: localization.string(key), String(format: "%.1f", duration))
+        let formattedDuration = String(format: "%.1f", locale: localization.locale, duration)
+        return String(format: localization.string(key), formattedDuration)
     }
 
     private func keyCapView(_ text: String, width: CGFloat = 28) -> AnyView {
@@ -446,7 +451,7 @@ struct SettingsView: View {
                         .tint(SongletonTheme.cyan)
                         .frame(width: 110)
 
-                    Text("\(Int(settings.menuBarWidth))")
+                    Text(verbatim: Int(settings.menuBarWidth).formatted(.number.locale(localization.locale)))
                         .font(.system(size: 12, weight: .bold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(.white.opacity(0.4))
@@ -469,7 +474,11 @@ struct SettingsView: View {
                     .tint(SongletonTheme.cyan)
                     .frame(width: 100)
 
-                Text(String(format: "%+.1fs", settings.lyricsOffset))
+                Text(String(
+                    format: localization.string("settings.signed_seconds_format"),
+                    locale: localization.locale,
+                    settings.lyricsOffset
+                ))
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                     .frame(width: 44, alignment: .trailing)
@@ -482,7 +491,8 @@ struct SettingsView: View {
     private var permissionsSection: some View {
         settingsCard(title: localization.string("settings.permissions"), icon: "lock.shield.fill", sectionID: "permissions") {
             VStack(spacing: 0) {
-                // Automation Status Row
+                // Player access status. macOS exposes this under Automation,
+                // but the product-level label should describe what it unlocks.
                 HStack(spacing: 12) {
                     iconBadge(systemName: automationStatusIcon, color: automationStatusColor)
 
@@ -493,6 +503,10 @@ struct SettingsView: View {
                         Text(automationStatusText)
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(automationStatusColor)
+                        Text(localization.string("permission.explanation"))
+                            .font(.system(size: 9.5, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.38))
+                            .lineLimit(1)
                     }
 
                     Spacer()
@@ -607,7 +621,7 @@ struct SettingsView: View {
             Spacer()
 
             Button {
-                NotificationCenter.default.post(name: Notification.Name("showOnboardingGuide"), object: nil)
+                NotificationCenter.default.post(name: .songletonShowOnboarding, object: nil)
             } label: {
                 Text(localization.string("settings.grant_permissions"))
                     .font(.system(size: 11, weight: .bold, design: .rounded))
@@ -629,7 +643,7 @@ struct SettingsView: View {
         VStack(spacing: 14) {
             HStack(spacing: 12) {
                 Button {
-                    NotificationCenter.default.post(name: Notification.Name("showGestureTutorial"), object: nil)
+                    NotificationCenter.default.post(name: .songletonShowGestureTutorial, object: nil)
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "play.circle.fill")
@@ -646,7 +660,7 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
 
                 Button {
-                    NotificationCenter.default.post(name: Notification.Name("showOnboardingGuide"), object: nil)
+                    NotificationCenter.default.post(name: .songletonShowOnboarding, object: nil)
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "sparkles")
@@ -663,7 +677,10 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
             }
 
-            Text("Songleton v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
+            Text(String(
+                format: localization.string("settings.version_format"),
+                Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
+            ))
                 .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.3))
         }
@@ -753,6 +770,7 @@ struct SettingsView: View {
                 .toggleStyle(.switch)
                 .tint(SongletonTheme.cyan)
                 .labelsHidden()
+                .accessibilityLabel(title)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -948,7 +966,7 @@ private struct NotificationPositionSelector: View {
         .buttonStyle(.plain)
         .onHover { hoveredPosition = $0 ? position : nil }
         .accessibilityLabel(localization.string(position.localizationKey))
-        .accessibilityValue(selection == position ? "Selected" : "")
+        .accessibilityValue(selection == position ? localization.string("common.selected") : "")
         .accessibilityAddTraits(selection == position ? .isSelected : [])
     }
 

@@ -26,7 +26,6 @@ struct UnifiedHoverPanelView: View {
     @State private var quitButtonScale: CGFloat = 1.0
     @State private var isMutePressed: Bool = false
     @State private var hoveredButtonID: String? = nil
-    @State private var hoveredPlaylistID: String? = nil
 
     // Gentle Artwork Breathing State
     @State private var isArtworkBreathing: Bool = false
@@ -203,11 +202,14 @@ struct UnifiedHoverPanelView: View {
                         model.setVolume(Int(localVolume))
                     }
                 },
-                barColor: themeColor
+                barColor: themeColor,
+                accessibilityLabel: localization.string("control.volume"),
+                accessibilityValue: "\(Int(activeVolume))%",
+                accessibilityStep: 5
             )
 
             // %100 Label Fixed Width (52px)
-            Text("\(Int(activeVolume))%")
+            Text(verbatim: "\(Int(activeVolume))%")
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundStyle(Color.white)
                 .padding(.horizontal, 7)
@@ -475,95 +477,7 @@ struct UnifiedHoverPanelView: View {
             volumeRow
                 .padding(.top, 2)
 
-            if source.lowercased().contains("spotify") {
-                spotifyDiscoverySection
-            }
         }
-    }
-
-    private var spotifyDiscoverySection: some View {
-        let playlists = SpotifyDiscoveryCatalog.playlists()
-
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 7) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color(red: 29 / 255, green: 185 / 255, blue: 84 / 255))
-
-                Text(localization.string("spotify.discovery_title"))
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.88))
-
-                Spacer()
-            }
-
-            HStack(spacing: 0) {
-                Spacer(minLength: 0)
-                HStack(spacing: 6) {
-                    ForEach(playlists) { playlist in
-                        spotifyPlaylistTile(playlist)
-                    }
-                }
-                Spacer(minLength: 0)
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .padding(.top, 5)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(localization.string("spotify.discovery_title"))
-    }
-
-    private func spotifyPlaylistTile(_ playlist: SpotifyDiscoveryPlaylist) -> some View {
-        let accent = playlistAccent(for: playlist)
-        let isHovered = hoveredPlaylistID == playlist.id
-
-        return Button {
-            model.playSpotifyPlaylist(playlist)
-        } label: {
-            VStack(spacing: 5) {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [accent.opacity(0.95), accent.opacity(0.42)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 42, height: 38)
-                    .overlay {
-                        Image(systemName: isHovered ? "play.fill" : "music.note.list")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(.white)
-                            .contentTransition(.symbolEffect(.replace))
-                    }
-                    .shadow(color: accent.opacity(isHovered ? 0.48 : 0.28), radius: isHovered ? 8 : 5, y: 2)
-
-                Text(playlist.title)
-                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.90))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .frame(height: 20, alignment: .top)
-            }
-            .frame(width: 58, height: 71)
-            .background(
-                isHovered ? Color.white.opacity(0.12) : Color.white.opacity(0.045),
-                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(isHovered ? accent.opacity(0.65) : .white.opacity(0.08), lineWidth: 1)
-            }
-            .scaleEffect(isHovered ? 1.03 : 1.0)
-            .animation(.spring(response: 0.24, dampingFraction: 0.72), value: isHovered)
-        }
-        .buttonStyle(.plain)
-        .onHover { isHovered in
-            hoveredPlaylistID = isHovered ? playlist.id : nil
-        }
-        .help(localization.string("spotify.discovery_play_hint"))
-        .accessibilityLabel(playlist.title)
-        .accessibilityHint(localization.string("spotify.discovery_play_hint"))
     }
 
     // MARK: - Not Running
@@ -637,16 +551,6 @@ struct UnifiedHoverPanelView: View {
             Image(systemName: icon)
                 .font(.system(size: iconSize, weight: .bold))
                 .foregroundStyle(isActive ? accent : .white.opacity(0.85))
-        }
-    }
-
-    private func playlistAccent(for playlist: SpotifyDiscoveryPlaylist) -> Color {
-        switch playlist.accentIndex {
-        case 0: Color(red: 29 / 255, green: 185 / 255, blue: 84 / 255)
-        case 1: SongletonTheme.cyan
-        case 2: SongletonTheme.violet
-        case 3: SongletonTheme.pink
-        default: Color(red: 0.96, green: 0.68, blue: 0.23)
         }
     }
 

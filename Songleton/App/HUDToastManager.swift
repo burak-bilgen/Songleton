@@ -190,10 +190,10 @@ final class HUDToastManager: NSObject {
                     panel.animator().setFrame(entryPanelFrame, display: true)
                     panel.animator().alphaValue = 0.0
                 } completionHandler: { [weak self, weak panel] in
-                    guard let panel else { return }
-                    panel.orderOut(nil)
-                    panel.close()
                     Task { @MainActor [weak self, weak panel] in
+                        guard let panel else { return }
+                        panel.orderOut(nil)
+                        panel.close()
                         guard let self, self.toastWindow === panel else { return }
                         self.toastWindow = nil
                     }

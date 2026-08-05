@@ -110,9 +110,11 @@ final class GestureTutorialManager: ObservableObject {
                 context.duration = 0.35
                 win.animator().alphaValue = 0.0
             } completionHandler: {
-                win.orderOut(nil)
-                win.contentView = nil
-                win.close()
+                Task { @MainActor in
+                    win.orderOut(nil)
+                    win.contentView = nil
+                    win.close()
+                }
             }
         }
         window = nil

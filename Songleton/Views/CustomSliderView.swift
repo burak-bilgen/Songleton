@@ -5,6 +5,9 @@ struct CustomSliderView: View {
     let range: ClosedRange<Double>
     let onEditingChanged: (Bool) -> Void
     var barColor: Color = .primary
+    var accessibilityLabel: String
+    var accessibilityValue: String
+    var accessibilityStep: Double
 
     var body: some View {
         GeometryReader { geometry in
@@ -37,5 +40,22 @@ struct CustomSliderView: View {
             )
         }
         .frame(height: 16)
+        .accessibilityElement()
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityValue(accessibilityValue)
+        .accessibilityAdjustableAction { direction in
+            let delta: Double
+            switch direction {
+            case .increment:
+                delta = accessibilityStep
+            case .decrement:
+                delta = -accessibilityStep
+            @unknown default:
+                return
+            }
+            onEditingChanged(true)
+            value = min(range.upperBound, max(range.lowerBound, value + delta))
+            onEditingChanged(false)
+        }
     }
 }

@@ -20,6 +20,7 @@ Commit the updated cask, create the matching `v1.0` GitHub Release, and attach
 `Songleton-1.0.dmg` to that release. The Cask URL and version must match the
 release asset exactly.
 
-The checked-in `sha256 :no_check` is intentionally a staging value. Do not
-publish it as an official cask. A pinned checksum is the integrity check that
-Homebrew users should receive.
+The checked-in all-zero checksum is a fail-closed staging value. Installation
+must fail until the release helper replaces it with the real DMG checksum.
+Never use `sha256 :no_check`; a pinned checksum is the integrity check Homebrew
+users should receive.

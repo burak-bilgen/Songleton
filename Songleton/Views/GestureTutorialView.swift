@@ -12,6 +12,66 @@ enum TutorialStage: Int, CaseIterable, Identifiable {
     var id: Int { rawValue }
 }
 
+enum TutorialPointerMotion {
+    static func minimumJerk(_ value: CGFloat) -> CGFloat {
+        let t = min(max(value, 0), 1)
+        return t * t * t * (10 + t * (-15 + 6 * t))
+    }
+
+    static func duration(distance: CGFloat, requested: Double) -> Double {
+        let distanceDriven = 0.32 + Double(max(distance, 0)) / 920
+        return min(0.92, max(requested, distanceDriven))
+    }
+
+    static func controlPoints(
+        from start: CGPoint,
+        to end: CGPoint,
+        sequence: Int
+    ) -> (first: CGPoint, second: CGPoint) {
+        let delta = CGPoint(x: end.x - start.x, y: end.y - start.y)
+        let distance = hypot(delta.x, delta.y)
+        guard distance > 0.5 else { return (start, end) }
+
+        let direction = CGPoint(x: delta.x / distance, y: delta.y / distance)
+        let normal = CGPoint(x: -direction.y, y: direction.x)
+        let bendDirection: CGFloat = sequence.isMultiple(of: 2) ? 1 : -1
+        let bend = min(48, max(10, distance * 0.09)) * bendDirection
+        let overshoot = min(9, max(1.5, distance * 0.018))
+
+        return (
+            CGPoint(
+                x: start.x + delta.x * 0.30 + normal.x * bend,
+                y: start.y + delta.y * 0.30 + normal.y * bend
+            ),
+            CGPoint(
+                x: end.x + direction.x * overshoot - normal.x * bend * 0.18,
+                y: end.y + direction.y * overshoot - normal.y * bend * 0.18
+            )
+        )
+    }
+
+    static func point(
+        from start: CGPoint,
+        to end: CGPoint,
+        firstControl: CGPoint,
+        secondControl: CGPoint,
+        progress: CGFloat
+    ) -> CGPoint {
+        let t = min(max(progress, 0), 1)
+        let inverse = 1 - t
+        return CGPoint(
+            x: inverse * inverse * inverse * start.x
+                + 3 * inverse * inverse * t * firstControl.x
+                + 3 * inverse * t * t * secondControl.x
+                + t * t * t * end.x,
+            y: inverse * inverse * inverse * start.y
+                + 3 * inverse * inverse * t * firstControl.y
+                + 3 * inverse * t * t * secondControl.y
+                + t * t * t * end.y
+        )
+    }
+}
+
 struct GestureTutorialView: View {
     @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -30,6 +90,7 @@ struct GestureTutorialView: View {
     @State private var cursorScale: CGFloat = 1
     @State private var cursorRotation: Double = -5
     @State private var isCursorPressed = false
+    @State private var cursorMoveSequence = 0
 
     // Mock MouseGestureManager for real overlay component
     @StateObject private var mockManager = MouseGestureManager()
@@ -197,8 +258,8 @@ struct GestureTutorialView: View {
                     .frame(width: 250, alignment: .leading)
 
                 HStack(spacing: 8) {
-                    tutorialInputPill(symbol: "⌘", label: "Command")
-                    tutorialInputPill(symbol: "⌥", label: "Option")
+                    tutorialInputPill(symbol: "⌘", label: localization.string("key.command"))
+                    tutorialInputPill(symbol: "⌥", label: localization.string("key.option"))
                     Image(systemName: "arrow.up.and.down")
                         .foregroundStyle(SongletonTheme.cyan)
                     Text(localization.string("tutorial.volume_drag_short"))
@@ -343,7 +404,7 @@ struct GestureTutorialView: View {
     private func animatedMouseCursor(size: CGSize) -> some View {
         ZStack {
             Circle()
-                .fill(SongletonTheme.cyan.opacity(isCursorPressed ? 0.28 : 0.0))
+                .fill((isTrackRightClicking ? SongletonTheme.violet : SongletonTheme.cyan).opacity(isCursorPressed ? 0.28 : 0.0))
                 .frame(width: 42, height: 42)
                 .blur(radius: 4)
 
@@ -351,7 +412,11 @@ struct GestureTutorialView: View {
                 .font(.system(size: 31, weight: .semibold))
                 .foregroundStyle(LinearGradient(colors: [.white, Color(white: 0.82)], startPoint: .top, endPoint: .bottom))
                 .shadow(color: .black.opacity(0.78), radius: 7, x: 2, y: 4)
-                .shadow(color: SongletonTheme.cyan.opacity(isCursorPressed ? 0.65 : 0.18), radius: isCursorPressed ? 12 : 4)
+                .shadow(
+                    color: (isTrackRightClicking ? SongletonTheme.violet : SongletonTheme.cyan)
+                        .opacity(isCursorPressed ? 0.65 : 0.18),
+                    radius: isCursorPressed ? 12 : 4
+                )
                 .scaleEffect(cursorScale)
                 .rotationEffect(.degrees(cursorRotation), anchor: .topLeading)
         }
@@ -378,7 +443,7 @@ struct GestureTutorialView: View {
                 onDismiss()
             } label: {
                 HStack(spacing: 6) {
-                    Text("ESC")
+                    Text(verbatim: "ESC")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .padding(.horizontal, 5)
                         .padding(.vertical, 2)
@@ -403,7 +468,11 @@ struct GestureTutorialView: View {
     private func stageControlCard(size: CGSize) -> some View {
         VStack(spacing: 16) {
             HStack {
-                Text("\(localization.string("tutorial.step_label")) \(currentStage.rawValue + 1) / \(TutorialStage.allCases.count)")
+                Text(String(
+                    format: localization.string("tutorial.step_progress_format"),
+                    currentStage.rawValue + 1,
+                    TutorialStage.allCases.count
+                ))
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
                     .foregroundStyle(SongletonTheme.cyan)
                 Spacer()
@@ -529,31 +598,72 @@ struct GestureTutorialView: View {
         }
     }
 
-    private func cursorAnimation(duration: Double) -> Animation {
-        reduceMotion
-            ? .linear(duration: min(duration, 0.18))
-            : .timingCurve(0.18, 0.82, 0.22, 1, duration: duration)
-    }
-
     private func moveCursor(
         to point: CGPoint,
         duration: Double,
         rotation: Double = -5,
         scale: CGFloat = 1
     ) async {
-        withAnimation(cursorAnimation(duration: duration)) {
+        if reduceMotion {
+            withAnimation(.linear(duration: min(duration, 0.18))) {
+                cursorPosition = point
+                cursorRotation = rotation
+                cursorScale = scale
+            }
+            try? await Task.sleep(for: .seconds(min(duration, 0.18)))
+            return
+        }
+
+        let start = cursorPosition
+        let startRotation = cursorRotation
+        let startScale = cursorScale
+        let delta = CGPoint(x: point.x - start.x, y: point.y - start.y)
+        let distance = hypot(delta.x, delta.y)
+        guard distance > 0.5 else {
+            cursorPosition = point
+            cursorRotation = rotation
+            cursorScale = scale
+            return
+        }
+
+        cursorMoveSequence += 1
+        let controls = TutorialPointerMotion.controlPoints(
+            from: start,
+            to: point,
+            sequence: cursorMoveSequence
+        )
+        let naturalDuration = TutorialPointerMotion.duration(distance: distance, requested: duration)
+        let frameCount = max(12, Int(naturalDuration * 60))
+        let frameDuration = naturalDuration / Double(frameCount)
+
+        for frame in 1...frameCount {
+            guard !Task.isCancelled else { return }
+            let linearT = CGFloat(frame) / CGFloat(frameCount)
+            let t = TutorialPointerMotion.minimumJerk(linearT)
+            cursorPosition = TutorialPointerMotion.point(
+                from: start,
+                to: point,
+                firstControl: controls.first,
+                secondControl: controls.second,
+                progress: t
+            )
+            cursorRotation = startRotation + (rotation - startRotation) * Double(t)
+            cursorScale = startScale + (scale - startScale) * t
+            try? await Task.sleep(for: .seconds(frameDuration))
+        }
+
+        if !Task.isCancelled {
             cursorPosition = point
             cursorRotation = rotation
             cursorScale = scale
         }
-        try? await Task.sleep(for: .seconds(duration))
     }
 
-    private func setCursorPressed(_ pressed: Bool) async {
+    private func setCursorPressed(_ pressed: Bool, rightClick: Bool = false) async {
         withAnimation(reduceMotion ? nil : .spring(response: 0.18, dampingFraction: 0.62)) {
             isCursorPressed = pressed
-            cursorScale = pressed ? 0.86 : 1
-            cursorRotation = pressed ? -1 : -5
+            cursorScale = pressed ? (rightClick ? 0.90 : 0.86) : 1
+            cursorRotation = pressed ? (rightClick ? -9 : -1) : -5
         }
         try? await Task.sleep(for: .milliseconds(pressed ? 120 : 90))
     }
@@ -564,20 +674,36 @@ struct GestureTutorialView: View {
         cursorTarget: CGPoint,
         duration: Double
     ) async {
-        withAnimation(cursorAnimation(duration: duration)) {
-            cursorPosition = cursorTarget
-        }
+        let origin = cursorPosition
+        let delta = CGPoint(x: cursorTarget.x - origin.x, y: cursorTarget.y - origin.y)
+        let distance = max(hypot(delta.x, delta.y), 1)
+        let normal = CGPoint(x: -delta.y / distance, y: delta.x / distance)
+        let control = CGPoint(
+            x: origin.x + delta.x * 0.52 + normal.x * min(18, distance * 0.06),
+            y: origin.y + delta.y * 0.52 + normal.y * min(18, distance * 0.06)
+        )
+        let frameCount = reduceMotion ? 6 : max(12, Int(duration * 60))
+        let frameDuration = duration / Double(frameCount)
+        var lastValue: Int?
 
-        let step = start <= end ? 1 : -1
-        let values = Array(stride(from: start, through: end, by: step))
-        let interval = max(0.025, duration / Double(max(values.count, 1)))
-
-        for value in values {
+        for frame in 1...frameCount {
             guard !Task.isCancelled else { return }
-            mockManager.simulateGestureVolume(value)
-            TutorialAudioService.shared.setDemoVolume(value)
-            try? await Task.sleep(for: .seconds(interval))
+            let linearT = CGFloat(frame) / CGFloat(frameCount)
+            let t = TutorialPointerMotion.minimumJerk(linearT)
+            let inverse = 1 - t
+            cursorPosition = CGPoint(
+                x: inverse * inverse * origin.x + 2 * inverse * t * control.x + t * t * cursorTarget.x,
+                y: inverse * inverse * origin.y + 2 * inverse * t * control.y + t * t * cursorTarget.y
+            )
+            let value = Int((Double(start) + Double(end - start) * Double(t)).rounded())
+            if value != lastValue {
+                mockManager.simulateGestureVolume(value)
+                TutorialAudioService.shared.setDemoVolume(value)
+                lastValue = value
+            }
+            try? await Task.sleep(for: .seconds(frameDuration))
         }
+        cursorPosition = cursorTarget
     }
 
     private func runStageAnimation(stage: TutorialStage, size: CGSize) {
@@ -593,8 +719,6 @@ struct GestureTutorialView: View {
         TutorialAudioService.shared.setDemoVolume(8)
         prepareAudio(for: stage)
 
-        let center = CGPoint(x: size.width / 2, y: size.height / 2)
-        cursorPosition = center
         cursorScale = 1
         cursorRotation = -5
         isCursorPressed = false
@@ -606,14 +730,8 @@ struct GestureTutorialView: View {
             switch stage {
             case .cancelDemo:
                 await moveCursor(
-                    to: CGPoint(x: size.width * 0.30, y: size.height * 0.56),
-                    duration: 0.34,
-                    rotation: -8
-                )
-                guard !Task.isCancelled else { return }
-                await moveCursor(
                     to: CGPoint(x: 10, y: size.height * 0.50),
-                    duration: 0.46,
+                    duration: 0.64,
                     rotation: -13,
                     scale: 0.94
                 )
@@ -639,14 +757,8 @@ struct GestureTutorialView: View {
 
             case .rightEdgeSkip:
                 await moveCursor(
-                    to: CGPoint(x: size.width * 0.70, y: size.height * 0.45),
-                    duration: 0.34,
-                    rotation: 4
-                )
-                guard !Task.isCancelled else { return }
-                await moveCursor(
                     to: CGPoint(x: size.width - 10, y: size.height * 0.50),
-                    duration: 0.46,
+                    duration: 0.68,
                     rotation: 10,
                     scale: 0.94
                 )
@@ -675,14 +787,8 @@ struct GestureTutorialView: View {
 
             case .topEdgePlayPause:
                 await moveCursor(
-                    to: CGPoint(x: size.width * 0.56, y: size.height * 0.32),
-                    duration: 0.38,
-                    rotation: -2
-                )
-                guard !Task.isCancelled else { return }
-                await moveCursor(
                     to: CGPoint(x: size.width / 2, y: 10),
-                    duration: 0.42,
+                    duration: 0.70,
                     rotation: -6,
                     scale: 0.94
                 )
@@ -711,14 +817,8 @@ struct GestureTutorialView: View {
                 guard !Task.isCancelled else { return }
 
                 await moveCursor(
-                    to: CGPoint(x: size.width * 0.52, y: 54),
-                    duration: 0.28,
-                    rotation: -4
-                )
-                guard !Task.isCancelled else { return }
-                await moveCursor(
                     to: CGPoint(x: size.width / 2, y: 10),
-                    duration: 0.24,
+                    duration: 0.52,
                     rotation: -6,
                     scale: 0.94
                 )
@@ -747,14 +847,8 @@ struct GestureTutorialView: View {
                 let bottomY = size.height / 2 - 56
 
                 await moveCursor(
-                    to: CGPoint(x: volumeX + 70, y: topY - 34),
-                    duration: 0.38,
-                    rotation: 4
-                )
-                guard !Task.isCancelled else { return }
-                await moveCursor(
                     to: CGPoint(x: volumeX, y: topY),
-                    duration: 0.24,
+                    duration: 0.58,
                     rotation: -4,
                     scale: 0.96
                 )
@@ -787,18 +881,12 @@ struct GestureTutorialView: View {
 
             case .hoverMenu:
                 await moveCursor(
-                    to: CGPoint(x: size.width * 0.58, y: size.height * 0.27),
-                    duration: 0.42,
-                    rotation: -2
-                )
-                guard !Task.isCancelled else { return }
-                await moveCursor(
                     to: CGPoint(x: size.width / 2, y: 54),
-                    duration: 0.38,
+                    duration: 0.66,
                     rotation: -5,
                     scale: 0.95
                 )
-                try? await Task.sleep(for: .milliseconds(560))
+                try? await Task.sleep(for: .milliseconds(360))
                 guard !Task.isCancelled else { return }
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
                     isHoverPanelVisible = true
@@ -812,27 +900,21 @@ struct GestureTutorialView: View {
 
             case .ambientMode:
                 await moveCursor(
-                    to: CGPoint(x: size.width * 0.56, y: size.height * 0.26),
-                    duration: 0.40,
-                    rotation: -2
-                )
-                guard !Task.isCancelled else { return }
-                await moveCursor(
                     to: CGPoint(x: size.width / 2, y: 54),
-                    duration: 0.36,
+                    duration: 0.62,
                     rotation: -5,
                     scale: 0.95
                 )
                 try? await Task.sleep(for: .milliseconds(420))
                 guard !Task.isCancelled else { return }
-                isHoverPanelVisible = true
-                await setCursorPressed(true)
                 withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
                     isTrackRightClicking = true
                 }
+                isHoverPanelVisible = true
+                await setCursorPressed(true, rightClick: true)
                 try? await Task.sleep(for: .milliseconds(240))
                 guard !Task.isCancelled else { return }
-                await setCursorPressed(false)
+                await setCursorPressed(false, rightClick: true)
                 withAnimation(.spring(response: 0.65, dampingFraction: 0.8)) {
                     isAmbientPreviewVisible = true
                 }
@@ -846,14 +928,20 @@ struct GestureTutorialView: View {
     // MARK: - Helpers & Localized Strings
 
     private func stageTitle(_ stage: TutorialStage) -> String {
+        let title: String
         switch stage {
-        case .cancelDemo: "1. " + localization.string("tutorial.stage_cancel")
-        case .rightEdgeSkip: "2. " + localization.string("menu.next_track")
-        case .topEdgePlayPause: "3. " + localization.string("tutorial.stage_playpause")
-        case .volumeControl: "4. " + localization.string("tutorial.stage_volume_control")
-        case .hoverMenu: "5. " + localization.string("tutorial.stage_hover_menu")
-        case .ambientMode: "6. " + localization.string("tutorial.stage_ambient_mode")
+        case .cancelDemo: title = localization.string("tutorial.stage_cancel")
+        case .rightEdgeSkip: title = localization.string("menu.next_track")
+        case .topEdgePlayPause: title = localization.string("tutorial.stage_playpause")
+        case .volumeControl: title = localization.string("tutorial.stage_volume_control")
+        case .hoverMenu: title = localization.string("tutorial.stage_hover_menu")
+        case .ambientMode: title = localization.string("tutorial.stage_ambient_mode")
         }
+        return String(
+            format: localization.string("tutorial.stage_title_format"),
+            stage.rawValue + 1,
+            title
+        )
     }
 
     private func stageHeader(_ stage: TutorialStage) -> String {
@@ -876,150 +964,5 @@ struct GestureTutorialView: View {
         case .hoverMenu: localization.string("tutorial.hover_menu_desc")
         case .ambientMode: localization.string("tutorial.ambient_mode_desc")
         }
-    }
-}
-
-// MARK: - Large Mouse Diagram View for Dual-Click Volume Tutorial
-
-struct LargeMouseDiagramView: View {
-    @ObservedObject private var localization = LocalizationManager.shared
-    let isBothPressed: Bool
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Text(localization.string("tutorial.volume_mouse_header"))
-                .font(.system(size: 15, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
-
-            ZStack {
-                // Mouse Outer Body Shell
-                RoundedRectangle(cornerRadius: 32, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(white: 0.18), Color(white: 0.08)],
-                            startPoint: .top, endPoint: .bottom
-                        )
-                    )
-                    .frame(width: 180, height: 220)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 32, style: .continuous)
-                            .stroke(
-                                isBothPressed
-                                    ? LinearGradient(colors: [.orange, .yellow], startPoint: .top, endPoint: .bottom)
-                                    : LinearGradient(colors: [Color.white.opacity(0.3), Color.white.opacity(0.1)], startPoint: .top, endPoint: .bottom),
-                                lineWidth: isBothPressed ? 2.5 : 1.2
-                            )
-                    )
-                    .shadow(color: isBothPressed ? .orange.opacity(0.35) : .black.opacity(0.5), radius: 18)
-                    .shadow(
-                        color: isBothPressed ? SongletonTheme.cyan.opacity(0.40) : Color.black.opacity(0.5),
-                        radius: isBothPressed ? 20 : 10
-                    )
-
-                // Left Mouse Button
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(
-                        isBothPressed
-                            ? LinearGradient(colors: [SongletonTheme.cyan, SongletonTheme.violet], startPoint: .top, endPoint: .bottom)
-                            : LinearGradient(colors: [Color.white.opacity(0.15), Color.white.opacity(0.05)], startPoint: .top, endPoint: .bottom)
-                    )
-                    .frame(width: 72, height: 74)
-                    .overlay(
-                        VStack(spacing: 2) {
-                            Text(localization.string("tutorial.mouse.left_short"))
-                                .font(.system(size: 11, weight: .black, design: .rounded))
-                                .foregroundStyle(isBothPressed ? .white : .white.opacity(0.8))
-                            Text(localization.string("tutorial.mouse.click_short"))
-                                .font(.system(size: 9.5, weight: .bold, design: .rounded))
-                                .foregroundStyle(isBothPressed ? .white.opacity(0.9) : .white.opacity(0.5))
-                        }
-                    )
-                    .offset(x: -42, y: -55)
-
-                // Right Mouse Button
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(
-                        isBothPressed
-                            ? LinearGradient(colors: [SongletonTheme.cyan, SongletonTheme.violet], startPoint: .top, endPoint: .bottom)
-                            : LinearGradient(colors: [Color.white.opacity(0.15), Color.white.opacity(0.05)], startPoint: .top, endPoint: .bottom)
-                    )
-                    .frame(width: 72, height: 74)
-                    .overlay(
-                        VStack(spacing: 2) {
-                            Text(localization.string("tutorial.mouse.right_short"))
-                                .font(.system(size: 11, weight: .black, design: .rounded))
-                                .foregroundStyle(isBothPressed ? .white : .white.opacity(0.8))
-                            Text(localization.string("tutorial.mouse.click_short"))
-                                .font(.system(size: 9.5, weight: .bold, design: .rounded))
-                                .foregroundStyle(isBothPressed ? .white.opacity(0.9) : .white.opacity(0.5))
-                        }
-                    )
-                    .offset(x: 42, y: -55)
-
-                // Scroll Wheel
-                Capsule()
-                    .fill(isBothPressed ? Color.white : Color(white: 0.4))
-                    .frame(width: 10, height: 28)
-                    .shadow(color: isBothPressed ? .white : .clear, radius: 4)
-                    .offset(y: -55)
-
-                // Drag Vector Arrow Indicator
-                VStack(spacing: 4) {
-                    Image(systemName: "arrow.up.and.down")
-                        .font(.system(size: 26, weight: .bold))
-                        .foregroundStyle(isBothPressed ? SongletonTheme.cyan : .white.opacity(0.6))
-                    Text(localization.string("tutorial.mouse.drag_hint"))
-                        .font(.system(size: 8.5, weight: .bold, design: .monospaced))
-                        .foregroundStyle(isBothPressed ? SongletonTheme.cyan : .white.opacity(0.6))
-                }
-                .offset(y: 48)
-            }
-
-            HStack(spacing: 8) {
-                mouseInstructionStep(number: "1", text: localization.string("tutorial.mouse_step_one"))
-                Image(systemName: "arrow.right")
-                    .foregroundStyle(.white.opacity(0.45))
-                mouseInstructionStep(number: "2", text: localization.string("tutorial.mouse_step_two"))
-            }
-
-            // Bottom Floating Badge
-            Text(isBothPressed
-                ? "⚡ " + localization.string("tutorial.mouse.press_both")
-                : localization.string("tutorial.mouse.idle_hint"))
-                .font(.system(size: 11, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 5)
-                .background(
-                    isBothPressed
-                        ? LinearGradient(colors: [SongletonTheme.cyan, SongletonTheme.violet], startPoint: .leading, endPoint: .trailing)
-                        : LinearGradient(colors: [SongletonTheme.cyan.opacity(0.3), SongletonTheme.violet.opacity(0.3)], startPoint: .leading, endPoint: .trailing),
-                    in: Capsule()
-                )
-                .shadow(color: isBothPressed ? SongletonTheme.cyan.opacity(0.5) : .clear, radius: 10)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(isBothPressed ? SongletonTheme.cyan.opacity(0.6) : Color.white.opacity(0.15), lineWidth: 1.5))
-        .shadow(color: isBothPressed ? SongletonTheme.cyan.opacity(0.3) : .black.opacity(0.5), radius: 20)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(localization.string("tutorial.volume_mouse_desc"))
-    }
-
-    private func mouseInstructionStep(number: String, text: String) -> some View {
-        HStack(spacing: 6) {
-            Text(number)
-                .font(.system(size: 11, weight: .black, design: .rounded))
-                .frame(width: 20, height: 20)
-                .background(SongletonTheme.cyan, in: Circle())
-                .foregroundStyle(.black)
-            Text(text)
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.85))
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 7)
-        .background(Color.white.opacity(0.07), in: Capsule())
     }
 }

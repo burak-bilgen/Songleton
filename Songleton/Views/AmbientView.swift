@@ -17,9 +17,9 @@ enum CRTState {
 }
 
 enum AmbientTheme: String, CaseIterable, Identifiable {
-    case vinyl = "Vinyl Record"
-    case cassette = "Cassette Tape"
-    case glass = "Pure Glass"
+    case vinyl
+    case cassette
+    case glass
 
     var id: String { rawValue }
     var icon: String {
@@ -161,14 +161,6 @@ struct AmbientView: View {
         }
     }
 
-    private var crtScaleY: CGFloat {
-        switch crtState {
-        case .off: return 0.95
-        case .turningOffLine, .turningOffDot, .turningOffFade: return 0.003
-        case .turningOn, .active: return 1.0
-        }
-    }
-
     private var crtOpacity: Double {
         switch crtState {
         case .off, .turningOffFade: return 0.0
@@ -269,7 +261,10 @@ struct AmbientView: View {
                                                 isDraggingPosition = editing
                                                 if !editing { model.seekTo(sliderPosition) }
                                             },
-                                            barColor: themeColor
+                                            barColor: themeColor,
+                                            accessibilityLabel: localization.string("control.playback_position"),
+                                            accessibilityValue: formatTime(sliderPosition),
+                                            accessibilityStep: 5
                                         )
                                         .onAppear { if !isDraggingPosition { sliderPosition = info.position } }
                                         .onChange(of: info.position) { _, v in
@@ -281,7 +276,7 @@ struct AmbientView: View {
                                                 .font(.system(size: 11, weight: .bold, design: .monospaced))
                                                 .foregroundStyle(.white.opacity(0.6))
                                             Spacer()
-                                            Text("-" + formatTime(max(0, info.duration - (isDraggingPosition ? sliderPosition : info.position))))
+                                            Text(verbatim: "-" + formatTime(max(0, info.duration - (isDraggingPosition ? sliderPosition : info.position))))
                                                 .font(.system(size: 11, weight: .bold, design: .monospaced))
                                                 .foregroundStyle(.white.opacity(0.6))
                                         }
@@ -297,6 +292,8 @@ struct AmbientView: View {
                                             .foregroundStyle(info.isShuffleEnabled ? themeColor : .white.opacity(0.6))
                                     }
                                     .buttonStyle(.plain)
+                                    .help(localization.string("control.shuffle"))
+                                    .accessibilityLabel(localization.string("control.shuffle"))
 
                                     Button {
                                         slideDirection = .previous
@@ -309,6 +306,8 @@ struct AmbientView: View {
                                             .foregroundStyle(.white)
                                     }
                                     .buttonStyle(.plain)
+                                    .help(localization.string("menu.previous_track"))
+                                    .accessibilityLabel(localization.string("menu.previous_track"))
 
                                     Button { model.togglePlayPause() } label: {
                                         ZStack {
@@ -324,6 +323,8 @@ struct AmbientView: View {
                                         }
                                     }
                                     .buttonStyle(.plain)
+                                    .help(info.isPlaying ? localization.string("control.pause") : localization.string("control.play"))
+                                    .accessibilityLabel(info.isPlaying ? localization.string("control.pause") : localization.string("control.play"))
 
                                     Button {
                                         slideDirection = .next
@@ -336,6 +337,8 @@ struct AmbientView: View {
                                             .foregroundStyle(.white)
                                     }
                                     .buttonStyle(.plain)
+                                    .help(localization.string("menu.next_track"))
+                                    .accessibilityLabel(localization.string("menu.next_track"))
 
                                     Button { model.cycleRepeatMode() } label: {
                                         Image(systemName: info.repeatMode == .one ? "repeat.1" : "repeat")
@@ -343,6 +346,8 @@ struct AmbientView: View {
                                             .foregroundStyle(info.repeatMode != .off ? themeColor : .white.opacity(0.6))
                                     }
                                     .buttonStyle(.plain)
+                                    .help(localization.string("control.repeat"))
+                                    .accessibilityLabel(localization.string("control.repeat"))
                                 }
 
                                 // Volume Row
@@ -358,7 +363,10 @@ struct AmbientView: View {
                                             isDraggingVolume = editing
                                             if !editing { model.setVolume(Int(localVolume)) }
                                         },
-                                        barColor: themeColor
+                                        barColor: themeColor,
+                                        accessibilityLabel: localization.string("control.volume"),
+                                        accessibilityValue: "\(Int(localVolume))%",
+                                        accessibilityStep: 5
                                     )
                                     .frame(width: 160)
 
@@ -454,7 +462,7 @@ struct AmbientView: View {
                                 triggerCRTTurnOffAndClose()
                             } label: {
                                 HStack(spacing: 6) {
-                                    Text("ESC")
+                                    Text(verbatim: "ESC")
                                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                                         .padding(.horizontal, 5)
                                         .padding(.vertical, 1)
@@ -535,15 +543,12 @@ struct AmbientView: View {
         .onChange(of: currentTrackId) { _, _ in
             triggerLyricsFetch()
         }
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ambientKeyDown"))) { notif in
+        .onReceive(NotificationCenter.default.publisher(for: .songletonAmbientKeyDown)) { notif in
             if let userInfo = notif.userInfo,
                let keyCode = userInfo["keyCode"] as? UInt16 {
                 let chars = userInfo["chars"] as? String ?? ""
                 handleKeyEvent(keyCode: keyCode, chars: chars)
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("triggerAmbientCloseAnimation"))) { _ in
-            triggerCRTTurnOffAndClose()
         }
     }
 
@@ -787,6 +792,8 @@ struct AmbientView: View {
                         .foregroundStyle(.white.opacity(0.6))
                 }
                 .buttonStyle(.plain)
+                .help(localization.string("ambient.hide_lyrics"))
+                .accessibilityLabel(localization.string("ambient.hide_lyrics"))
             }
 
             if lyricsModel.isLoading {
@@ -995,7 +1002,12 @@ struct AmbientView: View {
     private func formatSleepTimerRemaining() -> String {
         let m = sleepSecondsRemaining / 60
         let s = sleepSecondsRemaining % 60
-        return String(format: "%dm %02ds", m, s)
+        return String(
+            format: localization.string("ambient.timer_remaining_format"),
+            locale: localization.locale,
+            m,
+            s
+        )
     }
 
     private func startCRTTurnOnAnimation() {
@@ -1066,6 +1078,7 @@ struct AmbientView: View {
 
     private func updateClock() {
         let formatter = DateFormatter()
+        formatter.locale = localization.locale
         formatter.timeStyle = .short
         currentTimeString = formatter.string(from: Date())
 

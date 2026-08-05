@@ -1,4 +1,5 @@
 import AppKit
+import CoreServices
 
 nonisolated enum RepeatMode: String, Sendable {
     case off
@@ -84,6 +85,10 @@ nonisolated enum MediaValue {
         guard value.isFinite else { return 0 }
         return Int(min(max(0, value), 100).rounded())
     }
+
+    nonisolated static func metadata(_ value: String) -> String {
+        RemoteResourceSecurity.sanitizedMetadata(value)
+    }
 }
 
 enum AppleScriptRunner {
@@ -106,17 +111,56 @@ enum AppleScriptRunner {
 }
 
 enum AutomationPermission {
-    nonisolated static func status(bundleID: String, askUser: Bool) -> OSStatus {
+    nonisolated enum Status: Equatable, Sendable {
+        case notDetermined
+        case granted
+        case denied
+        case targetNotRunning
+    }
+
+    nonisolated static func status(bundleID: String, askUser: Bool = false) -> Status {
+        guard !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty else {
+            return .targetNotRunning
+        }
         let target = NSAppleEventDescriptor(bundleIdentifier: bundleID)
-        return AEDeterminePermissionToAutomateTarget(target.aeDesc, typeWildCard, typeWildCard, askUser)
+        guard let descriptor = target.aeDesc else { return .notDetermined }
+
+        let result = AEDeterminePermissionToAutomateTarget(
+            descriptor,
+            AEEventClass(kCoreEventClass),
+            AEEventID(kAEGetData),
+            askUser
+        )
+        let status: Status
+        switch result {
+        case noErr:
+            status = .granted
+        case OSStatus(errAEEventNotPermitted):
+            status = .denied
+        case OSStatus(errAEEventWouldRequireUserConsent):
+            status = .notDetermined
+        case OSStatus(procNotFound):
+            status = .targetNotRunning
+        default:
+            status = .notDetermined
+        }
+
+        if status == .granted || status == .denied {
+            UserDefaults.standard.set(status == .granted, forKey: "permission_\(bundleID)")
+        }
+        return status
     }
 
     nonisolated static func isGranted(bundleID: String) -> Bool {
-        let err = status(bundleID: bundleID, askUser: false)
-        if err == noErr || err == -600 || err == -609 {
+        switch status(bundleID: bundleID) {
+        case .granted:
             return true
+        case .denied, .notDetermined:
+            return false
+        case .targetNotRunning:
+            break
         }
-        return UserDefaults.standard.bool(forKey: "permission_\(bundleID)")
+        return UserDefaults.standard.object(forKey: "permission_\(bundleID)") as? Bool == true
     }
 }
 
@@ -141,30 +185,40 @@ extension MediaController {
         !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty
     }
 
-    nonisolated func togglePlayPause() throws { try sendCommand("playpause") }
-    nonisolated func nextTrack() throws { try sendCommand("next track") }
-    nonisolated func previousTrack() throws { try sendCommand("previous track") }
+    nonisolated func togglePlayPause() throws { try runCommand("playpause") }
+    nonisolated func nextTrack() throws { try runCommand("next track") }
+    nonisolated func previousTrack() throws { try runCommand("previous track") }
     nonisolated func setVolume(_ volume: Int) throws {
-        try sendCommand("set sound volume to \(MediaValue.volume(volume))")
+        try runCommand("set sound volume to \(MediaValue.volume(volume))")
     }
     nonisolated func seekTo(_ position: Double) throws {
-        try sendCommand("set player position to \(Int(MediaValue.position(position)))")
+        try runCommand("set player position to \(Int(MediaValue.position(position)))")
     }
 
-    private nonisolated func sendCommand(_ command: String) throws {
+    nonisolated func runCommand(_ command: String) throws {
         guard isRunning else { throw MediaControllerError.appNotRunning }
         guard AutomationPermission.isGranted(bundleID: bundleID) else { throw MediaControllerError.permissionDenied }
-        try AppleScriptRunner.run("tell application \"\(scriptAppName)\" to \(command)")
+        do {
+            try AppleScriptRunner.run("tell application \"\(scriptAppName)\" to \(command)")
+        } catch MediaControllerError.permissionDenied {
+            UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
+            throw MediaControllerError.permissionDenied
+        }
     }
 
     nonisolated func runInfoScript(_ body: String) throws -> NSAppleEventDescriptor {
         guard isRunning else { throw MediaControllerError.appNotRunning }
         guard AutomationPermission.isGranted(bundleID: bundleID) else { throw MediaControllerError.permissionDenied }
-        return try AppleScriptRunner.run("tell application \"\(scriptAppName)\"\n\(body)\nend tell")
+        do {
+            return try AppleScriptRunner.run("tell application \"\(scriptAppName)\"\n\(body)\nend tell")
+        } catch MediaControllerError.permissionDenied {
+            UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
+            throw MediaControllerError.permissionDenied
+        }
     }
 }
 
-final class SpotifyController: MediaController {
+nonisolated final class SpotifyController: MediaController {
     let bundleID = "com.spotify.client"
     let displayName = "Spotify"
     var scriptAppName: String { "Spotify" }
@@ -188,7 +242,9 @@ final class SpotifyController: MediaController {
               let playerState = result.atIndex(4)?.stringValue else {
             throw MediaControllerError.scriptFailed("Unexpected Spotify response")
         }
-        let album = result.atIndex(3)?.stringValue ?? ""
+        let safeTrack = MediaValue.metadata(track)
+        let safeArtist = MediaValue.metadata(artist)
+        let album = MediaValue.metadata(result.atIndex(3)?.stringValue ?? "")
         let volume = MediaValue.volume(Int(result.atIndex(5)?.int32Value ?? 50))
         let artworkURL = result.atIndex(6)?.stringValue.flatMap { URL(string: $0) }
         let position = MediaValue.position(result.atIndex(7)?.doubleValue ?? 0)
@@ -199,7 +255,7 @@ final class SpotifyController: MediaController {
         let isRepeatBool = result.atIndex(10)?.booleanValue ?? false
 
         return NowPlayingInfo(
-            track: track, artist: artist, album: album,
+            track: safeTrack, artist: safeArtist, album: album,
             isPlaying: playerState == "playing",
             volume: volume, artworkURL: artworkURL, artworkData: nil,
             position: position, duration: duration,
@@ -208,38 +264,17 @@ final class SpotifyController: MediaController {
     }
 
     nonisolated func toggleShuffle() throws {
-        try AppleScriptRunner.run("tell application \"Spotify\" to set shuffling to (not shuffling)")
+        try runCommand("set shuffling to (not shuffling)")
     }
 
     nonisolated func setRepeatMode(_ mode: RepeatMode) throws {
         let isRep = (mode != .off)
-        try AppleScriptRunner.run("tell application \"Spotify\" to set repeating to \(isRep)")
+        try runCommand("set repeating to \(isRep)")
     }
 
-    nonisolated func playPlaylist(uri: String, startingTrackURI: String) throws {
-        guard uri.hasPrefix("spotify:playlist:"), startingTrackURI.hasPrefix("spotify:track:") else {
-            throw MediaControllerError.unsupportedCommand
-        }
-        guard isRunning else { throw MediaControllerError.appNotRunning }
-        guard AutomationPermission.isGranted(bundleID: bundleID) else {
-            throw MediaControllerError.permissionDenied
-        }
-
-        // Spotify's dictionary requires a track URI plus a playlist context.
-        // Do not wait for a reply: waiting makes Spotify briefly foreground
-        // itself on some macOS versions before returning to Songleton.
-        try AppleScriptRunner.run("""
-        ignoring application responses
-            tell application id "com.spotify.client"
-                set shuffling to true
-                play track "\(startingTrackURI)" in context "\(uri)"
-            end tell
-        end ignoring
-        """)
-    }
 }
 
-final class AppleMusicController: @unchecked Sendable, MediaController {
+nonisolated final class AppleMusicController: @unchecked Sendable, MediaController {
     let bundleID = "com.apple.Music"
     let displayName = "Apple Music"
     var scriptAppName: String { "Music" }
@@ -266,7 +301,9 @@ final class AppleMusicController: @unchecked Sendable, MediaController {
               let playerState = result.atIndex(4)?.stringValue else {
             throw MediaControllerError.scriptFailed("Unexpected Music response")
         }
-        let album = result.atIndex(3)?.stringValue ?? ""
+        let safeTrack = MediaValue.metadata(track)
+        let safeArtist = MediaValue.metadata(artist)
+        let album = MediaValue.metadata(result.atIndex(3)?.stringValue ?? "")
         let volume = MediaValue.volume(Int(result.atIndex(5)?.int32Value ?? 50))
         let position = MediaValue.position(result.atIndex(6)?.doubleValue ?? 0)
         let duration = MediaValue.duration(result.atIndex(7)?.doubleValue ?? 0)
@@ -281,10 +318,10 @@ final class AppleMusicController: @unchecked Sendable, MediaController {
             mode = .off
         }
 
-        let artworkData = loadArtworkIfNeeded(for: "\(track)|\(artist)|\(album)")
+        let artworkData = loadArtworkIfNeeded(for: "\(safeTrack)|\(safeArtist)|\(album)")
 
         return NowPlayingInfo(
-            track: track, artist: artist, album: album,
+            track: safeTrack, artist: safeArtist, album: album,
             isPlaying: playerState == "playing",
             volume: volume, artworkURL: nil, artworkData: artworkData,
             position: position, duration: duration,
@@ -307,7 +344,9 @@ final class AppleMusicController: @unchecked Sendable, MediaController {
         on error
             return missing value
         end try
-        """).data).flatMap { $0.isEmpty ? nil : $0 }
+        """).data).flatMap { data in
+            RemoteResourceSecurity.safeImage(from: data) == nil ? nil : data
+        }
 
         artworkLock.lock()
         cachedArtworkTrack = trackKey
@@ -317,7 +356,7 @@ final class AppleMusicController: @unchecked Sendable, MediaController {
     }
 
     nonisolated func toggleShuffle() throws {
-        try AppleScriptRunner.run("tell application \"Music\" to set shuffle enabled to (not shuffle enabled)")
+        try runCommand("set shuffle enabled to (not shuffle enabled)")
     }
 
     nonisolated func setRepeatMode(_ mode: RepeatMode) throws {
@@ -327,6 +366,6 @@ final class AppleMusicController: @unchecked Sendable, MediaController {
         case .all: modeStr = "all"
         case .one: modeStr = "one"
         }
-        try AppleScriptRunner.run("tell application \"Music\" to set song repeat to \(modeStr)")
+        try runCommand("set song repeat to \(modeStr)")
     }
 }

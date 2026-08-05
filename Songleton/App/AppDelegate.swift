@@ -22,7 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NowPlayingModel.shared.checkAutomationPermission(askUser: false)
 
         NotificationCenter.default.addObserver(
-            forName: Notification.Name("showOnboardingGuide"),
+            forName: .songletonShowOnboarding,
             object: nil,
             queue: .main
         ) { [weak self] _ in
@@ -32,7 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
 
         NotificationCenter.default.addObserver(
-            forName: Notification.Name("showGestureTutorial"),
+            forName: .songletonShowGestureTutorial,
             object: nil,
             queue: .main
         ) { _ in

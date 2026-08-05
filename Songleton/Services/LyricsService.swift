@@ -6,19 +6,24 @@ final class LyricsService {
     private init() {}
 
     func fetchSyncedLyrics(track: String, artist: String, album: String? = nil, duration: Double? = nil) async -> [LyricLine]? {
+        let safeTrack = RemoteResourceSecurity.sanitizedMetadata(track)
+        let safeArtist = RemoteResourceSecurity.sanitizedMetadata(artist)
+        let safeAlbum = album.map { RemoteResourceSecurity.sanitizedMetadata($0) }
+        guard !safeTrack.isEmpty, !safeArtist.isEmpty else { return nil }
+
         // First try exact fetch with provided track name
-        if let result = await fetchFromAPI(track: track, artist: artist, album: album, duration: duration) {
+        if let result = await fetchFromAPI(track: safeTrack, artist: safeArtist, album: safeAlbum, duration: duration) {
             return result
         }
 
         // Fallback 1: Try with cleaned track title (removing feat, remaster, live tags)
-        let cleanedTrack = Self.cleanTrackTitle(track)
-        if cleanedTrack != track, let result = await fetchFromAPI(track: cleanedTrack, artist: artist, album: album, duration: duration) {
+        let cleanedTrack = Self.cleanTrackTitle(safeTrack)
+        if cleanedTrack != safeTrack, let result = await fetchFromAPI(track: cleanedTrack, artist: safeArtist, album: safeAlbum, duration: duration) {
             return result
         }
 
         // Fallback 2: Search LRCLIB /api/search with query string
-        let searchQuery = "\(cleanedTrack) \(artist)"
+        let searchQuery = "\(cleanedTrack) \(safeArtist)"
         if let result = await searchFromAPI(query: searchQuery, duration: duration) {
             return result
         }
@@ -68,22 +73,20 @@ final class LyricsService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Songleton macOS/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 6.0
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-                return nil
-            }
-
+            let data = try await SecureRemoteResource.data(for: request, kind: .lyrics)
             guard let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]], !jsonArray.isEmpty else {
                 return nil
             }
 
             // Find best matching search result based on duration if available
-            var bestResult: [String: Any]? = jsonArray.first
+            let boundedResults = jsonArray.prefix(100)
+            var bestResult: [String: Any]? = boundedResults.first
             if let duration, duration > 0 {
-                let closest = jsonArray.min(by: { a, b in
+                let closest = boundedResults.min(by: { a, b in
                     let durA = a["duration"] as? Double ?? 0
                     let durB = b["duration"] as? Double ?? 0
                     return abs(durA - duration) < abs(durB - duration)
@@ -106,14 +109,11 @@ final class LyricsService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Songleton macOS/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 6.0
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-                return nil
-            }
-
+            let data = try await SecureRemoteResource.data(for: request, kind: .lyrics)
             let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
             if let syncedLrc = json?["syncedLyrics"] as? String, !syncedLrc.isEmpty {
                 return Self.parseLRC(syncedLrc)
@@ -134,8 +134,8 @@ final class LyricsService {
 
         let metadataPrefixes = ["[ar:", "[ti:", "[al:", "[by:", "[length:"]
 
-        for line in lrcString.components(separatedBy: .newlines) {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
+        for line in lrcString.components(separatedBy: .newlines).prefix(5_000) {
+            let trimmed = String(line.prefix(2_000)).trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty { continue }
             if metadataPrefixes.contains(where: { trimmed.hasPrefix($0) }) { continue }
 
@@ -175,8 +175,8 @@ final class LyricsService {
     static func parsePlainLyrics(_ plainString: String) -> [LyricLine] {
         var lines: [LyricLine] = []
         var dummyTime = 0.0
-        for line in plainString.components(separatedBy: .newlines) {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
+        for line in plainString.components(separatedBy: .newlines).prefix(5_000) {
+            let trimmed = String(line.prefix(2_000)).trimmingCharacters(in: .whitespaces)
             if !trimmed.isEmpty {
                 lines.append(LyricLine(timestamp: dummyTime, text: trimmed))
                 dummyTime += 4.0

@@ -83,7 +83,7 @@ struct TutorialHoverPanelPreview: View {
                         Text(localization.string("tutorial.demo_artist"))
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(.white.opacity(0.62))
-                        Text("Spotify")
+                        Text(verbatim: "Spotify")
                             .font(.system(size: 10, weight: .bold, design: .rounded))
                             .foregroundStyle(SongletonTheme.cyan)
                     }
@@ -111,7 +111,7 @@ struct TutorialHoverPanelPreview: View {
                         .overlay(alignment: .leading) {
                             Capsule().fill(SongletonTheme.cyan).frame(width: 118)
                         }
-                    Text("38%")
+                    Text(verbatim: "38%")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                 }
                 .foregroundStyle(.white.opacity(0.76))

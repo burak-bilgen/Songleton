@@ -1,9 +1,28 @@
 import AppKit
-import ApplicationServices
+@preconcurrency import ApplicationServices
 import Combine
+@preconcurrency import CoreFoundation
 import CoreGraphics
 import OSLog
 import SwiftUI
+
+nonisolated fileprivate final class MouseMoveThrottle: @unchecked Sendable {
+    private let lock = NSLock()
+    private let minimumInterval: TimeInterval
+    private var lastForwardedAt: TimeInterval = 0
+
+    init(maximumUpdatesPerSecond: Double) {
+        minimumInterval = 1 / max(1, maximumUpdatesPerSecond)
+    }
+
+    func shouldForward(now: TimeInterval = ProcessInfo.processInfo.systemUptime) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard now - lastForwardedAt >= minimumInterval else { return false }
+        lastForwardedAt = now
+        return true
+    }
+}
 
 private func mouseEventTapCallback(
     _ proxy: CGEventTapProxy,
@@ -18,6 +37,9 @@ private func mouseEventTapCallback(
             if let tap = manager.eventTap { CGEvent.tapEnable(tap: tap, enable: true) }
         }
     } else if type == .mouseMoved || type == .leftMouseDragged || type == .rightMouseDragged {
+        guard manager.mouseMoveThrottle.shouldForward() else {
+            return Unmanaged.passUnretained(event)
+        }
         let location = event.location
         let flags = event.flags
         Task { @MainActor in
@@ -31,9 +53,8 @@ private func mouseEventTapCallback(
         }
     } else if type == .flagsChanged {
         let flags = event.flags
-        let location = event.location
         Task { @MainActor in
-            manager.handleFlagsChanged(flags, location: location)
+            manager.handleFlagsChanged(flags)
         }
     }
     return Unmanaged.passUnretained(event)
@@ -50,6 +71,7 @@ final class MouseGestureManager: ObservableObject {
     static let shared = MouseGestureManager()
 
     fileprivate var eventTap: CFMachPort?
+    nonisolated fileprivate let mouseMoveThrottle = MouseMoveThrottle(maximumUpdatesPerSecond: 60)
     private var eventTapRunLoopSource: CFRunLoopSource?
     private var activeZone: EdgeZone?
     private var pendingWorkItem: DispatchWorkItem?
@@ -70,7 +92,6 @@ final class MouseGestureManager: ObservableObject {
     private var volumeGestureWindow: NSPanel?
     private let logger = Logger(subsystem: "bilgenworks.app.Songleton", category: "mouse-gesture")
     private var lastEventLogDate = Date.distantPast
-    private var lastProcessedMoveDate = Date.distantPast
 
     init() {
         refreshAccessibilityStatus()
@@ -205,7 +226,7 @@ final class MouseGestureManager: ObservableObject {
         logger.info("Global mouse monitor stopped")
     }
 
-    fileprivate func handleFlagsChanged(_ flags: CGEventFlags, location: CGPoint) {
+    fileprivate func handleFlagsChanged(_ flags: CGEventFlags) {
         let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
         let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
 
@@ -215,32 +236,28 @@ final class MouseGestureManager: ObservableObject {
     }
 
     fileprivate func handleGlobalMouseLocation(_ location: CGPoint, flags: CGEventFlags, now: Date) {
+        let appKitLocation = NSEvent.mouseLocation
         let isBothPressed = pressedButtons.contains(0) && pressedButtons.contains(1)
         let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
 
         if isBothPressed || isCmdOptionPressed {
-            if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: location) }
+            if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: appKitLocation) }
             updateVolumeGesture(at: location.y)
             return
         } else if isVolumeGestureActive {
             endVolumeGesture()
         }
 
-        // Throttle edge detection checks to ~60Hz (16ms) to avoid CPU overhead on high DPI mice
-        if now.timeIntervalSince(lastProcessedMoveDate) < 0.016 {
-            return
-        }
-        lastProcessedMoveDate = now
-
         if now.timeIntervalSince(lastEventLogDate) >= 1.0 {
             lastEventLogDate = now
             logger.debug("Global mouse move event received")
         }
 
-        handleMouseLocation(NSPoint(x: location.x, y: location.y), now: now)
+        handleMouseLocation(appKitLocation, now: now)
     }
 
     fileprivate func handleGlobalMouseEvent(_ type: CGEventType, flags: CGEventFlags, location: CGPoint) {
+        let appKitLocation = NSEvent.mouseLocation
         let button: Int64?
         switch type {
         case .leftMouseDown, .leftMouseUp: button = 0
@@ -260,7 +277,7 @@ final class MouseGestureManager: ObservableObject {
         let isCmdOptionPressed = flags.contains(.maskCommand) && flags.contains(.maskAlternate)
 
         if isBothPressed || isCmdOptionPressed {
-            if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: location) }
+            if !isVolumeGestureActive { startVolumeGesture(at: location.y, screenLocation: appKitLocation) }
             updateVolumeGesture(at: location.y)
         } else if isVolumeGestureActive {
             endVolumeGesture()
@@ -390,8 +407,10 @@ final class MouseGestureManager: ObservableObject {
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.1
             panel.animator().alphaValue = 0
-        } completionHandler: {
-            panel.orderOut(nil)
+        } completionHandler: { [weak panel] in
+            Task { @MainActor in
+                panel?.orderOut(nil)
+            }
         }
     }
 
@@ -402,8 +421,10 @@ final class MouseGestureManager: ObservableObject {
             context.duration = 0.18
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             panel.animator().alphaValue = 0
-        } completionHandler: {
-            panel.orderOut(nil)
+        } completionHandler: { [weak panel] in
+            Task { @MainActor in
+                panel?.orderOut(nil)
+            }
         }
     }
 
@@ -414,8 +435,10 @@ final class MouseGestureManager: ObservableObject {
             context.duration = 0.24
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             panel.animator().alphaValue = 0
-        } completionHandler: {
-            panel.orderOut(nil)
+        } completionHandler: { [weak panel] in
+            Task { @MainActor in
+                panel?.orderOut(nil)
+            }
         }
     }
 
@@ -429,9 +452,8 @@ final class MouseGestureManager: ObservableObject {
         )
     }
 
-    /// Event-tap coordinates use a top-down global Y axis in the live gesture
-    /// path, so the visual top edge maps to the screen frame's minimum Y here.
-    /// Kept pure so this real-device contract stays covered by tests.
+    /// Edge detection uses AppKit coordinates, where each screen's visual top
+    /// is `maxY`. Keeping this pure protects vertically arranged displays too.
     static func edgeZone(
         at location: NSPoint,
         in frame: NSRect,
@@ -443,7 +465,7 @@ final class MouseGestureManager: ObservableObject {
             if location.x <= frame.minX + edgeInset { return .previous }
             if location.x >= frame.maxX - edgeInset { return .next }
         }
-        if verticalEnabled, location.y <= frame.minY + edgeInset {
+        if verticalEnabled, location.y >= frame.maxY - edgeInset {
             return .playPause
         }
         return nil
@@ -482,8 +504,8 @@ final class MouseGestureManager: ObservableObject {
             panel.animator().alphaValue = 0
             view?.layer?.setAffineTransform(CGAffineTransform(translationX: 0, y: 18))
         } completionHandler: { [weak self, weak panel] in
-            panel?.orderOut(nil)
             Task { @MainActor [weak self, weak panel] in
+                panel?.orderOut(nil)
                 guard let self, self.volumeGestureWindow === panel else { return }
                 self.volumeGestureWindow = nil
             }
@@ -537,7 +559,7 @@ final class MouseGestureManager: ObservableObject {
         }
     }
 
-    deinit {
+    isolated deinit {
         if let eventTap { CFMachPortInvalidate(eventTap) }
     }
 }

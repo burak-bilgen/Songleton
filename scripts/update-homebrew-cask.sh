@@ -30,8 +30,13 @@ fi
 tmp_path="$(mktemp)"
 sed -E \
   -e "s/version \"[0-9.]+\"/version \"${version}\"/" \
-  -e "s/sha256 (:no_check|\"[0-9a-f]+\")/sha256 \"${checksum}\"/" \
+  -e "s/sha256 \"[0-9a-f]{64}\"/sha256 \"${checksum}\"/" \
   "$cask_path" > "$tmp_path"
+if ! grep -q "sha256 \"${checksum}\"" "$tmp_path"; then
+  echo "Could not replace the cask checksum safely" >&2
+  rm -f "$tmp_path"
+  exit 65
+fi
 mv "$tmp_path" "$cask_path"
 
 echo "Updated ${cask_path}"

@@ -3,7 +3,7 @@ import Combine
 import SwiftUI
 
 @MainActor
-final class MenuBarManager: NSObject {
+final class MenuBarManager: NSObject, NSWindowDelegate {
     static let shared = MenuBarManager()
 
     private var bwdStatusItem: NSStatusItem?
@@ -11,6 +11,7 @@ final class MenuBarManager: NSObject {
     private var fwdStatusItem: NSStatusItem?
 
     private var volumePopover: NSPopover?
+    private var settingsWindow: NSWindow?
     private var cancellables = Set<AnyCancellable>()
     private var hoverWorkItem: DispatchWorkItem?
     private var closeWorkItem: DispatchWorkItem?
@@ -48,6 +49,7 @@ final class MenuBarManager: NSObject {
             button.target = self
             button.action = #selector(bwdTapped)
             button.toolTip = LocalizationManager.shared.string("menu.previous_track")
+            button.setAccessibilityLabel(LocalizationManager.shared.string("menu.previous_track"))
         }
         self.fwdStatusItem = fwdItem
 
@@ -66,6 +68,7 @@ final class MenuBarManager: NSObject {
             button.action = #selector(mainItemClicked)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.toolTip = LocalizationManager.shared.string("menu.main_item_tooltip")
+            button.setAccessibilityLabel(LocalizationManager.shared.string("menu.main_item_tooltip"))
 
             let trackingView = MenuBarTrackingAreaView(frame: button.bounds)
             trackingView.autoresizingMask = [.width, .height]
@@ -87,11 +90,13 @@ final class MenuBarManager: NSObject {
             button.target = self
             button.action = #selector(fwdTapped)
             button.toolTip = LocalizationManager.shared.string("menu.next_track")
+            button.setAccessibilityLabel(LocalizationManager.shared.string("menu.next_track"))
         }
         self.bwdStatusItem = bwdItem
 
-        // Menu bar controls stay hidden until the gesture tutorial is skipped
-        // or completed.
+        // Keep the main item available as a recovery affordance even while the
+        // player or setup state is unavailable. Transport controls remain
+        // locked until setup is resolved and a player is loaded.
         setStatusItemsVisible(false)
 
         NowPlayingModel.shared.$state
@@ -117,6 +122,9 @@ final class MenuBarManager: NSObject {
         bwdStatusItem?.button?.toolTip = LocalizationManager.shared.string("menu.previous_track")
         mainStatusItem?.button?.toolTip = LocalizationManager.shared.string("menu.main_item_tooltip")
         fwdStatusItem?.button?.toolTip = LocalizationManager.shared.string("menu.next_track")
+        bwdStatusItem?.button?.setAccessibilityLabel(LocalizationManager.shared.string("menu.previous_track"))
+        mainStatusItem?.button?.setAccessibilityLabel(LocalizationManager.shared.string("menu.main_item_tooltip"))
+        fwdStatusItem?.button?.setAccessibilityLabel(LocalizationManager.shared.string("menu.next_track"))
     }
 
     func updateWidth() {
@@ -160,15 +168,15 @@ final class MenuBarManager: NSObject {
         } else {
             playerIsAvailable = false
         }
-        let effectiveVisibility = isVisible && tutorialResolved && playerIsAvailable
-        let navVisible = effectiveVisibility && SettingsModel.shared.showMenuBarNavButtons
+        let transportControlsVisible = isVisible && tutorialResolved && playerIsAvailable
+        let navVisible = transportControlsVisible && SettingsModel.shared.showMenuBarNavButtons
         // NSStatusBar inserts newly visible items toward the leading side.
         // Reveal in reverse visual order so the track label stays between the
         // previous and next buttons on the menu bar.
         bwdStatusItem?.isVisible = navVisible
-        mainStatusItem?.isVisible = effectiveVisibility
+        mainStatusItem?.isVisible = true
         fwdStatusItem?.isVisible = navVisible
-        if effectiveVisibility { updateWidth() }
+        updateWidth()
     }
 
     private var isBlockedByGuide: Bool {
@@ -214,11 +222,16 @@ final class MenuBarManager: NSObject {
         // Left-click on the track name toggles playback. Ambient Mode remains
         // on right-click, so the track item has one predictable primary action.
         closeVolumePopoverImmediately()
-        NowPlayingModel.shared.togglePlayPause()
+        if case .loaded = NowPlayingModel.shared.state {
+            NowPlayingModel.shared.togglePlayPause()
+        } else {
+            openSettingsMenu()
+        }
     }
 
     @objc private func openSettingsMenu() {
-        if NSApp.windows.contains(where: { $0.title.contains("Songleton") || $0.identifier?.rawValue == "settings" }) {
+        if let window = settingsWindow {
+            window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
         }
@@ -235,15 +248,22 @@ final class MenuBarManager: NSObject {
         window.contentView = NSHostingView(rootView: settingsView)
         window.center()
         window.isReleasedWhenClosed = false
+        window.delegate = self
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.isMovableByWindowBackground = true
         window.makeKeyAndOrderFront(nil)
+        settingsWindow = window
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    func windowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, window === settingsWindow else { return }
+        settingsWindow = nil
+    }
+
     @objc private func openOnboardingGuide() {
-        NotificationCenter.default.post(name: Notification.Name("showOnboardingGuide"), object: nil)
+        NotificationCenter.default.post(name: .songletonShowOnboarding, object: nil)
     }
 
     @objc private func quitApp() {

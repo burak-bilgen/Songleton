@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#050817"/><stop offset="0.55" stop-color="#0a1027"/><stop offset="1" stop-color="#171039"/>
+    </linearGradient>
+    <linearGradient id="iconBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071331"/><stop offset="0.52" stop-color="#10235e"/><stop offset="1" stop-color="#351a5a"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#74f4ff"/><stop offset="0.5" stop-color="#3f8bff"/><stop offset="1" stop-color="#c04cff"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#173e66"/><stop offset="0.55" stop-color="#252d64"/><stop offset="1" stop-color="#321e57"/>
+    </linearGradient>
+    <clipPath id="brandIcon"><rect width="180" height="180" rx="32"/></clipPath>
+    <clipPath id="dockIcon"><rect x="123" y="5" width="32" height="32" rx="6"/></clipPath>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur in="SourceAlpha" stdDeviation="22"/><feOffset dy="22"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#page)"/>
+  <circle cx="160" cy="90" r="250" fill="#2359bd" opacity=".12" filter="url(#glow)"/>
+  <circle cx="1020" cy="530" r="310" fill="#7d42e5" opacity=".12" filter="url(#glow)"/>
+
+  <g transform="translate(72 86)" filter="url(#shadow)">
+    <image width="180" height="180" href="songleton-app-icon.png" clip-path="url(#brandIcon)"/>
+  </g>
+  <text x="72" y="326" fill="#f7f9ff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="76" font-weight="800" letter-spacing="-4">Songleton</text>
+  <text x="76" y="380" fill="#93a0bd" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="25">Your music. One move away.</text>
+  <g transform="translate(76 430)">
+    <rect width="138" height="38" rx="19" fill="#71e7ff" opacity=".13" stroke="#71e7ff" stroke-opacity=".25"/>
+    <circle cx="19" cy="19" r="4" fill="#71e7ff"/>
+    <text x="33" y="24" fill="#d8faff" font-family="-apple-system, sans-serif" font-size="13" font-weight="700">macOS 14+</text>
+  </g>
+
+  <g transform="translate(458 95)" filter="url(#shadow)">
+    <rect width="660" height="420" rx="28" fill="#11182c" stroke="#ffffff" stroke-opacity=".22" stroke-width="2"/>
+    <rect x="8" y="8" width="644" height="404" rx="21" fill="url(#screen)"/>
+    <rect x="8" y="8" width="644" height="30" rx="21" fill="#0b1120" fill-opacity=".58"/>
+    <circle cx="28" cy="23" r="3" fill="#ffffff"/><text x="42" y="27" fill="#ffffff" font-family="-apple-system,sans-serif" font-size="11" font-weight="700">Finder</text>
+    <g transform="translate(209 11)">
+      <text x="0" y="17" fill="#ffffff" font-family="-apple-system,sans-serif" font-size="11">◀</text><text x="31" y="17" fill="#ffffff" font-family="-apple-system,sans-serif" font-size="11">▶</text>
+      <rect x="54" y="0" width="172" height="24" rx="7" fill="#ffffff" fill-opacity=".14"/>
+      <rect x="61" y="4" width="16" height="16" rx="4" fill="url(#mark)"/><text x="84" y="16" fill="#ffffff" font-family="-apple-system,sans-serif" font-size="10" font-weight="700">Midnight City</text><text x="201" y="16" fill="#ffffff" font-family="-apple-system,sans-serif" font-size="8">Ⅱ</text>
+    </g>
+    <text x="575" y="27" fill="#ffffff" font-family="-apple-system,sans-serif" font-size="10">Wed 01:18</text>
+    <g transform="translate(221 57)">
+      <path d="M88 0h24l10 10H78Z" fill="#252c39"/>
+      <rect width="300" height="270" rx="22" fill="#171e29" fill-opacity=".94" stroke="#ffffff" stroke-opacity=".26"/>
+      <rect x="16" y="15" width="74" height="29" rx="14" fill="#7d1f25" fill-opacity=".5" stroke="#ff4949" stroke-opacity=".5"/><text x="30" y="34" fill="#ffd9d9" font-family="-apple-system,sans-serif" font-size="10" font-weight="700">✦ Ambient</text>
+      <circle cx="249" cy="29" r="16" fill="#ffffff" fill-opacity=".12"/><circle cx="281" cy="29" r="16" fill="#ffffff" fill-opacity=".12"/>
+      <rect x="98" y="25" width="104" height="104" rx="16" fill="url(#mark)"/><circle cx="164" cy="54" r="22" fill="#ffd58b" opacity=".85"/><path d="M98 95 134 70l34 22 34-34v71H98Z" fill="#101a37" opacity=".86"/>
+      <text x="150" y="154" text-anchor="middle" fill="#ffffff" font-family="-apple-system,sans-serif" font-size="16" font-weight="800">Midnight City</text><text x="150" y="172" text-anchor="middle" fill="#ffffff" fill-opacity=".55" font-family="-apple-system,sans-serif" font-size="10">M83</text>
+      <g transform="translate(49 188)"><circle cx="14" cy="14" r="14" fill="#ffffff" fill-opacity=".1"/><circle cx="58" cy="14" r="17" fill="#ffffff" fill-opacity=".14"/><circle cx="110" cy="14" r="23" fill="#d73138"/><circle cx="162" cy="14" r="17" fill="#ffffff" fill-opacity=".14"/><circle cx="206" cy="14" r="14" fill="#ffffff" fill-opacity=".1"/><text x="108" y="20" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="18">Ⅱ</text></g>
+      <rect x="44" y="240" width="187" height="4" rx="2" fill="#ffffff" fill-opacity=".18"/><rect x="44" y="240" width="70" height="4" rx="2" fill="#ff3b3b"/><circle cx="114" cy="242" r="6" fill="#ffffff"/><rect x="244" y="231" width="40" height="22" rx="10" fill="#ffffff" fill-opacity=".12"/><text x="264" y="246" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="9" font-weight="700">37%</text>
+    </g>
+    <g transform="translate(214 362)"><rect width="232" height="42" rx="14" fill="#e8edf7" fill-opacity=".18" stroke="#ffffff" stroke-opacity=".2"/><rect x="9" y="5" width="32" height="32" rx="8" fill="#6abaff"/><rect x="47" y="5" width="32" height="32" rx="8" fill="#61d376"/><rect x="85" y="5" width="32" height="32" rx="8" fill="#1ed760"/><image x="123" y="5" width="32" height="32" href="songleton-app-icon.png" clip-path="url(#dockIcon)"/><rect x="161" y="5" width="32" height="32" rx="8" fill="#fa3e62"/><rect x="199" y="5" width="24" height="32" rx="8" fill="#c9d0dd"/></g>
+  </g>
+</svg>

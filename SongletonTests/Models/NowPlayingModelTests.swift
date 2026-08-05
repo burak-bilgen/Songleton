@@ -13,6 +13,8 @@ final class NowPlayingModelTests {
         await runTest(name: "testResolverPrefersPlayingController", test: testResolverPrefersPlayingController)
         await runTest(name: "testResolverUsesPausedControllerAsFallback", test: testResolverUsesPausedControllerAsFallback)
         await runTest(name: "testResolverReportsPermissionDenied", test: testResolverReportsPermissionDenied)
+        await runTest(name: "testAutomationPermissionUsesCachedState", test: testAutomationPermissionUsesCachedState)
+        await runTest(name: "testAutomationPermissionReportsMissingTarget", test: testAutomationPermissionReportsMissingTarget)
         await runTest(name: "testLyricsActiveLineBoundaries", test: testLyricsActiveLineBoundaries)
     }
 
@@ -24,27 +26,34 @@ final class NowPlayingModelTests {
 
     func testShowArtistInMenuBarSetting() async {
         let settings = SettingsModel.shared
+        let originalValue = settings.showArtistInMenuBar
+        defer { settings.showArtistInMenuBar = originalValue }
 
         settings.showArtistInMenuBar = true
         assertTrue(SettingsModel.shared.showArtistInMenuBar)
 
         settings.showArtistInMenuBar = false
         assertFalse(SettingsModel.shared.showArtistInMenuBar)
-
-        // Reset to the app default.
-        settings.showArtistInMenuBar = false
     }
 
     func testLyricsOffsetIntegration() async {
         let settings = SettingsModel.shared
+        let originalValue = settings.lyricsOffset
+        defer { settings.lyricsOffset = originalValue }
         settings.lyricsOffset = 1.2
         assertEqual(SettingsModel.shared.lyricsOffset, 1.2)
     }
 
     func testLyricsActiveLineSelection() async {
         let settings = SettingsModel.shared
+        let originalOffset = settings.lyricsOffset
         settings.lyricsOffset = 0
         let lyrics = LyricsModel.shared
+        let originalLines = lyrics.lines
+        defer {
+            settings.lyricsOffset = originalOffset
+            lyrics.lines = originalLines
+        }
         lyrics.lines = [
             LyricLine(timestamp: 0, text: "One"),
             LyricLine(timestamp: 5, text: "Two"),
@@ -52,16 +61,16 @@ final class NowPlayingModelTests {
         ]
         assertEqual(lyrics.activeLineIndex(for: 6), 1)
         assertEqual(lyrics.activeLineIndex(for: 11), 2)
-        lyrics.lines = []
     }
 
     func testLanguageSelection() async {
         let localization = LocalizationManager.shared
+        let originalLanguage = localization.language
+        defer { localization.language = originalLanguage }
         localization.language = .english
         assertEqual(localization.resolvedLanguageCode, "en")
         localization.language = .turkish
         assertEqual(localization.resolvedLanguageCode, "tr")
-        localization.language = .system
     }
 
     func testMediaValueSanitization() async {
@@ -117,6 +126,36 @@ final class NowPlayingModelTests {
         } else {
             assertTrue(false, "Expected a permission-denied result")
         }
+    }
+
+    func testAutomationPermissionUsesCachedState() async {
+        let bundleID = "bilgenworks.app.Songleton.tests.missing-player"
+        let key = "permission_\(bundleID)"
+        let defaults = UserDefaults.standard
+        let originalValue = defaults.object(forKey: key)
+        defer {
+            if let originalValue {
+                defaults.set(originalValue, forKey: key)
+            } else {
+                defaults.removeObject(forKey: key)
+            }
+        }
+
+        defaults.removeObject(forKey: key)
+        assertFalse(AutomationPermission.isGranted(bundleID: bundleID))
+
+        defaults.set(true, forKey: key)
+        assertTrue(AutomationPermission.isGranted(bundleID: bundleID))
+
+        defaults.set(false, forKey: key)
+        assertFalse(AutomationPermission.isGranted(bundleID: bundleID))
+    }
+
+    func testAutomationPermissionReportsMissingTarget() async {
+        assertEqual(
+            AutomationPermission.status(bundleID: "bilgenworks.app.Songleton.tests.missing-player"),
+            .targetNotRunning
+        )
     }
 
     func testLyricsActiveLineBoundaries() async {

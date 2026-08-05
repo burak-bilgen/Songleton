@@ -1,47 +1,59 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "CFBundleName" : {
-      "comment" : "Bundle name",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Songleton"
-          }
-        }
-      }
-    },
-    "NSAppleEventsUsageDescription" : {
-      "comment" : "Privacy - AppleEvents Sending Usage Description",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Songleton needs to control media players to show what's playing and control playback."
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleName": {
+      "comment": "Bundle name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+          "state": "translated",
+            "value": "Songleton"
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Songleton, çalan parçayı göstermek ve oynatmayı kontrol etmek için medya oynatıcılara komut gönderir."
+        "tr": {
+          "stringUnit": {
+          "state": "translated",
+            "value": "Songleton"
           }
         }
       }
     },
-    "NSHumanReadableCopyright" : {
-      "comment" : "Copyright (human-readable)",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : ""
+    "NSAppleEventsUsageDescription": {
+      "comment": "Privacy - AppleEvents Sending Usage Description",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Songleton accesses Spotify and Apple Music to show what's playing and control playback."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Songleton, çalan parçayı göstermek ve oynatmayı yönetmek için Spotify ve Apple Music'e erişir."
+          }
+        }
+      }
+    },
+    "NSHumanReadableCopyright": {
+      "comment": "Copyright (human-readable)",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+          "state": "translated",
+          "value": "Copyright © 2026 Burak Bilgen"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+          "state": "translated",
+          "value": "Copyright © 2026 Burak Bilgen"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

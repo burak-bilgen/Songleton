@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import OSLog
 import SwiftUI
 
 struct RecentTrack: Identifiable {
@@ -22,13 +23,13 @@ private actor MediaCommandQueue {
 final class NowPlayingModel: ObservableObject {
     static let shared = NowPlayingModel()
 
-    enum State {
+    enum State: Sendable {
         case notRunning
         case permissionDenied
         case loaded(NowPlayingInfo, source: String)
     }
 
-    enum AutomationStatus {
+    enum AutomationStatus: Sendable {
         case notDetermined
         case granted
         case denied
@@ -38,6 +39,7 @@ final class NowPlayingModel: ObservableObject {
     @Published private(set) var artwork: NSImage?
     @Published private(set) var dominantColor: Color = .accentColor
     @Published var automationStatus: AutomationStatus = .notDetermined
+    @Published private(set) var permissionRequestsInFlight: Set<String> = []
     @Published private(set) var recentTracks: [RecentTrack] = []
 
     let controllers: [any MediaController] = [SpotifyController(), AppleMusicController()]
@@ -49,6 +51,7 @@ final class NowPlayingModel: ObservableObject {
     private var lastFetchTime: Date = Date()
     private var timerCancellable: AnyCancellable?
     private let commandQueue = MediaCommandQueue()
+    private let logger = Logger(subsystem: "bilgenworks.app.Songleton", category: "media-command")
     private var volumeTask: Task<Void, Never>?
 
     var currentPosition: Double {
@@ -107,32 +110,13 @@ final class NowPlayingModel: ObservableObject {
             } catch is CancellationError {
                 return
             } catch {
-                print("Media command failed: \(error)")
+                self?.logger.error("Media command failed: \(String(describing: error), privacy: .private)")
             }
             self?.refresh()
         }
     }
     func seekTo(_ position: Double) { send { try $0.seekTo(position) } }
     func toggleShuffle() { send { try $0.toggleShuffle() } }
-
-    func playSpotifyPlaylist(_ playlist: SpotifyDiscoveryPlaylist) {
-        guard let spotify = activeController as? SpotifyController else { return }
-
-        Task {
-            do {
-                try await commandQueue.execute {
-                    try spotify.playPlaylist(
-                        uri: playlist.uri,
-                        startingTrackURI: playlist.startingTrackURI
-                    )
-                }
-            } catch is CancellationError {
-                return
-            } catch {
-                print("Spotify playlist command failed: \(error)")
-            }
-        }
-    }
 
     func cycleRepeatMode() {
         guard case .loaded(let info, let src) = state else { return }
@@ -175,99 +159,177 @@ final class NowPlayingModel: ObservableObject {
     }
 
     func checkAutomationPermission(askUser: Bool) {
+        if askUser {
+            requestPermissionByScript()
+            return
+        }
+        let bundleIDs = controllers.map(\.bundleID)
+        Task { [weak self] in
+            let statuses = await Task.detached(priority: .utility) {
+                bundleIDs.map { bundleID in
+                    let status: AutomationStatus
+                    switch AutomationPermission.status(bundleID: bundleID) {
+                    case .granted:
+                        status = .granted
+                    case .denied:
+                        status = .denied
+                    case .notDetermined:
+                        status = .notDetermined
+                    case .targetNotRunning:
+                        if let cached = UserDefaults.standard.object(
+                            forKey: "permission_\(bundleID)"
+                        ) as? Bool {
+                            status = cached ? .granted : .denied
+                        } else {
+                            status = .notDetermined
+                        }
+                    }
+                    return (bundleID, status)
+                }
+            }.value
+            guard let self else { return }
+            applyAutomationStatuses(statuses)
+            refresh()
+        }
+    }
+
+    private func applyAutomationStatuses(_ statuses: [(String, AutomationStatus)]) {
         var anyGranted = false
         var anyDenied = false
 
-        for controller in controllers {
-            let status = permissionStatus(for: controller.bundleID, askUser: askUser)
+        for (bundleID, status) in statuses {
             switch status {
             case .granted:
                 anyGranted = true
+                UserDefaults.standard.set(true, forKey: "permission_\(bundleID)")
             case .denied:
                 anyDenied = true
+                UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
             case .notDetermined:
                 break
             }
         }
 
-        let result: AutomationStatus = anyGranted ? .granted : (anyDenied ? .denied : .notDetermined)
-        automationStatus = result
+        automationStatus = anyGranted ? .granted : (anyDenied ? .denied : .notDetermined)
         if anyGranted {
             UserDefaults.standard.set(true, forKey: "hasGrantedAutomation")
         }
     }
 
     func permissionStatus(for bundleID: String, askUser: Bool = false) -> AutomationStatus {
-        let status = AutomationPermission.status(bundleID: bundleID, askUser: askUser)
-        if status == noErr {
-            UserDefaults.standard.set(true, forKey: "permission_\(bundleID)")
-            return .granted
-        } else if status == OSStatus(errAEEventNotPermitted) {
-            UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
-            return .denied
+        if askUser {
+            checkAutomationPermission(askUser: true)
         }
-
-        if UserDefaults.standard.bool(forKey: "permission_\(bundleID)") {
-            return .granted
+        if let cached = UserDefaults.standard.object(forKey: "permission_\(bundleID)") as? Bool {
+            return cached ? .granted : .denied
         }
-
         return .notDetermined
     }
 
     func requestPermissionFor(bundleID: String) {
-        guard let controller = controllers.first(where: { $0.bundleID == bundleID }) else { return }
+        guard controllers.contains(where: { $0.bundleID == bundleID }) else { return }
+        guard permissionRequestsInFlight.insert(bundleID).inserted else { return }
 
-        let src = """
-        tell application "\(controller.scriptAppName)"
-            get player state
-        end tell
-        """
-        if let script = NSAppleScript(source: src) {
-            var errDict: NSDictionary?
-            _ = script.executeAndReturnError(&errDict)
-            if let errDict = errDict {
-                let code = errDict[NSAppleScript.errorNumber] as? Int ?? 0
-                if code == -1743 {
-                    UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
-                } else {
-                    UserDefaults.standard.set(true, forKey: "permission_\(bundleID)")
-                }
-            } else {
-                UserDefaults.standard.set(true, forKey: "permission_\(bundleID)")
+        Task { [weak self] in
+            guard let self else { return }
+            defer { permissionRequestsInFlight.remove(bundleID) }
+            logger.info("Requesting player access for \(bundleID, privacy: .public)")
+            let status = await Self.requestAutomationPermission(for: bundleID)
+            if status != .notDetermined {
+                UserDefaults.standard.set(status == .granted, forKey: "permission_\(bundleID)")
             }
+            logger.info("Player access request finished for \(bundleID, privacy: .public)")
+            checkAutomationPermission(askUser: false)
         }
-
-        checkAutomationPermission(askUser: false)
-        refresh()
     }
 
     func requestPermissionByScript() {
-        for controller in controllers {
-            requestPermissionFor(bundleID: controller.bundleID)
+        let bundleIDs = controllers.map(\.bundleID).filter {
+            permissionStatus(for: $0) != .granted && !permissionRequestsInFlight.contains($0)
         }
-        checkAutomationPermission(askUser: false)
-        refresh()
+        guard !bundleIDs.isEmpty else { return }
+        permissionRequestsInFlight.formUnion(bundleIDs)
+
+        Task { [weak self] in
+            guard let self else { return }
+            defer { permissionRequestsInFlight.subtract(bundleIDs) }
+            var statuses: [(String, AutomationStatus)] = []
+            for bundleID in bundleIDs {
+                let status = await Self.requestAutomationPermission(for: bundleID)
+                statuses.append((bundleID, status))
+            }
+            applyAutomationStatuses(statuses)
+            refresh()
+        }
+    }
+
+    private static func requestAutomationPermission(
+        for bundleID: String
+    ) async -> AutomationStatus {
+        guard await launchPlayerIfNeeded(bundleID: bundleID) else {
+            return .notDetermined
+        }
+
+        return await Task.detached(priority: .userInitiated) {
+            switch AutomationPermission.status(bundleID: bundleID, askUser: true) {
+            case .granted:
+                return .granted
+            case .denied:
+                return .denied
+            case .notDetermined, .targetNotRunning:
+                return .notDetermined
+            }
+        }.value
+    }
+
+    private static func launchPlayerIfNeeded(bundleID: String) async -> Bool {
+        if !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty {
+            return true
+        }
+
+        guard let applicationURL = NSWorkspace.shared.urlForApplication(
+            withBundleIdentifier: bundleID
+        ) else {
+            return false
+        }
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = false
+        return await withCheckedContinuation { continuation in
+            NSWorkspace.shared.openApplication(
+                at: applicationURL,
+                configuration: configuration
+            ) { application, error in
+                continuation.resume(returning: application != nil && error == nil)
+            }
+        }
     }
 
     func refresh() {
         guard !isFetching else { return }
         isFetching = true
-        Task {
-            let result = await fetchAll()
+        let controllers = controllers
+        Task { [weak self] in
+            let result = await Task.detached(priority: .utility) {
+                Self.fetchAll(controllers: controllers)
+            }.value
+            guard let self else { return }
             if let result {
-                state = result.state
-                lastFetchTime = Date()
-                activeController = result.active
-                await syncArtwork(with: result.state)
+                self.state = result.state
+                self.lastFetchTime = Date()
+                self.activeController = result.active
+                await self.syncArtwork(with: result.state)
 
                 if case .loaded(let info, let src) = result.state {
                     let key = "\(src)|\(info.track)|\(info.artist)"
-                    let previousKey = lastLoadedKey
+                    let previousKey = self.lastLoadedKey
                     if key != previousKey {
-                        lastLoadedKey = key
+                        self.lastLoadedKey = key
                         let recent = RecentTrack(track: info.track, artist: info.artist, source: src, playedAt: Date())
-                        recentTracks.insert(recent, at: 0)
-                        if recentTracks.count > 20 { recentTracks = Array(recentTracks.prefix(20)) }
+                        self.recentTracks.insert(recent, at: 0)
+                        if self.recentTracks.count > 20 {
+                            self.recentTracks = Array(self.recentTracks.prefix(20))
+                        }
                         let srcLower = src.lowercased()
                         let isDesktopMusicApp = srcLower.contains("spotify") || srcLower.contains("music")
                         if previousKey != nil,
@@ -280,20 +342,22 @@ final class NowPlayingModel: ObservableObject {
                     }
                 }
             } else {
-                state = .notRunning
-                activeController = nil
-                await syncArtwork(with: .notRunning)
+                self.state = .notRunning
+                self.activeController = nil
+                await self.syncArtwork(with: .notRunning)
             }
-            isFetching = false
+            self.isFetching = false
         }
     }
 
-    private struct FetchResult {
+    nonisolated private struct FetchResult: Sendable {
         let state: State
         let active: (any MediaController)?
     }
 
-    nonisolated private func fetchAll() async -> FetchResult? {
+    nonisolated private static func fetchAll(
+        controllers: [any MediaController]
+    ) -> FetchResult? {
         switch MediaControllerResolver.resolve(controllers: controllers) {
         case .loaded(let info, let controller):
             return FetchResult(state: .loaded(info, source: controller.displayName), active: controller)
@@ -321,7 +385,7 @@ final class NowPlayingModel: ObservableObject {
         guard key != currentArtworkKey else { return }
         currentArtworkKey = key
 
-        if let data = info.artworkData, let image = NSImage(data: data) {
+        if let data = info.artworkData, let image = RemoteResourceSecurity.safeImage(from: data) {
             artwork = image
             dominantColor = extractColor(from: image)
             return
@@ -409,10 +473,11 @@ final class NowPlayingModel: ObservableObject {
     }
 
     nonisolated private static func downloadArtworkAndColor(from url: URL) async -> (NSImage?, Color?) {
-        guard let (data, response) = try? await URLSession.shared.data(from: url),
-              (response as? HTTPURLResponse)?.statusCode == 200,
-              data.count <= 10 * 1024 * 1024,
-              let image = NSImage(data: data) else { return (nil, nil) }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("image/*", forHTTPHeaderField: "Accept")
+        guard let data = try? await SecureRemoteResource.data(for: request, kind: .artwork),
+              let image = RemoteResourceSecurity.safeImage(from: data) else { return (nil, nil) }
         return (image, nil)
     }
 
@@ -429,7 +494,7 @@ final class NowPlayingModel: ObservableObject {
             do {
                 try await self?.commandQueue.execute { try action(controller) }
             } catch {
-                print("Media command failed: \(error)")
+                self?.logger.error("Media command failed: \(String(describing: error), privacy: .private)")
             }
             self?.refresh()
         }

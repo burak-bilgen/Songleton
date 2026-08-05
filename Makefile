@@ -74,12 +74,13 @@ dmg: archive
 	@cp -R "$(ARCHIVE_APP)" build/dmg-stage/
 	@ln -sf /Applications build/dmg-stage/Applications
 	@rm -f "$(DMG_PATH)"
-	@hdiutil create \
-		-volname "$(APP_NAME)" \
-		-srcfolder build/dmg-stage \
-		-ov -format UDZO \
-		-imagekey zlib-level=9 \
+	@diskutil image create from \
+		--volumeName "$(APP_NAME)" \
+		--format UDZO \
+		build/dmg-stage \
 		"$(DMG_PATH)"
+	@codesign --force --timestamp --sign "$(DEVELOPER_IDENTITY)" "$(DMG_PATH)"
+	@codesign --verify --strict --verbose=2 "$(DMG_PATH)"
 	@rm -rf build/dmg-stage
 	@echo "DMG ready: $(DMG_PATH)"
 	@ls -lh "$(DMG_PATH)"
@@ -121,21 +122,33 @@ coverage:
 	@xcrun llvm-profdata merge -sparse /tmp/SongletonCoverage/*.profraw -o /tmp/SongletonCoverage/Songleton.profdata
 	@xcrun llvm-cov report /tmp/SongletonCoverage/RunTests -instr-profile=/tmp/SongletonCoverage/Songleton.profdata --ignore-filename-regex='Songleton/(App|Views)/|SongletonTests/'
 
-## Run tests and fail the build on Swift compiler warnings.
-quality: test
-	@xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration Debug build \
+## Run static security checks.
+security:
+	@chmod +x scripts/security-audit.sh && ./scripts/security-audit.sh
+
+## Validate localization coverage and reject hardcoded user-facing strings.
+localization:
+	@chmod +x scripts/localization-audit.sh && ./scripts/localization-audit.sh
+
+## Validate the static site, translations, assets, and accessibility boundaries.
+site:
+	@chmod +x scripts/site-audit.sh && ./scripts/site-audit.sh
+
+## Run security, localization, site checks, tests, and fail on Swift compiler warnings.
+quality: security localization site test
+	@xcodebuild -quiet -project $(PROJECT) -scheme $(SCHEME) -configuration Debug build \
+		CODE_SIGNING_ALLOWED=NO SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+	@xcodebuild -quiet -project $(PROJECT) -scheme $(SCHEME) -configuration Release \
+		-destination 'generic/platform=macOS' build \
 		CODE_SIGNING_ALLOWED=NO SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
 
-## Create a notarized release DMG. Prefer a keychain profile (NOTARY_PROFILE); APPLE_ID+TEAM_ID+APP_PASSWORD remain supported.
+## Create a notarized release DMG using credentials stored in Keychain.
 notarize: dmg
-	@if [ -n "$(NOTARY_PROFILE)" ]; then \
-		xcrun notarytool submit "$(DMG_PATH)" --keychain-profile "$(NOTARY_PROFILE)" --wait; \
-	elif [ -n "$(APPLE_ID)" ] && [ -n "$(TEAM_ID)" ] && [ -n "$(APP_PASSWORD)" ]; then \
-		xcrun notarytool submit "$(DMG_PATH)" --apple-id "$(APPLE_ID)" --team-id "$(TEAM_ID)" --password "$(APP_PASSWORD)" --wait; \
-	else \
-		echo "NOTARY_PROFILE (keychain profile) or APPLE_ID + TEAM_ID + APP_PASSWORD required" && exit 1; \
-	fi
+	@test -n "$(NOTARY_PROFILE)" || (echo "NOTARY_PROFILE is required. Store credentials with notarytool store-credentials." && exit 1)
+	@xcrun notarytool submit "$(DMG_PATH)" --keychain-profile "$(NOTARY_PROFILE)" --wait
 	@xcrun stapler staple "$(DMG_PATH)"
+	@xcrun stapler validate "$(DMG_PATH)"
+	@spctl --assess --type open --context context:primary-signature --verbose=2 "$(DMG_PATH)"
 
-.PHONY: run build-debug fresh kill restart logs dmg build-release archive clean test coverage quality notarize
+.PHONY: run build-debug fresh kill restart logs dmg build-release archive clean test coverage security localization site quality notarize
 .DEFAULT_GOAL := run

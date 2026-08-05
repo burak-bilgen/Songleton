@@ -22,7 +22,7 @@ It is designed for people who work, write, code, design, or browse with music on
 | Surface | What it does |
 | --- | --- |
 | Menu bar | Shows the current track only while Spotify or Apple Music has usable playback. Previous, next, and title controls remain one click away. |
-| Hover panel | Artwork, playback, shuffle, repeat, mute, volume, settings, Ambient Mode, and Spotify discovery in one compact panel. |
+| Hover panel | Artwork, playback, shuffle, repeat, mute, volume, settings, and Ambient Mode in one compact panel. |
 | Screen gestures | Previous, next, play or pause, and volume without finding a button. Clear visual feedback prevents accidental triggers. |
 | New-track HUD | A non-activating track notification that enters from the selected screen edge, keeps its glow intact, and never steals focus. |
 | Ambient Mode | A full-screen music scene with Vinyl, Cassette, and Glass themes, lyrics, seek, sleep timer, and keyboard controls. |
@@ -50,13 +50,6 @@ Hover the song title and Songleton expands into a compact control room:
 - Previous, next, play or pause, shuffle, repeat, mute, and volume.
 - Tooltips and VoiceOver labels for every actionable control.
 - Ambient Mode, Settings, and Quit without a separate window.
-- Spotify picks at the bottom whenever Spotify is the active player.
-
-### Spotify picks
-
-When Spotify is active, the hover panel offers five compact one-click playlists. The catalog contains only verified Spotify editorial playlists, never community copies that happen to share a chart name. Select a playlist and Songleton tells the already-running Spotify desktop app to enable shuffle and begin that playlist without opening a browser or intentionally bringing Spotify to the front.
-
-This does not require a Songleton account, Spotify OAuth flow, IP geolocation, or a hidden web scraper. The Spotify app itself still needs to be installed, running, authorized for Automation, and signed in as usual. The catalog is intentionally curated rather than advertised as a live Spotify ranking feed.
 
 ## Screen-edge gestures
 
@@ -145,7 +138,6 @@ Songleton is deliberately local-first.
 - It has no analytics, advertising, tracking, or listening-history upload.
 - Artwork comes from the active player or its artwork URL.
 - Lyrics are fetched from [LRCLIB](https://lrclib.net/) using only the current track, artist, album, and duration needed for lookup.
-- Spotify picks use a small built-in editorial catalog. Songleton does not use physical location, IP geolocation, or a hidden Spotify web scraper.
 - Passwords, player credentials, local files, and listening history are never uploaded.
 
 ## Requirements
@@ -172,7 +164,7 @@ make notarize
 ./scripts/update-homebrew-cask.sh build/Songleton-1.0.dmg
 ```
 
-Then commit the generated checksum, create the matching `v1.0` GitHub Release, and attach `Songleton-1.0.dmg`. The cask at [`homebrew-tap/Casks/songleton.rb`](homebrew-tap/Casks/songleton.rb) intentionally starts with `sha256 :no_check`; it is a release staging file, not a claim that an unsigned artifact is ready to install. The exact Homebrew steps are in [`homebrew-tap/README.md`](homebrew-tap/README.md).
+Then commit the generated checksum, create the matching `v1.0` GitHub Release, and attach `Songleton-1.0.dmg`. The cask at [`homebrew-tap/Casks/songleton.rb`](homebrew-tap/Casks/songleton.rb) starts with an all-zero fail-closed checksum; installation cannot succeed until the release helper pins the real DMG digest. The exact Homebrew steps are in [`homebrew-tap/README.md`](homebrew-tap/README.md).
 
 ## Build from source
 
@@ -196,7 +188,10 @@ make build-debug
 # Run the native test runner
 make test
 
-# Test and reject compiler warnings
+# Audit the static website and both language catalogs
+make site localization
+
+# Run security, localization, website, tests, and warning-free Debug/Release builds
 make quality
 
 # Clear build products
@@ -206,7 +201,7 @@ make clean
 make fresh
 ```
 
-The native test suite covers settings persistence, notification layout and motion, Spotify editorial catalog integrity, player resolution, lyrics parsing, localization behavior, tutorial gating, and the pure screen-edge gesture contract.
+The native test suite covers settings persistence, notification layout and motion, player resolution, lyrics parsing, localization behavior, tutorial gating, and the pure screen-edge gesture contract.
 
 ## License
 

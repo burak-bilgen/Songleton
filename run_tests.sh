@@ -27,6 +27,7 @@ SWIFTC_ARGS=(
   -framework AppKit \
   -framework AVFoundation \
   -framework ApplicationServices \
+  -framework ImageIO \
   -framework ServiceManagement \
   -parse-as-library \
   -emit-executable \

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct MarqueeText: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let text: String
     var font: Font
     var maxWidth: CGFloat
@@ -18,7 +20,7 @@ struct MarqueeText: View {
 
     var body: some View {
         Group {
-            if needsScroll {
+            if needsScroll && !reduceMotion {
                 TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: isPaused)) { context in
                     let elapsed = max(0, context.date.timeIntervalSince(startDate) - pauseDuration)
                     let cycle = textWidth + gap

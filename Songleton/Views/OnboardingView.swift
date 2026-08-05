@@ -24,8 +24,7 @@ struct OnboardingView: View {
 
     enum Step: Int, CaseIterable {
         case welcome = 0
-        case controls = 1
-        case permissions = 2
+        case permissions = 1
     }
 
     var body: some View {
@@ -43,9 +42,6 @@ struct OnboardingView: View {
                     switch step {
                     case .welcome:
                         welcomeStepView
-                            .transition(pageTransition)
-                    case .controls:
-                        controlsStepView
                             .transition(pageTransition)
                     case .permissions:
                         permissionsStepView
@@ -302,55 +298,14 @@ struct OnboardingView: View {
             }
 
             actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
-                move(to: .controls)
+                move(to: .permissions)
             }
             .entrance(5, appeared: appeared)
             .modifier(GlowPulse(pulse: pulseIcon))
         }
     }
 
-    // MARK: - Step 2: How It Works
-
-    private var controlsStepView: some View {
-        VStack(spacing: 16) {
-            TutorialMenuBarPreview(isRightClicking: false)
-                .scaleEffect(1.12)
-                .padding(.top, 18)
-                .entrance(0, appeared: appeared)
-
-            VStack(spacing: 6) {
-                Text(localization.string("onboarding.screen_controls_title"))
-                    .font(.system(size: 23, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                Text(localization.string("onboarding.screen_controls_subtitle"))
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .entrance(1, appeared: appeared)
-
-            VStack(spacing: 10) {
-                featureCard(id: 4, icon: "cursorarrow.click.2", color: SongletonTheme.cyan,
-                            title: localization.string("onboarding.feature_control_title"),
-                            desc: localization.string("onboarding.feature_control_hint"))
-                featureCard(id: 5, icon: "music.note.list", color: SongletonTheme.violet,
-                            title: localization.string("onboarding.feature_live_title"),
-                            desc: localization.string("onboarding.feature_live_hint"))
-                featureCard(id: 6, icon: "quote.bubble.fill", color: SongletonTheme.pink,
-                            title: localization.string("onboarding.feature_lyrics_title"),
-                            desc: localization.string("onboarding.feature_lyrics_hint"))
-            }
-            .entrance(2, appeared: appeared)
-
-            actionButton(title: localization.string("common.continue"), color: SongletonTheme.cyan) {
-                move(to: .permissions)
-            }
-            .entrance(3, appeared: appeared)
-        }
-    }
-
-    // MARK: - Step 3: Permissions & Launch
+    // MARK: - Step 2: Permissions & Launch
 
     private var permissionsStepView: some View {
         VStack(spacing: 20) {
@@ -389,11 +344,18 @@ struct OnboardingView: View {
 
                 if !isGranted {
                     Button(action: model.requestPermissionByScript) {
-                        Text(localization.string("permission.request_all"))
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(SongletonTheme.cyan)
+                        HStack(spacing: 7) {
+                            if !model.permissionRequestsInFlight.isEmpty {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
+                            Text(localization.string("permission.request_all"))
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundStyle(SongletonTheme.cyan)
+                        }
                     }
                     .buttonStyle(.plain)
+                    .disabled(!model.permissionRequestsInFlight.isEmpty)
 
                     Button(action: onAbort) {
                         Text(localization.string("onboarding.skip"))
@@ -506,45 +468,13 @@ struct OnboardingView: View {
         }
     }
 
-    private func gestureItem(icon: String, color: Color, title: String, desc: String) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(color.opacity(0.14))
-                    .frame(width: 34, height: 30)
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(color)
-            }
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(color.opacity(0.28), lineWidth: 0.8)
-            )
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 12.5, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                Text(desc)
-                    .font(.system(size: 11.5, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.45))
-                    .lineSpacing(1)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(SongletonTheme.card.opacity(0.65), in: RoundedRectangle(cornerRadius: 11))
-        .overlay(RoundedRectangle(cornerRadius: 11).stroke(Color.white.opacity(0.06), lineWidth: 1))
-    }
-
     private func gestureDescription(_ key: String) -> String {
         let configuredDuration = SettingsModel.shared.edgeGestureHoldDuration
         let duration = key == "gesture.top_desc"
             ? configuredDuration * 0.8
             : configuredDuration
-        return String(format: localization.string(key), String(format: "%.1f", duration))
+        let formattedDuration = String(format: "%.1f", locale: localization.locale, duration)
+        return String(format: localization.string(key), locale: localization.locale, formattedDuration)
     }
 
     private func shortcutRow(keys: [AnyView], desc: String) -> some View {
@@ -630,24 +560,34 @@ struct OnboardingView: View {
                     .opacity(checkmarkPop ? 1 : 0)
                     .shadow(color: .green.opacity(0.45), radius: checkmarkPop ? 6 : 0)
             } else {
+                let isRequesting = model.permissionRequestsInFlight.contains(bundleID)
                 Button(action: {
                     model.requestPermissionFor(bundleID: bundleID)
                 }) {
-                    Text(localization.string("onboarding.connect"))
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 6)
-                        .background(
-                            LinearGradient(
-                                colors: [color.opacity(0.9), color.opacity(0.7)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            in: Capsule()
-                        )
-                        .foregroundStyle(.black.opacity(0.85))
+                    Group {
+                        if isRequesting {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Text(localization.string("onboarding.connect"))
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        }
+                    }
+                    .frame(minWidth: 52)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background(
+                        LinearGradient(
+                            colors: [color.opacity(0.9), color.opacity(0.7)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        in: Capsule()
+                    )
+                    .foregroundStyle(.black.opacity(0.85))
                 }
                 .buttonStyle(.plain)
+                .disabled(isRequesting)
             }
         }
         .padding(12)

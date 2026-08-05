@@ -1,10 +1,11 @@
 cask "songleton" do
   version "1.0"
 
-  # Replace :no_check with the checksum printed by:
+  # Release-blocking placeholder. Replace it with the checksum printed by:
   # shasum -a 256 Songleton-#{version}.dmg
   # The release helper at ../../scripts/update-homebrew-cask.sh does this.
-  sha256 :no_check
+  # All-zero SHA intentionally fails closed until a release is prepared.
+  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
 
   url "https://github.com/burak-bilgen/Songleton/releases/download/v#{version}/Songleton-#{version}.dmg"
   name "Songleton"
