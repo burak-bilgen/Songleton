@@ -7,6 +7,11 @@
 	     and never shows the Automation permission dialog to the user. -->
 	<key>com.apple.security.automation.apple-events</key>
 	<true/>
-
+	<!-- App Sandbox: spotify/music are driven over Apple Events, lyrics are
+	     fetched over the network, and everything else is local. -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>
