@@ -993,13 +993,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bring artwork, themes, and synced lyrics together in a calm full-screen view."
+            "value": "Open Ambient Mode when you want the current track to take over the screen."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Albüm kapağını, temaları ve senkronize sözleri sakin bir tam ekran görünümde buluştur."
+            "value": "Müziğe odaklanmak istediğinde Ambient Mode'u aç, çalan parça ekrana yerleşsin."
           }
         }
       }
@@ -1010,13 +1010,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Give the music the whole screen"
+            "value": "Give the music some room"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Müziğe tam ekran yer aç"
+            "value": "Müziğe biraz alan aç"
           }
         }
       }
@@ -1027,13 +1027,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Left for the previous track, right for the next, and top to play or pause."
+            "value": "Rest the pointer at the left, right, or top edge to control playback without finding the player."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Önceki parça için sol, sonraki için sağ, oynatmak veya duraklatmak için üst kenarı kullan."
+            "value": "Oynatıcıyı aramadan önceki, sonraki, oynat ve duraklat için imleci ekranın kenarında kısa süre beklet."
           }
         }
       }
@@ -1044,13 +1044,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Control playback from the screen edges"
+            "value": "Let the edges do the work"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Müziği ekran kenarlarından yönet"
+            "value": "Kenarlar da kontrol olabilir"
           }
         }
       }
@@ -1061,13 +1061,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Track info and playback controls stay close without opening another window."
+            "value": "See what is playing and reach the controls from the menu bar, without opening another window."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şarkı bilgisi ve oynatma kontrolleri, başka pencere açmadan elinin altında kalsın."
+            "value": "Ne çaldığını gör ve kontrollerine başka pencere açmadan menü çubuğundan ulaş."
           }
         }
       }
@@ -1078,13 +1078,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everything you need in the menu bar"
+            "value": "Controls where you expect them"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İhtiyacın olan her şey menü çubuğunda"
+            "value": "Kontroller hep aynı yerde"
           }
         }
       }
@@ -1146,13 +1146,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect this player so Songleton can read the current track and control playback."
+            "value": "Allow Songleton to see the current track and send playback commands to this player."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Songleton'ın çalan parçayı okuyup oynatmayı yönetebilmesi için bu uygulamayı bağla."
+            "value": "Songleton'ın çalan parçayı görmesi ve oynatma komutları göndermesi için bu oynatıcıya izin ver."
           }
         }
       }
@@ -1163,13 +1163,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Control Spotify or Apple Music from the menu bar without leaving what you're doing."
+            "value": "Control Spotify or Apple Music from the menu bar without breaking your flow."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yaptığın işi bölmeden Spotify veya Apple Music'i menü çubuğundan kontrol et."
+            "value": "Spotify veya Apple Music'i, yaptığın işi bölmeden menü çubuğundan kontrol et."
           }
         }
       }
@@ -1186,7 +1186,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Müzik hep elinin altında olsun"
+            "value": "Müzik yanında kalsın"
           }
         }
       }
@@ -1197,13 +1197,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect at least one player. Accessibility is optional and used only for gestures."
+            "value": "Choose Spotify or Apple Music. Accessibility is optional and only enables the screen-edge gestures."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En az bir oynatıcı bağla. Erişilebilirlik isteğe bağlıdır ve yalnızca hareketler için kullanılır."
+            "value": "Spotify veya Apple Music'ten birini bağla. Erişilebilirlik izni isteğe bağlıdır, yalnızca ekran kenarı hareketlerini açar."
           }
         }
       }
@@ -1214,13 +1214,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect a player. That's it."
+            "value": "Choose a player, then you are ready"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir oynatıcı bağla. Hepsi bu."
+            "value": "Bir oynatıcı seç, başlayalım"
           }
         }
       }
@@ -1374,23 +1374,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gizlilik ayarlarını aç"
-          }
-        }
-      }
-    },
-    "permission.request_all": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connect available players"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Açık oynatıcıları bağla"
           }
         }
       }
@@ -2591,13 +2574,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Continue when the animation finishes."
+            "value": "When the preview ends, move on to the next control."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Animasyon bitince devam et."
+            "value": "Ön izleme bitince sıradaki kontrole geçebilirsin."
           }
         }
       }
@@ -2625,13 +2608,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Showing it now…"
+            "value": "Preview is playing…"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şimdi gösteriliyor…"
+            "value": "Ön izleme oynuyor…"
           }
         }
       }
@@ -2659,13 +2642,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "LIVE EDGE GESTURE"
+            "value": "SCREEN-EDGE GESTURE"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "CANLI KENAR HAREKETİ"
+            "value": "EKRAN KENARI HAREKETİ"
           }
         }
       }
@@ -2727,13 +2710,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use the left button for the previous track and the right button for the next. Click the title to play or pause, or hover to open the full controls."
+            "value": "Use the left and right buttons for tracks, click the title to play or pause, and hover for the full panel."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sol düğmeyle önceki, sağ düğmeyle sonraki parçaya geç. Oynatmak veya duraklatmak için parça adına tıkla; tüm kontroller için üzerine gel."
+            "value": "Sol ve sağ düğmelerle şarkı değiştir, başlığa tıklayarak oynat veya duraklat. Tüm kontroller için üzerine gel."
           }
         }
       }
@@ -2744,13 +2727,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the control panel"
+            "value": "Menu bar controls"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kontrol panelini aç"
+            "value": "Menü çubuğundaki kontroller"
           }
         }
       }
@@ -2863,13 +2846,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Previous, next, play, and pause from the screen edges"
+            "value": "Use the screen edges for previous, next, play, and pause"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ekran kenarlarından önceki, sonraki, oynat ve duraklat"
+            "value": "Önceki, sonraki, oynat ve duraklat için ekran kenarlarını kullan"
           }
         }
       }
@@ -2897,13 +2880,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A visible cancel window before each gesture runs"
+            "value": "Every gesture has a short, visible window to cancel it"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Her hareket çalışmadan önce görünür iptal süresi"
+            "value": "Her hareketi çalıştırmadan önce kısa bir iptal süresi görürsün"
           }
         }
       }
@@ -2948,13 +2931,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Try the screen-edge gestures and playback controls in a quick guided demo."
+            "value": "A short visual guide to the screen-edge gestures and menu bar controls."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ekran kenarı hareketlerini ve oynatma kontrollerini kısa bir tanıtımla dene."
+            "value": "Ekran kenarı hareketleri ve menü çubuğu kontrolleri için kısa bir görsel tur."
           }
         }
       }
@@ -2965,13 +2948,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "See how Songleton works"
+            "value": "Get to know the controls"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Songleton nasıl çalışıyor?"
+            "value": "Kontrolleri birlikte görelim"
           }
         }
       }
@@ -3101,13 +3084,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "How Songleton works"
+            "value": "Songleton controls"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Songleton nasıl çalışır?"
+            "value": "Songleton kontrolleri"
           }
         }
       }
@@ -3118,13 +3101,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hold Command and Option, then drag vertically. The volume indicator follows your hand."
+            "value": "Hold Command and Option, then drag up or down. The volume HUD follows the movement."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Komut ve Option tuşlarını basılı tutup dikey sürükle. Ses göstergesi elini takip eder."
+            "value": "Command ve Option'a basılı tutup yukarı veya aşağı sürükle. Ses göstergesi hareketi takip eder."
           }
         }
       }
@@ -3135,13 +3118,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adjust volume anywhere"
+            "value": "Adjust volume from anywhere"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sesi her yerden ayarla"
+            "value": "Sesi bulunduğun yerden ayarla"
           }
         }
       }

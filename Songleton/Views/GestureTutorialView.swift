@@ -115,20 +115,20 @@ struct GestureTutorialView: View {
                     if isEdgeGestureStage {
                         edgeHotspotIndicators(size: geo.size)
                         edgeGestureStatus
-                            .position(x: geo.size.width / 2, y: geo.size.height / 2 - 115)
+                            .position(x: geo.size.width / 2, y: edgeDemoY(for: geo.size) - 108)
                             .zIndex(5)
                     }
 
                     if currentStage == .volumeControl {
                         volumeControlCanvas
-                            .position(x: geo.size.width / 2, y: geo.size.height / 2 - 145)
+                            .position(x: geo.size.width / 2, y: demoCenterY(for: geo.size))
                             .zIndex(20)
                             .transition(.scale(scale: 0.95).combined(with: .opacity))
                     }
 
                     if currentStage == .hoverMenu || currentStage == .ambientMode {
                         tutorialMenuBarPreview
-                            .position(x: geo.size.width / 2, y: 54)
+                            .position(x: geo.size.width / 2, y: menuBarCenterY(for: geo.size))
                             .zIndex(25)
                     }
 
@@ -136,7 +136,7 @@ struct GestureTutorialView: View {
                         TutorialHoverPanelPreview()
                             .scaleEffect(0.88)
                             .allowsHitTesting(false)
-                            .position(x: geo.size.width / 2, y: tutorialPreviewCenterY(for: geo.size))
+                            .position(x: geo.size.width / 2, y: demoCenterY(for: geo.size))
                             .zIndex(24)
                             .transition(.scale(scale: 0.92).combined(with: .opacity))
                     }
@@ -144,8 +144,8 @@ struct GestureTutorialView: View {
                     if isAmbientPreviewVisible {
                         AmbientView(onClose: {})
                             .frame(
-                                width: min(680, geo.size.width - 96),
-                                height: min(410, max(280, geo.size.height * 0.43))
+                                width: min(680, max(280, geo.size.width - 64)),
+                                height: min(390, max(250, geo.size.height * 0.38))
                             )
                             .allowsHitTesting(false)
                             .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
@@ -154,7 +154,7 @@ struct GestureTutorialView: View {
                                     .stroke(Color.white.opacity(0.18), lineWidth: 1)
                             )
                             .shadow(color: .black.opacity(0.60), radius: 30, y: 16)
-                            .position(x: geo.size.width / 2, y: tutorialPreviewCenterY(for: geo.size))
+                            .position(x: geo.size.width / 2, y: demoCenterY(for: geo.size))
                             .zIndex(24)
                     }
 
@@ -165,9 +165,11 @@ struct GestureTutorialView: View {
                             zone: currentZone(for: currentStage)
                         )
                         .position(edgeOverlayPosition(for: currentStage, size: geo.size))
+                        .zIndex(15)
                     }
 
                     animatedMouseCursor(size: geo.size)
+                        .zIndex(45)
 
                     if currentStage == .topEdgePlayPause && isPlaybackPaused {
                         Label(localization.string("tutorial.playback_paused"), systemImage: "pause.fill")
@@ -176,7 +178,7 @@ struct GestureTutorialView: View {
                             .padding(.horizontal, 14)
                             .padding(.vertical, 9)
                             .background(Color.orange.opacity(0.82), in: Capsule())
-                            .position(x: geo.size.width / 2, y: geo.size.height / 2 - 190)
+                            .position(x: geo.size.width / 2, y: edgeDemoY(for: geo.size) - 158)
                     }
 
                     if currentStage == .topEdgePlayPause && isPlaybackResuming {
@@ -186,13 +188,14 @@ struct GestureTutorialView: View {
                             .padding(.horizontal, 14)
                             .padding(.vertical, 9)
                             .background(SongletonTheme.cyan.opacity(0.85), in: Capsule())
-                            .position(x: geo.size.width / 2, y: geo.size.height / 2 - 190)
+                            .position(x: geo.size.width / 2, y: edgeDemoY(for: geo.size) - 158)
                             .transition(.scale.combined(with: .opacity))
                     }
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
 
                 tutorialChrome(size: geo.size)
+                    .zIndex(60)
             }
             .onAppear {
                 cursorPosition = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
@@ -206,42 +209,35 @@ struct GestureTutorialView: View {
         }
     }
 
-    private var usesBottomAnchoredControls: Bool {
-        currentStage == .volumeControl || currentStage == .hoverMenu || currentStage == .ambientMode
+    private func menuBarCenterY(for size: CGSize) -> CGFloat {
+        min(84, max(66, size.height * 0.10))
     }
 
-    private func tutorialPreviewCenterY(for size: CGSize) -> CGFloat {
-        min(size.height * 0.34, 330)
+    private func controlClearance(for size: CGSize) -> CGFloat {
+        min(310, max(236, size.height * 0.37))
+    }
+
+    private func demoCenterY(for size: CGSize) -> CGFloat {
+        let preferred = max(238, size.height * 0.36)
+        return min(preferred, size.height - controlClearance(for: size) - 10)
+    }
+
+    private func edgeDemoY(for size: CGSize) -> CGFloat {
+        min(size.height * 0.44, size.height - controlClearance(for: size) - 22)
     }
 
     @ViewBuilder
     private func tutorialChrome(size: CGSize) -> some View {
-        if usesBottomAnchoredControls {
-            VStack(spacing: 0) {
-                topBarView
-                    .padding(.horizontal, 36)
-                    .padding(.top, 28)
+        VStack(spacing: 0) {
+            topBarView
+                .padding(.horizontal, size.width < 700 ? 20 : 36)
+                .padding(.top, size.height < 700 ? 18 : 28)
 
-                Spacer(minLength: 0)
+            Spacer(minLength: 0)
 
-                stageControlCard(size: size)
-                    .padding(.horizontal, 28)
-                    .padding(.bottom, max(34, size.height * 0.055))
-                    .zIndex(30)
-            }
-        } else {
-            VStack {
-                topBarView
-                    .padding(.horizontal, 36)
-                    .padding(.top, 28)
-
-                Spacer()
-
-                stageControlCard(size: size)
-                    .zIndex(30)
-
-                Spacer()
-            }
+            stageControlCard(size: size)
+                .padding(.horizontal, size.width < 700 ? 16 : 28)
+                .padding(.bottom, max(20, size.height * 0.045))
         }
     }
 
@@ -362,9 +358,9 @@ struct GestureTutorialView: View {
     private func edgeOverlayPosition(for stage: TutorialStage, size: CGSize) -> CGPoint {
         switch stage {
         case .cancelDemo:
-            return CGPoint(x: 56, y: size.height / 2)
+            return CGPoint(x: 56, y: edgeDemoY(for: size))
         case .rightEdgeSkip:
-            return CGPoint(x: size.width - 56, y: size.height / 2)
+            return CGPoint(x: size.width - 56, y: edgeDemoY(for: size))
         case .topEdgePlayPause:
             return CGPoint(x: size.width / 2, y: 56)
         case .volumeControl, .hoverMenu, .ambientMode:
@@ -466,7 +462,9 @@ struct GestureTutorialView: View {
     // MARK: - Stage Control Card Panel
 
     private func stageControlCard(size: CGSize) -> some View {
-        VStack(spacing: 16) {
+        let compact = size.width < 720 || size.height < 760
+
+        return VStack(spacing: 16) {
             HStack {
                 Text(String(
                     format: localization.string("tutorial.step_progress_format"),
@@ -486,11 +484,12 @@ struct GestureTutorialView: View {
 
             VStack(spacing: 7) {
                 Text(stageHeader(currentStage))
-                    .font(.system(size: 21, weight: .bold, design: .rounded))
+                    .font(.system(size: compact ? 18 : 21, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
 
                 Text(stageDescription(currentStage))
-                    .font(.system(size: 13.5, weight: .medium, design: .rounded))
+                    .font(.system(size: compact ? 12.5 : 13.5, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.68))
                     .multilineTextAlignment(.center)
             }
@@ -506,7 +505,29 @@ struct GestureTutorialView: View {
                     .foregroundStyle(.white.opacity(0.76))
             }
 
-            HStack(spacing: 12) {
+            Group {
+                if compact {
+                    VStack(spacing: 8) {
+                        replayButton(size: size)
+                        primaryStageButton(size: size)
+                    }
+                } else {
+                    HStack(spacing: 12) {
+                        replayButton(size: size)
+                        primaryStageButton(size: size)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, compact ? 18 : 28)
+        .padding(.vertical, compact ? 16 : 22)
+        .frame(maxWidth: 680)
+        .background(SongletonTheme.card.opacity(0.92), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.white.opacity(0.16), lineWidth: 1))
+        .shadow(color: .black.opacity(0.62), radius: 24, y: 12)
+    }
+
+    private func replayButton(size: CGSize) -> some View {
                 Button {
                     runStageAnimation(stage: currentStage, size: size)
                 } label: {
@@ -517,13 +538,16 @@ struct GestureTutorialView: View {
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                     }
                     .foregroundStyle(.white.opacity(0.85))
-                    .frame(minWidth: 168, minHeight: 50)
+                    .frame(minWidth: 168, maxWidth: .infinity, minHeight: 48)
                     .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .disabled(isStageAnimationRunning)
                 .accessibilityLabel(localization.string("common.try_again"))
+    }
 
+    @ViewBuilder
+    private func primaryStageButton(size: CGSize) -> some View {
                 if currentStage.rawValue < TutorialStage.allCases.count - 1 {
                     Button {
                         if let next = TutorialStage(rawValue: currentStage.rawValue + 1) {
@@ -537,7 +561,7 @@ struct GestureTutorialView: View {
                                 .font(.system(size: 13, weight: .bold))
                         }
                         .foregroundStyle(.white)
-                            .frame(minWidth: 210, minHeight: 50)
+                            .frame(minWidth: 210, maxWidth: .infinity, minHeight: 48)
                         .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -554,21 +578,13 @@ struct GestureTutorialView: View {
                                 .font(.system(size: 14, weight: .bold, design: .rounded))
                         }
                         .foregroundStyle(.white)
-                            .frame(minWidth: 210, minHeight: 50)
+                            .frame(minWidth: 210, maxWidth: .infinity, minHeight: 48)
                         .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .disabled(isStageAnimationRunning)
                     .accessibilityLabel(localization.string("common.start"))
                 }
-            }
-        }
-        .padding(.horizontal, 28)
-        .padding(.vertical, 22)
-        .frame(maxWidth: 680)
-        .background(SongletonTheme.card.opacity(0.92), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.white.opacity(0.16), lineWidth: 1))
-        .shadow(color: .black.opacity(0.62), radius: 24, y: 12)
     }
 
     // MARK: - Animation Controller & Sound Triggers
@@ -729,8 +745,9 @@ struct GestureTutorialView: View {
 
             switch stage {
             case .cancelDemo:
+                let edgeY = edgeDemoY(for: size)
                 await moveCursor(
-                    to: CGPoint(x: 10, y: size.height * 0.50),
+                    to: CGPoint(x: 10, y: edgeY),
                     duration: 0.64,
                     rotation: -13,
                     scale: 0.94
@@ -745,7 +762,7 @@ struct GestureTutorialView: View {
                 }
 
                 await moveCursor(
-                    to: CGPoint(x: 164, y: size.height * 0.53),
+                    to: CGPoint(x: 164, y: edgeY + 18),
                     duration: 0.28,
                     rotation: 3,
                     scale: 1.08
@@ -756,8 +773,9 @@ struct GestureTutorialView: View {
                 isStageAnimationRunning = false
 
             case .rightEdgeSkip:
+                let edgeY = edgeDemoY(for: size)
                 await moveCursor(
-                    to: CGPoint(x: size.width - 10, y: size.height * 0.50),
+                    to: CGPoint(x: size.width - 10, y: edgeY),
                     duration: 0.68,
                     rotation: 10,
                     scale: 0.94
@@ -776,7 +794,7 @@ struct GestureTutorialView: View {
 
                 mockManager.simulateEdgeGestureBurst()
                 await moveCursor(
-                    to: CGPoint(x: size.width - 74, y: size.height * 0.47),
+                    to: CGPoint(x: size.width - 74, y: edgeY - 12),
                     duration: 0.22,
                     rotation: 3,
                     scale: 1.04
@@ -786,6 +804,7 @@ struct GestureTutorialView: View {
                 isStageAnimationRunning = false
 
             case .topEdgePlayPause:
+                let pauseY = min(edgeDemoY(for: size) - 122, 160)
                 await moveCursor(
                     to: CGPoint(x: size.width / 2, y: 10),
                     duration: 0.70,
@@ -809,7 +828,7 @@ struct GestureTutorialView: View {
                 guard !Task.isCancelled else { return }
 
                 await moveCursor(
-                    to: CGPoint(x: size.width * 0.48, y: 142),
+                    to: CGPoint(x: size.width * 0.48, y: pauseY),
                     duration: 0.34,
                     rotation: 2
                 )
@@ -842,9 +861,10 @@ struct GestureTutorialView: View {
                 isStageAnimationRunning = false
 
             case .volumeControl:
+                let volumeCenterY = demoCenterY(for: size)
                 let volumeX = size.width / 2 + 150
-                let topY = size.height / 2 - 192
-                let bottomY = size.height / 2 - 56
+                let topY = volumeCenterY - 82
+                let bottomY = volumeCenterY + 72
 
                 await moveCursor(
                     to: CGPoint(x: volumeX, y: topY),
@@ -881,7 +901,7 @@ struct GestureTutorialView: View {
 
             case .hoverMenu:
                 await moveCursor(
-                    to: CGPoint(x: size.width / 2, y: 54),
+                    to: CGPoint(x: size.width / 2, y: menuBarCenterY(for: size)),
                     duration: 0.66,
                     rotation: -5,
                     scale: 0.95
@@ -900,7 +920,7 @@ struct GestureTutorialView: View {
 
             case .ambientMode:
                 await moveCursor(
-                    to: CGPoint(x: size.width / 2, y: 54),
+                    to: CGPoint(x: size.width / 2, y: menuBarCenterY(for: size)),
                     duration: 0.62,
                     rotation: -5,
                     scale: 0.95

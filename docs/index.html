@@ -8,7 +8,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; media-src 'none'; manifest-src 'none'; upgrade-insecure-requests">
   <meta name="description" content="Songleton, Spotify ve Apple Music'i menü çubuğundan, ekran kenarlarından ve Ambient Mode'dan kontrol eden yerel macOS uygulaması.">
   <meta property="og:title" content="Songleton for macOS">
-  <meta property="og:description" content="Müziğin bir hareket uzağında.">
+  <meta property="og:description" content="Müzik açık. Sen devam et.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://burak-bilgen.github.io/Songleton/">
   <meta property="og:locale" content="tr_TR">
@@ -47,8 +47,8 @@
     <section class="hero shell">
       <div class="hero-copy">
         <div class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="heroEyebrow">macOS 14+ için yerel müzik yardımcısı</span></div>
-        <h1 data-i18n="heroTitle">Müziğin.<br><span>Bir hareket uzağında.</span></h1>
-        <p data-i18n="heroText">Spotify ve Apple Music'i menü çubuğundan kontrol et. İmleci ekran kenarında beklet. Müziği tam ekrana al. Oynatıcıya gidip gelme işi 2012'de kalabilirdi.</p>
+        <h1 data-i18n="heroTitle">Müzik açık.<br><span>Sen devam et.</span></h1>
+        <p data-i18n="heroText">Spotify veya Apple Music'i aç. Şarkını menü çubuğundan yönet, ekran kenarlarıyla kontrol et ya da Ambient Mode ile bütün ekrana yay. Uygulamalar arasında gidip gelme.</p>
         <div class="hero-actions">
           <a class="button primary" href="https://github.com/burak-bilgen/Songleton/releases/latest"><span data-i18n="downloadFree">Ücretsiz indir</span><span aria-hidden="true">↓</span></a>
           <a class="button ghost" href="#tour"><span data-i18n="watchTour">Canlı turu izle</span><span aria-hidden="true">⌄</span></a>
@@ -68,8 +68,8 @@
     <section class="tour" id="tour" aria-labelledby="tour-title">
       <div class="tour-intro shell">
         <p class="section-kicker" data-i18n="tourKicker">Adım adım ürün turu</p>
-        <h2 id="tour-title" data-i18n="tourTitle">Bir Mac. Bir imleç. Gereksiz pencere yok.</h2>
-        <p data-i18n="tourLead">Bir kez kaydır. Her hareket seni doğrudan sonraki Songleton özelliğine götürsün.</p>
+        <h2 id="tour-title" data-i18n="tourTitle">Müziği yönet. Yaptığın işi bölme.</h2>
+        <p data-i18n="tourLead">Aşağı kaydır. Songleton'ın her özelliğini gerçek bir Mac masaüstünde çalışırken gör.</p>
       </div>
 
       <div class="tour-stage-wrap">
@@ -80,16 +80,18 @@
 
               <div class="mac-menu-bar">
                 <div class="menu-left"><span class="apple">●</span><b>Finder</b><span data-i18n="menuFile">Dosya</span><span data-i18n="menuEdit">Düzen</span><span data-i18n="menuView">Görüntü</span></div>
-                <div class="songleton-status" id="songleton-status">
-                  <button class="status-nav" aria-label="Previous">◀</button>
-                  <button class="status-nav" aria-label="Next">▶</button>
-                  <button class="track-pill" aria-label="Songleton now playing">
-                    <span class="tiny-cover"></span><span class="status-title">Midnight City</span><span class="status-play">Ⅱ</span>
-                  </button>
-                  <button class="status-volume" aria-label="Volume">◖)))</button>
-                  <button class="status-ambient" aria-label="Ambient Mode">✦</button>
+                <div class="menu-right">
+                  <div class="songleton-status" id="songleton-status">
+                    <button class="status-nav" aria-label="Previous">◀</button>
+                    <button class="status-nav" aria-label="Next">▶</button>
+                    <button class="track-pill" aria-label="Songleton now playing">
+                      <span class="tiny-cover"></span><span class="status-title">Midnight City</span><span class="status-play">Ⅱ</span>
+                    </button>
+                    <button class="status-volume" aria-label="Volume">◖)))</button>
+                    <button class="status-ambient" aria-label="Ambient Mode">✦</button>
+                  </div>
+                  <span class="menu-lang">TR</span><span>⌁</span><span>◉</span><span class="menu-clock">Çar 01:18</span>
                 </div>
-                <div class="menu-right"><span class="menu-lang">TR</span><span>⌁</span><span>◉</span><span class="menu-clock">Çar 01:18</span></div>
               </div>
 
               <div class="desktop-widgets">
@@ -156,10 +158,10 @@
         </div>
 
         <div class="tour-steps shell">
-          <article class="tour-step" data-state="menubar" data-cursor="54,4,45,34"><div class="step-card"><span>01</span><h3 data-i18n="step1Title">Önce menü çubuğuna yerleşir.</h3><p data-i18n="step1Text">Şarkı, önceki, sonraki ve oynat/durdur. Oynatıcı penceresini aramak yok.</p><em data-i18n="scrollHint">Bir kez kaydır. Sonrasını biz hallederiz ↓</em></div></article>
-          <article class="tour-step" data-state="hover" data-cursor="45,34,56,4"><div class="step-card"><span>02</span><h3 data-i18n="step2Title">Üstüne gel. Kontrol odası açılsın.</h3><p data-i18n="step2Text">Kapak görseli, karıştırma, yineleme, ses ve Ambient. Uygulamadaki panelin aynısı, gereksiz kalabalık olmadan.</p></div></article>
-          <article class="tour-step" data-state="panelplay" data-cursor="57,4,57,42"><div class="step-card"><span>03</span><h3 data-i18n="step3Title">Tıklayınca müzik durur. Şaşırtıcı teknoloji.</h3><p data-i18n="step3Text">Şarkı alanına tek tıkla oynat veya duraklat. Paneldeki diğer kontroller de gerçekten çalışır.</p></div></article>
-          <article class="tour-step" data-state="ambient" data-cursor="52,4,57,4"><div class="step-card"><span>04</span><h3 data-i18n="step4Title">Sağ tık. Ambient Mode.</h3><p data-i18n="step4Text">Menü barındaki şarkıya sağ tıkla. O an çalan parça bütün ekranı alır.</p><em data-i18n="rightClick">Sağ tık gösteriliyor</em></div></article>
+          <article class="tour-step" data-state="menubar" data-cursor="78,13,78,4"><div class="step-card"><span>01</span><h3 data-i18n="step1Title">Önce menü çubuğuna yerleşir.</h3><p data-i18n="step1Text">Şarkı, önceki, sonraki ve oynat/durdur. Oynatıcı penceresini aramak yok.</p><em data-i18n="scrollHint">Bir kez kaydır. Sonrasını biz hallederiz ↓</em></div></article>
+          <article class="tour-step" data-state="hover" data-cursor="78,13,77,4"><div class="step-card"><span>02</span><h3 data-i18n="step2Title">Üstüne gel. Kontrol odası açılsın.</h3><p data-i18n="step2Text">Kapak görseli, karıştırma, yineleme, ses ve Ambient. Uygulamadaki panelin aynısı, gereksiz kalabalık olmadan.</p></div></article>
+          <article class="tour-step" data-state="panelplay" data-cursor="77,4,76,42"><div class="step-card"><span>03</span><h3 data-i18n="step3Title">Tıklayınca müzik durur. Şaşırtıcı teknoloji.</h3><p data-i18n="step3Text">Şarkı alanına tek tıkla oynat veya duraklat. Paneldeki diğer kontroller de gerçekten çalışır.</p></div></article>
+          <article class="tour-step" data-state="ambient" data-cursor="76,42,77,4"><div class="step-card"><span>04</span><h3 data-i18n="step4Title">Sağ tık. Ambient Mode.</h3><p data-i18n="step4Text">Menü barındaki şarkıya sağ tıkla. O an çalan parça bütün ekranı alır.</p><em data-i18n="rightClick">Sağ tık gösteriliyor</em></div></article>
           <article class="tour-step" data-state="previous" data-cursor="52,42,1,51"><div class="step-card"><span>05</span><h3 data-i18n="step5Title">Sol kenar, önceki şarkı.</h3><p data-i18n="step5Text">İmleci kenarda beklet. Halka dolmadan ayrılırsan iptal, dolarsa önceki. Kazara şarkı katliamı yok.</p></div></article>
           <article class="tour-step" data-state="next" data-cursor="20,48,99,51"><div class="step-card"><span>06</span><h3 data-i18n="step6Title">Sağ kenar, sonraki şarkı.</h3><p data-i18n="step6Text">Aynı kas hafızası, diğer yön. Şarkı değişimi menü barına ve bildirime akar.</p></div></article>
           <article class="tour-step" data-state="pause" data-cursor="74,45,50,1"><div class="step-card"><span>07</span><h3 data-i18n="step7Title">Üst kenar, duraklat.</h3><p data-i18n="step7Text">Bir kez beklet, müzik dursun. Halka dolarken ne olacağını görürsün.</p></div></article>

@@ -19,7 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         registerCustomFonts()
         MenuBarManager.shared.setup()
-        NowPlayingModel.shared.checkAutomationPermission(askUser: false)
+        NowPlayingModel.shared.checkAutomationPermission()
 
         NotificationCenter.default.addObserver(
             forName: .songletonShowOnboarding,
@@ -62,7 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
-        NowPlayingModel.shared.checkAutomationPermission(askUser: false)
+        NowPlayingModel.shared.checkAutomationPermission()
         MouseGestureManager.shared.refreshAccessibilityStatus()
     }
 

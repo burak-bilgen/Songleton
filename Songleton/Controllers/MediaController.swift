@@ -1,5 +1,5 @@
 import AppKit
-import CoreServices
+import OSLog
 
 nonisolated enum RepeatMode: String, Sendable {
     case off
@@ -111,6 +111,11 @@ enum AppleScriptRunner {
 }
 
 enum AutomationPermission {
+    nonisolated private static let logger = Logger(
+        subsystem: "bilgenworks.app.Songleton",
+        category: "automation-permission"
+    )
+
     nonisolated enum Status: Equatable, Sendable {
         case notDetermined
         case granted
@@ -122,29 +127,31 @@ enum AutomationPermission {
         guard !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty else {
             return .targetNotRunning
         }
-        let target = NSAppleEventDescriptor(bundleIdentifier: bundleID)
-        guard let descriptor = target.aeDesc else { return .notDetermined }
-
-        let result = AEDeterminePermissionToAutomateTarget(
-            descriptor,
-            AEEventClass(kCoreEventClass),
-            AEEventID(kAEGetData),
-            askUser
-        )
-        let status: Status
-        switch result {
-        case noErr:
-            status = .granted
-        case OSStatus(errAEEventNotPermitted):
-            status = .denied
-        case OSStatus(errAEEventWouldRequireUserConsent):
-            status = .notDetermined
-        case OSStatus(procNotFound):
-            status = .targetNotRunning
-        default:
-            status = .notDetermined
+        guard askUser else {
+            guard let cached = UserDefaults.standard.object(
+                forKey: "permission_\(bundleID)"
+            ) as? Bool else { return .notDetermined }
+            return cached ? .granted : .denied
         }
 
+        logger.info("Sending access request to \(bundleID, privacy: .public)")
+        let status: Status
+        do {
+            try AppleScriptRunner.run("""
+            with timeout of 120 seconds
+                tell application id "\(bundleID)" to get player state
+            end timeout
+            """)
+            status = .granted
+        } catch MediaControllerError.permissionDenied {
+            status = .denied
+        } catch {
+            logger.error(
+                "Player access request failed for \(bundleID, privacy: .public): \(String(describing: error), privacy: .private)"
+            )
+            status = .notDetermined
+        }
+        logger.info("Player access request returned for \(bundleID, privacy: .public)")
         if status == .granted || status == .denied {
             UserDefaults.standard.set(status == .granted, forKey: "permission_\(bundleID)")
         }
@@ -152,14 +159,6 @@ enum AutomationPermission {
     }
 
     nonisolated static func isGranted(bundleID: String) -> Bool {
-        switch status(bundleID: bundleID) {
-        case .granted:
-            return true
-        case .denied, .notDetermined:
-            return false
-        case .targetNotRunning:
-            break
-        }
         return UserDefaults.standard.object(forKey: "permission_\(bundleID)") as? Bool == true
     }
 }

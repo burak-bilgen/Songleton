@@ -19,6 +19,12 @@ private actor MediaCommandQueue {
     }
 }
 
+private actor AutomationPermissionQueue {
+    func request(bundleID: String) -> AutomationPermission.Status {
+        AutomationPermission.status(bundleID: bundleID, askUser: true)
+    }
+}
+
 @MainActor
 final class NowPlayingModel: ObservableObject {
     static let shared = NowPlayingModel()
@@ -51,6 +57,7 @@ final class NowPlayingModel: ObservableObject {
     private var lastFetchTime: Date = Date()
     private var timerCancellable: AnyCancellable?
     private let commandQueue = MediaCommandQueue()
+    private let automationPermissionQueue = AutomationPermissionQueue()
     private let logger = Logger(subsystem: "bilgenworks.app.Songleton", category: "media-command")
     private var volumeTask: Task<Void, Never>?
 
@@ -72,9 +79,10 @@ final class NowPlayingModel: ObservableObject {
 
         timerCancellable = Timer.publish(every: 1.0, on: .main, in: .common)
             .autoconnect()
-            .sink { [weak self] _ in self?.refresh() }
-
-        refresh()
+            .sink { [weak self] _ in
+                guard let self, self.hasAnyPlayerPermission else { return }
+                self.refresh()
+            }
     }
 
     var menuBarTitle: String? {
@@ -158,37 +166,18 @@ final class NowPlayingModel: ObservableObject {
         permissionStatus(for: "com.apple.Music") == .granted
     }
 
-    func checkAutomationPermission(askUser: Bool) {
-        if askUser {
-            requestPermissionByScript()
-            return
+    func checkAutomationPermission() {
+        let statuses = controllers.map { controller in
+            let cached = UserDefaults.standard.object(
+                forKey: "permission_\(controller.bundleID)"
+            ) as? Bool
+            return (
+                controller.bundleID,
+                cached.map { $0 ? AutomationStatus.granted : .denied } ?? .notDetermined
+            )
         }
-        let bundleIDs = controllers.map(\.bundleID)
-        Task { [weak self] in
-            let statuses = await Task.detached(priority: .utility) {
-                bundleIDs.map { bundleID in
-                    let status: AutomationStatus
-                    switch AutomationPermission.status(bundleID: bundleID) {
-                    case .granted:
-                        status = .granted
-                    case .denied:
-                        status = .denied
-                    case .notDetermined:
-                        status = .notDetermined
-                    case .targetNotRunning:
-                        if let cached = UserDefaults.standard.object(
-                            forKey: "permission_\(bundleID)"
-                        ) as? Bool {
-                            status = cached ? .granted : .denied
-                        } else {
-                            status = .notDetermined
-                        }
-                    }
-                    return (bundleID, status)
-                }
-            }.value
-            guard let self else { return }
-            applyAutomationStatuses(statuses)
+        applyAutomationStatuses(statuses)
+        if statuses.contains(where: { $0.1 == .granted }) {
             refresh()
         }
     }
@@ -206,7 +195,7 @@ final class NowPlayingModel: ObservableObject {
                 anyDenied = true
                 UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
             case .notDetermined:
-                break
+                UserDefaults.standard.removeObject(forKey: "permission_\(bundleID)")
             }
         }
 
@@ -216,10 +205,7 @@ final class NowPlayingModel: ObservableObject {
         }
     }
 
-    func permissionStatus(for bundleID: String, askUser: Bool = false) -> AutomationStatus {
-        if askUser {
-            checkAutomationPermission(askUser: true)
-        }
+    func permissionStatus(for bundleID: String) -> AutomationStatus {
         if let cached = UserDefaults.standard.object(forKey: "permission_\(bundleID)") as? Bool {
             return cached ? .granted : .denied
         }
@@ -233,53 +219,37 @@ final class NowPlayingModel: ObservableObject {
         Task { [weak self] in
             guard let self else { return }
             defer { permissionRequestsInFlight.remove(bundleID) }
+            NSApp.activate(ignoringOtherApps: true)
             logger.info("Requesting player access for \(bundleID, privacy: .public)")
-            let status = await Self.requestAutomationPermission(for: bundleID)
-            if status != .notDetermined {
-                UserDefaults.standard.set(status == .granted, forKey: "permission_\(bundleID)")
+            let status = await requestAutomationPermission(for: bundleID)
+            applyAutomationStatuses([(bundleID, status)])
+            logger.info(
+                "Player access request finished for \(bundleID, privacy: .public): \(String(describing: status), privacy: .public)"
+            )
+            if status == .granted {
+                refresh()
+            } else if status == .denied {
+                Self.openAutomationSettings()
             }
-            logger.info("Player access request finished for \(bundleID, privacy: .public)")
-            checkAutomationPermission(askUser: false)
         }
     }
 
-    func requestPermissionByScript() {
-        let bundleIDs = controllers.map(\.bundleID).filter {
-            permissionStatus(for: $0) != .granted && !permissionRequestsInFlight.contains($0)
-        }
-        guard !bundleIDs.isEmpty else { return }
-        permissionRequestsInFlight.formUnion(bundleIDs)
-
-        Task { [weak self] in
-            guard let self else { return }
-            defer { permissionRequestsInFlight.subtract(bundleIDs) }
-            var statuses: [(String, AutomationStatus)] = []
-            for bundleID in bundleIDs {
-                let status = await Self.requestAutomationPermission(for: bundleID)
-                statuses.append((bundleID, status))
-            }
-            applyAutomationStatuses(statuses)
-            refresh()
-        }
-    }
-
-    private static func requestAutomationPermission(
+    private func requestAutomationPermission(
         for bundleID: String
     ) async -> AutomationStatus {
-        guard await launchPlayerIfNeeded(bundleID: bundleID) else {
+        guard await Self.launchPlayerIfNeeded(bundleID: bundleID) else {
             return .notDetermined
         }
+        NSApp.activate(ignoringOtherApps: true)
 
-        return await Task.detached(priority: .userInitiated) {
-            switch AutomationPermission.status(bundleID: bundleID, askUser: true) {
-            case .granted:
-                return .granted
-            case .denied:
-                return .denied
-            case .notDetermined, .targetNotRunning:
-                return .notDetermined
-            }
-        }.value
+        switch await automationPermissionQueue.request(bundleID: bundleID) {
+        case .granted:
+            return .granted
+        case .denied:
+            return .denied
+        case .notDetermined, .targetNotRunning:
+            return .notDetermined
+        }
     }
 
     private static func launchPlayerIfNeeded(bundleID: String) async -> Bool {
@@ -305,13 +275,27 @@ final class NowPlayingModel: ObservableObject {
         }
     }
 
+    private static func openAutomationSettings() {
+        guard let url = URL(
+            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation"
+        ) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
     func refresh() {
         guard !isFetching else { return }
+        let permittedControllers = controllers.filter {
+            permissionStatus(for: $0.bundleID) == .granted
+        }
+        guard !permittedControllers.isEmpty else {
+            state = .notRunning
+            activeController = nil
+            return
+        }
         isFetching = true
-        let controllers = controllers
         Task { [weak self] in
             let result = await Task.detached(priority: .utility) {
-                Self.fetchAll(controllers: controllers)
+                Self.fetchAll(controllers: permittedControllers)
             }.value
             guard let self else { return }
             if let result {
@@ -340,6 +324,8 @@ final class NowPlayingModel: ObservableObject {
                             HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: self.artwork)
                         }
                     }
+                } else if case .permissionDenied = result.state {
+                    self.checkAutomationPermission()
                 }
             } else {
                 self.state = .notRunning

@@ -56,7 +56,7 @@ struct OnboardingView: View {
         }
         .frame(width: 540, height: 680)
         .onAppear {
-            model.checkAutomationPermission(askUser: false)
+            model.checkAutomationPermission()
             if !reduceMotion {
                 withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
                     pulseIcon = true
@@ -121,57 +121,44 @@ struct OnboardingView: View {
     // MARK: - Navigation Header & Indicator
 
     private var headerView: some View {
-        VStack(spacing: 16) {
-            HStack(alignment: .center, spacing: 12) {
-                Spacer()
+        HStack {
+            Spacer()
 
-                Menu {
-                    Section(localization.string("onboarding.language_picker_title")) {
-                        languageMenuOption(.system, title: localization.string("language.system"))
-                        languageMenuOption(.english, title: localization.string("language.english"))
-                        languageMenuOption(.turkish, title: localization.string("language.turkish"))
-                    }
-                } label: {
-                    HStack(alignment: .center, spacing: 8) {
-                        Image(systemName: "globe")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(SongletonTheme.cyan)
-
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(localization.string("onboarding.language_picker_title"))
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.58))
-                            Text(selectedLanguageTitle)
-                                .font(.system(size: 12, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-                        }
-
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.48))
-                    }
-                    .padding(.leading, 11)
-                    .padding(.trailing, 10)
-                    .padding(.vertical, 8)
-                    .background(
-                        LinearGradient(
-                            colors: [SongletonTheme.cyan.opacity(0.35), SongletonTheme.violet.opacity(0.35)],
-                            startPoint: .leading, endPoint: .trailing
-                        ),
-                        in: Capsule()
-                    )
-                    .overlay(Capsule().stroke(SongletonTheme.cyan.opacity(0.60), lineWidth: 1.2))
-                    .shadow(color: SongletonTheme.cyan.opacity(0.25), radius: 8)
+            Menu {
+                Section(localization.string("onboarding.language_picker_title")) {
+                    languageMenuOption(.system, title: localization.string("language.system"))
+                    languageMenuOption(.english, title: localization.string("language.english"))
+                    languageMenuOption(.turkish, title: localization.string("language.turkish"))
                 }
-                .menuStyle(.borderlessButton)
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: "globe")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(SongletonTheme.cyan)
+
+                    Text(selectedLanguageTitle)
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.58))
+                }
+                .padding(.horizontal, 11)
+                .padding(.vertical, 8)
+                .background(Color.white.opacity(0.08), in: Capsule())
+                .overlay(Capsule().stroke(Color.white.opacity(0.14), lineWidth: 1))
             }
+            .menuStyle(.borderlessButton)
+            .accessibilityLabel(localization.string("onboarding.language_picker_title"))
         }
     }
 
     private var selectedLanguageTitle: String {
         switch localization.language {
         case .system:
-            return "\(localization.string("language.system")) · \(systemLanguageTitle)"
+            return "\(localization.string("language.system")): \(systemLanguageTitle)"
         case .english:
             return localization.string("language.english")
         case .turkish:
@@ -343,20 +330,6 @@ struct OnboardingView: View {
                 .opacity(isGranted ? 1.0 : 0.45)
 
                 if !isGranted {
-                    Button(action: model.requestPermissionByScript) {
-                        HStack(spacing: 7) {
-                            if !model.permissionRequestsInFlight.isEmpty {
-                                ProgressView()
-                                    .controlSize(.small)
-                            }
-                            Text(localization.string("permission.request_all"))
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
-                                .foregroundStyle(SongletonTheme.cyan)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!model.permissionRequestsInFlight.isEmpty)
-
                     Button(action: onAbort) {
                         Text(localization.string("onboarding.skip"))
                             .font(.system(size: 12, weight: .medium, design: .rounded))

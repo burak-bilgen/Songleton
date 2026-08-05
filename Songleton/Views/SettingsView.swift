@@ -39,7 +39,7 @@ struct SettingsView: View {
         .onAppear {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
-            model.checkAutomationPermission(askUser: false)
+            model.checkAutomationPermission()
             refreshAccessibilityStatus()
             centerWindow()
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -52,7 +52,7 @@ struct SettingsView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             refreshAccessibilityStatus()
-            model.checkAutomationPermission(askUser: false)
+            model.checkAutomationPermission()
         }
     }
 
@@ -512,7 +512,7 @@ struct SettingsView: View {
                     Spacer()
 
                     Button {
-                        model.checkAutomationPermission(askUser: true)
+                        model.checkAutomationPermission()
                     } label: {
                         Text(localization.string("common.check"))
                             .font(.system(size: 11, weight: .bold, design: .rounded))
