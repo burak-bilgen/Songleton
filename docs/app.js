@@ -18,6 +18,7 @@ const copy = {
     step11Title: "Ambient Mode'da sözler de var.", step11Text: "Vinyl, Cassette ve Glass temaları arasında geç. Senkron sözler ve kısayollar aynı görünümde kalır.",
     step12Title: "İnce ayarlar, tek yerde.", step12Text: "Hareketler, bildirim konumu, söz zamanlaması, menü çubuğu ve dil ayarları burada.",
     detailsKicker: "Diğer ayrıntılar", detailsTitle: "Küçük bir uygulama, düşünülmüş detaylar.", featureHudTitle: "Yeni şarkı bildirimi", featureHudText: "İmlecin bulunduğu ekranda seçtiğin konumdan gelir. Klavye odağını almaz.", featureAmbientTitle: "Üç Ambient teması", featureAmbientText: "Vinyl, Cassette ve Glass. Her biri gerçek oynatma durumunu gösterir.", featureLyricsTitle: "Senkron sözler", featureLyricsText: "LRC zamanlaması, düz metin desteği ve ayarlanabilir gecikme.", featureKeysTitle: "Klavye kısayolları", featureKeysText: "Ambient açıkken oynatma, parça, ses, söz ve tema kontrolleri klavyede de var.", featurePrivacyTitle: "Dinleme alışkanlığın sende kalır.", featurePrivacyText: "Hesap, reklam ve analiz yok. Kontrol Mac'inde kalır. Söz araması yalnızca eşleşme için gereken parça bilgisini kullanır.", readCode: "Koda bak ↗",
+    benefitsKicker: "Neden Songleton?", benefitsTitle: "Müzik açıkken, işine odaklan.", benefit1Title: "Yalnızca müzik çalarken görünür", benefit1Text: "Oynatıcılar boştayken menü çubuğu tertemiz kalır. Parça başladığında Songleton yerini alır, bittiğinde sadece kaybolur.", benefit2Title: "İkinci bir müzik arşivi yok", benefit2Text: "Hesap ve ayrı bir kütüphane kurmaz. Spotify ve Apple Music'i kullandığın haliyle, kendisi görünmeden yönetir.", benefit3Title: "Yerel öncelikli", benefit3Text: "Hesap, analiz ve izleme yok. Tüm kontrol Mac'inde kalır; internet yalnızca söz aranırken devreye girer.",
     faqTitle: "Merak edilenler.", faqAppsQ: "Hangi uygulamalar destekleniyor?", faqAppsA: "Spotify ve Apple Music'in masaüstü uygulamaları. Songleton ikinci bir müzik arşivi oluşturmaz.", faqPermissionQ: "Neden oynatıcı erişimi gerekiyor?", faqPermissionA: "macOS, Spotify ve Music'e gönderilen komutları Otomasyon izniyle korur. Songleton'ın çalan parçayı görmesi ve oynatma kontrollerini kullanması için bu izin gerekir. Erişilebilirlik izni yalnızca ekran kenarı hareketleri içindir.", faqPrivacyQ: "Dinleme geçmişim yükleniyor mu?", faqPrivacyA: "Hayır. Songleton'da hesap, analiz yazılımı veya dinleme geçmişi yüklemesi yok.", faqBuildQ: "Kendim derleyebilir miyim?", faqBuildA: "Evet. Proje MIT lisanslı Swift ve SwiftUI kodundan oluşuyor. Xcode yüklü bir Mac'te depoyu klonlayıp make çalıştırabilirsin.",
     ctaTitle: "Müzik açıkken,<br>Songleton hazır.", ctaText: "macOS 14 ve sonrası için ücretsiz, yerel ve açık kaynak.", downloadSongleton: "Songleton'ı indir", footer: "macOS için Swift ile yapıldı. MIT License."
   },
@@ -40,6 +41,7 @@ const copy = {
     step11Title: "Lyrics live in Ambient Mode too.", step11Text: "Move between Vinyl, Cassette, and Glass. Synced lyrics and shortcuts stay in the same view.",
     step12Title: "Fine-tune everything in one place.", step12Text: "Gestures, notification placement, lyric timing, menu bar, and language settings are all here.",
     detailsKicker: "The other details", detailsTitle: "A small app with considered details.", featureHudTitle: "New-track notification", featureHudText: "Appears at your chosen position on the display under the pointer. It never takes keyboard focus.", featureAmbientTitle: "Three Ambient themes", featureAmbientText: "Vinyl, Cassette, and Glass. Each reflects the real playback state.", featureLyricsTitle: "Synced lyrics", featureLyricsText: "LRC timing, plain-text fallback, and an adjustable offset.", featureKeysTitle: "Keyboard shortcuts", featureKeysText: "Playback, track, volume, lyrics, and theme controls stay on the keyboard when Ambient is open.", featurePrivacyTitle: "Your listening stays yours.", featurePrivacyText: "No account, ads, or analytics. Control stays on your Mac. Lyrics lookup uses only the track details needed to find a match.", readCode: "View the code ↗",
+    benefitsKicker: "Why Songleton?", benefitsTitle: "Stay focused while the music plays.", benefit1Title: "Visible only when music plays", benefit1Text: "When the players are idle, the menu bar stays clean. When a track starts, Songleton takes its place — and quietly steps aside when it ends.", benefit2Title: "No second music library", benefit2Text: "No account, no separate archive. It runs the Spotify and Apple Music you already use, without getting in the way.", benefit3Title: "Local by default", benefit3Text: "No account, analytics, or tracking. Everything stays on your Mac; the internet is used only for lyrics lookups.",
     faqTitle: "Questions, answered.", faqAppsQ: "Which apps are supported?", faqAppsA: "The Spotify and Apple Music desktop apps. Songleton does not create a second music library.", faqPermissionQ: "Why does Songleton need player access?", faqPermissionA: "macOS protects commands sent to Spotify and Music with Automation permission. Songleton needs it to see the current track and use playback controls. Accessibility is only for screen-edge gestures.", faqPrivacyQ: "Does it upload my listening history?", faqPrivacyA: "No. Songleton has no account, analytics SDK, or listening-history upload.", faqBuildQ: "Can I build it myself?", faqBuildA: "Yes. It is an MIT-licensed Swift and SwiftUI project. Clone the repository and run make on a Mac with Xcode installed.",
     ctaTitle: "When music is on,<br>Songleton is ready.", ctaText: "Free, local, and open source for macOS 14 and later.", downloadSongleton: "Download Songleton", footer: "Built with Swift for macOS. MIT License."
   }
@@ -329,6 +331,17 @@ function requestTourUpdate() {
 window.addEventListener("scroll", requestTourUpdate, { passive: true });
 window.addEventListener("resize", requestTourUpdate);
 
+const scrollProgressBar = document.querySelector(".scroll-progress");
+function updateScrollProgress() {
+  if (!scrollProgressBar) return;
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = max > 0 ? window.scrollY / max : 0;
+  scrollProgressBar.style.width = `${Math.min(1, progress) * 100}%`;
+}
+window.addEventListener("scroll", updateScrollProgress, { passive: true });
+window.addEventListener("resize", updateScrollProgress);
+updateScrollProgress();
+
 window.addEventListener("wheel", (event) => {
   if (!tourStage || !steps.length || event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 
@@ -348,6 +361,25 @@ window.addEventListener("wheel", (event) => {
   if (Math.abs(accumulatedWheelDelta) < 18) return;
   goToStep(activeStepIndex + Math.sign(accumulatedWheelDelta));
 }, { passive: false });
+
+window.addEventListener("keydown", (event) => {
+  if (!tourStage || !steps.length) return;
+  const key = event.key;
+  if (key !== "ArrowDown" && key !== "ArrowUp") return;
+  const target = event.target;
+  if (target && (target.closest("button, a, summary, input, select, textarea") || target.isContentEditable)) return;
+
+  const stageRect = tourStage.getBoundingClientRect();
+  const tourIsActive = stageRect.top < window.innerHeight * .58 && stageRect.bottom > window.innerHeight * .42;
+  if (!tourIsActive) return;
+
+  const direction = key === "ArrowDown" ? 1 : -1;
+  const canMove = direction > 0 ? activeStepIndex < steps.length - 1 : activeStepIndex > 0;
+  if (!canMove) return;
+
+  event.preventDefault();
+  goToStep(activeStepIndex + direction);
+});
 
 previousStepButton?.addEventListener("click", () => goToStep(activeStepIndex - 1));
 nextStepButton?.addEventListener("click", () => goToStep(activeStepIndex + 1));
@@ -389,4 +421,27 @@ document.querySelectorAll(".feature-card").forEach((card) => {
     card.style.setProperty("--pointer-x", `${event.clientX - rect.left}px`);
     card.style.setProperty("--pointer-y", `${event.clientY - rect.top}px`);
   });
+});
+
+const revealElements = [...document.querySelectorAll(".reveal")];
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+document.documentElement.classList.add("js");
+if (!("IntersectionObserver" in window) || reducedMotion.matches) {
+  revealElements.forEach((element) => element.classList.add("in"));
+} else {
+  const revealObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const group = [...entry.target.parentElement?.children || []].filter((child) => child.classList.contains("reveal"));
+      const index = group.indexOf(entry.target);
+      entry.target.style.transitionDelay = `${Math.min(index, 5) * 70}ms`;
+      entry.target.classList.add("in");
+      revealObserver.unobserve(entry.target);
+    }
+  }, { threshold: 0.14, rootMargin: "0px 0px -8% 0px" });
+  revealElements.forEach((element) => revealObserver.observe(element));
+}
+reducedMotion.addEventListener?.("change", () => {
+  if (!reducedMotion.matches || !revealElements.length) return;
+  revealElements.forEach((element) => element.classList.add("in"));
 });

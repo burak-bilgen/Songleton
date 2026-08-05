@@ -8,7 +8,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; media-src 'none'; manifest-src 'none'; upgrade-insecure-requests">
   <meta name="description" content="Songleton, Spotify ve Apple Music'i menü çubuğundan, ekran kenarlarından ve Ambient Mode'dan kontrol eden yerel macOS uygulaması.">
   <meta property="og:title" content="Songleton for macOS">
-  <meta property="og:description" content="Müzik açık. Sen devam et.">
+  <meta property="og:description" content="Müzik açık, sen devam et. Şarkını menü çubuğundan yönet, ekran kenarlarıyla kontrol et, Ambient Mode ile bütün ekrana yay.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://burak-bilgen.github.io/Songleton/">
   <meta property="og:locale" content="tr_TR">
@@ -23,6 +23,7 @@
 </head>
 <body>
   <a class="skip-link" href="#tour" data-i18n="skip">Tanıtıma geç</a>
+  <div class="scroll-progress" aria-hidden="true"></div>
 
   <nav class="site-nav" aria-label="Ana menü" data-i18n-label="primaryNav">
     <a class="brand" href="#top" aria-label="Songleton">
@@ -46,30 +47,56 @@
   <main id="top">
     <section class="hero shell">
       <div class="hero-copy">
-        <div class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="heroEyebrow">macOS 14+ için yerel müzik yardımcısı</span></div>
-        <h1 data-i18n="heroTitle">Müzik açık.<br><span>Sen devam et.</span></h1>
-        <p data-i18n="heroText">Spotify veya Apple Music'i aç. Şarkını menü çubuğundan yönet, ekran kenarlarıyla kontrol et ya da Ambient Mode ile bütün ekrana yay. Uygulamalar arasında gidip gelme.</p>
+        <div class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="heroEyebrow">macOS 14+ için yerel müzik kontrolü</span></div>
+        <h1 data-i18n="heroTitle">Müzik açık.<br><span>Yakınında.</span></h1>
+        <p data-i18n="heroText">Spotify veya Apple Music'i nerede çalışıyorsan oradan yönet. Songleton menü çubuğunda durur, ekran kenarlarını da istersen hızlı kontrollere çevirir.</p>
         <div class="hero-actions">
           <a class="button primary" href="https://github.com/burak-bilgen/Songleton/releases/latest"><span data-i18n="downloadFree">Ücretsiz indir</span><span aria-hidden="true">↓</span></a>
-          <a class="button ghost" href="#tour"><span data-i18n="watchTour">Canlı turu izle</span><span aria-hidden="true">⌄</span></a>
+          <a class="button ghost" href="#tour"><span data-i18n="watchTour">Turu izle</span><span aria-hidden="true">⌄</span></a>
         </div>
-        <div class="hero-meta"><span>SwiftUI</span><i></i><span data-i18n="openSource">Açık kaynak</span><i></i><span data-i18n="localFirst">Yerel öncelikli</span></div>
+        <div class="hero-meta"><span>SwiftUI</span><i></i><span data-i18n="openSource">Açık kaynak</span><i></i><span data-i18n="localFirst">Yerel çalışır</span></div>
       </div>
 
       <div class="hero-orbit" aria-hidden="true">
         <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
         <div class="hero-icon"><img src="assets/songleton-app-icon.png" alt="" width="1024" height="1024"></div>
+        <div class="hero-eq"><i></i><i></i><i></i><i></i></div>
         <div class="floating-chip chip-one"><b>⌁</b><span data-i18n="chipEdges">Ekran kenarları</span></div>
         <div class="floating-chip chip-two"><b>◉</b><span>Ambient Mode</span></div>
-        <div class="floating-chip chip-three"><b>♫</b><span data-i18n="chipLyrics">Canlı sözler</span></div>
+        <div class="floating-chip chip-three"><b>♫</b><span data-i18n="chipLyrics">Senkron sözler</span></div>
+      </div>
+      <div class="hero-scroll-cue" aria-hidden="true"><div class="cue-mouse"><span></span></div></div>
+    </section>
+
+    <section class="benefits shell" id="benefits" aria-labelledby="benefits-title">
+      <div class="section-heading">
+        <p class="section-kicker" data-i18n="benefitsKicker">Neden Songleton?</p>
+        <h2 id="benefits-title" data-i18n="benefitsTitle">Müzik açıkken, işine odaklan.</h2>
+      </div>
+      <div class="benefit-grid">
+        <article class="benefit-card reveal">
+          <div class="benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>
+          <h3 data-i18n="benefit1Title">Yalnızca müzik çalarken görünür</h3>
+          <p data-i18n="benefit1Text">Oynatıcılar boştayken menü çubuğu tertemiz kalır. Parça başladığında Songleton yerini alır, bittiğinde sadece kaybolur.</p>
+        </article>
+        <article class="benefit-card reveal">
+          <div class="benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 10 5-10 5L2 7z"></path><path d="m2 17 10 5 10-5"></path><path d="m2 12 10 5 10-5"></path></svg></div>
+          <h3 data-i18n="benefit2Title">İkinci bir müzik arşivi yok</h3>
+          <p data-i18n="benefit2Text">Hesap ve ayrı bir kütüphane kurmaz. Spotify ve Apple Music'i kullandığın haliyle, kendisi görünmeden yönetir.</p>
+        </article>
+        <article class="benefit-card reveal">
+          <div class="benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg></div>
+          <h3 data-i18n="benefit3Title">Yerel öncelikli</h3>
+          <p data-i18n="benefit3Text">Hesap, analiz ve izleme yok. Tüm kontrol Mac'inde kalır; internet yalnızca söz aranırken devreye girer.</p>
+        </article>
       </div>
     </section>
 
     <section class="tour" id="tour" aria-labelledby="tour-title">
-      <div class="tour-intro shell">
-        <p class="section-kicker" data-i18n="tourKicker">Adım adım ürün turu</p>
-        <h2 id="tour-title" data-i18n="tourTitle">Müziği yönet. Yaptığın işi bölme.</h2>
-        <p data-i18n="tourLead">Aşağı kaydır. Songleton'ın her özelliğini gerçek bir Mac masaüstünde çalışırken gör.</p>
+      <div class="tour-intro shell reveal">
+        <p class="section-kicker" data-i18n="tourKicker">Ürün turu</p>
+        <h2 id="tour-title" data-i18n="tourTitle">Müzik kontrolü, yerini bilsin.</h2>
+        <p data-i18n="tourLead">Her adımda Songleton'ın Mac masaüstünde nasıl davrandığını gör.</p>
       </div>
 
       <div class="tour-stage-wrap">
@@ -95,8 +122,8 @@
               </div>
 
               <div class="desktop-widgets">
-                <div class="widget greeting"><span data-i18n="desktopHello">İyi geceler.</span><b data-i18n="desktopFocus">Müzik açık. Odak bozulmadı.</b></div>
-                <div class="widget mini-note"><i></i><span data-i18n="desktopNote">Bir sonraki şarkı için sağ kenarı dene.</span></div>
+                <div class="widget greeting"><span data-i18n="desktopHello">İyi geceler.</span><b data-i18n="desktopFocus">Müzik açık. Akış bölünmedi.</b></div>
+                <div class="widget mini-note"><i></i><span data-i18n="desktopNote">Sonraki parça için sağ kenarı dene.</span></div>
               </div>
 
               <div class="hover-arrow"></div>
@@ -138,11 +165,11 @@
               <section class="settings-window" aria-label="Songleton settings demonstration">
                 <div class="window-titlebar"><div><i></i><i></i><i></i></div><b>Songleton</b><span>⌕</span></div>
                 <aside><button class="active">⌁ <span data-i18n="settingsGeneral">Genel</span></button><button>⌁ <span data-i18n="settingsGestures">Hareketler</span></button><button>▣ <span data-i18n="settingsHud">Bildirim</span></button><button>◉ Ambient</button><button>⌘ <span data-i18n="settingsAccess">Erişim</span></button></aside>
-                <div class="settings-content"><p class="settings-overline" data-i18n="settingsOverline">SONGLETON AYARLARI</p><h3 data-i18n="settingsTitle">Tam senin kadar kontrolcü.</h3><div class="setting-row"><span><b data-i18n="settingLaunch">Girişte başlat</b><small data-i18n="settingLaunchSub">Mac açıldığında sessizce hazır ol.</small></span><i class="toggle on"></i></div><div class="setting-row"><span><b data-i18n="settingNotice">Yeni şarkı bildirimi</b><small data-i18n="settingNoticeSub">Sekiz ekran konumundan birini seç.</small></span><i class="toggle on"></i></div><div class="setting-row"><span><b data-i18n="settingAccessName">Spotify ve Müzik erişimi</b><small data-i18n="settingAccessSub">Açık oynatıcıyı oku ve kontrol et.</small></span><strong class="granted" data-i18n="granted">Verildi</strong></div><div class="setting-row"><span><b data-i18n="settingLanguage">Dil</b><small data-i18n="settingLanguageSub">Türkçe, English veya Sistem.</small></span><strong>Türkçe⌄</strong></div></div>
+                <div class="settings-content"><p class="settings-overline" data-i18n="settingsOverline">SONGLETON AYARLARI</p><h3 data-i18n="settingsTitle">Sade ayarlar, net kontroller.</h3><div class="setting-row"><span><b data-i18n="settingLaunch">Girişte başlat</b><small data-i18n="settingLaunchSub">Mac açıldığında Songleton hazır olsun.</small></span><i class="toggle on"></i></div><div class="setting-row"><span><b data-i18n="settingNotice">Yeni şarkı bildirimi</b><small data-i18n="settingNoticeSub">Bildirimin ekrandaki yerini seç.</small></span><i class="toggle on"></i></div><div class="setting-row"><span><b data-i18n="settingAccessName">Spotify ve Music erişimi</b><small data-i18n="settingAccessSub">Şarkıyı gör ve oynatmayı yönet.</small></span><strong class="granted" data-i18n="granted">İzin verildi</strong></div><div class="setting-row"><span><b data-i18n="settingLanguage">Dil</b><small data-i18n="settingLanguageSub">Türkçe, English veya Sistem.</small></span><strong>Türkçe⌄</strong></div></div>
               </section>
 
               <div class="scripted-cursor" aria-hidden="true"><svg viewBox="0 0 34 42"><path d="M3 2 3 31 11 24 17 39 23 36 17 22 29 22Z" fill="#fff" stroke="#101321" stroke-width="2.2" stroke-linejoin="round"/></svg><i></i></div>
-              <div class="click-caption"><b></b><span data-i18n="scripted">Scripted demo</span></div>
+              <div class="click-caption"><b></b><span data-i18n="scripted">Etkileşimli ön izleme</span></div>
 
               <div class="dock">
                 <div class="dock-icon finder">◒</div><div class="dock-icon safari">⌁</div><div class="dock-icon messages">•••</div><div class="dock-divider"></div><div class="dock-icon spotify">)))</div><div class="dock-icon songleton"><img src="assets/songleton-app-icon.png" alt="" width="45" height="45"></div><div class="dock-icon music">♫</div><div class="dock-divider"></div><div class="dock-icon bin">▥</div>
@@ -158,49 +185,49 @@
         </div>
 
         <div class="tour-steps shell">
-          <article class="tour-step" data-state="menubar" data-cursor="78,13,78,4"><div class="step-card"><span>01</span><h3 data-i18n="step1Title">Önce menü çubuğuna yerleşir.</h3><p data-i18n="step1Text">Şarkı, önceki, sonraki ve oynat/durdur. Oynatıcı penceresini aramak yok.</p><em data-i18n="scrollHint">Bir kez kaydır. Sonrasını biz hallederiz ↓</em></div></article>
-          <article class="tour-step" data-state="hover" data-cursor="78,13,77,4"><div class="step-card"><span>02</span><h3 data-i18n="step2Title">Üstüne gel. Kontrol odası açılsın.</h3><p data-i18n="step2Text">Kapak görseli, karıştırma, yineleme, ses ve Ambient. Uygulamadaki panelin aynısı, gereksiz kalabalık olmadan.</p></div></article>
-          <article class="tour-step" data-state="panelplay" data-cursor="77,4,76,42"><div class="step-card"><span>03</span><h3 data-i18n="step3Title">Tıklayınca müzik durur. Şaşırtıcı teknoloji.</h3><p data-i18n="step3Text">Şarkı alanına tek tıkla oynat veya duraklat. Paneldeki diğer kontroller de gerçekten çalışır.</p></div></article>
-          <article class="tour-step" data-state="ambient" data-cursor="76,42,77,4"><div class="step-card"><span>04</span><h3 data-i18n="step4Title">Sağ tık. Ambient Mode.</h3><p data-i18n="step4Text">Menü barındaki şarkıya sağ tıkla. O an çalan parça bütün ekranı alır.</p><em data-i18n="rightClick">Sağ tık gösteriliyor</em></div></article>
-          <article class="tour-step" data-state="previous" data-cursor="52,42,1,51"><div class="step-card"><span>05</span><h3 data-i18n="step5Title">Sol kenar, önceki şarkı.</h3><p data-i18n="step5Text">İmleci kenarda beklet. Halka dolmadan ayrılırsan iptal, dolarsa önceki. Kazara şarkı katliamı yok.</p></div></article>
-          <article class="tour-step" data-state="next" data-cursor="20,48,99,51"><div class="step-card"><span>06</span><h3 data-i18n="step6Title">Sağ kenar, sonraki şarkı.</h3><p data-i18n="step6Text">Aynı kas hafızası, diğer yön. Şarkı değişimi menü barına ve bildirime akar.</p></div></article>
-          <article class="tour-step" data-state="pause" data-cursor="74,45,50,1"><div class="step-card"><span>07</span><h3 data-i18n="step7Title">Üst kenar, duraklat.</h3><p data-i18n="step7Text">Bir kez beklet, müzik dursun. Halka dolarken ne olacağını görürsün.</p></div></article>
-          <article class="tour-step" data-state="resume" data-cursor="58,30,50,1"><div class="step-card"><span>08</span><h3 data-i18n="step8Title">Bir daha vur. Devam etsin.</h3><p data-i18n="step8Text">Müzik geri gelir, masaüstü de ritmi çok hafif hisseder. Monitörü masadan atmıyoruz.</p></div></article>
-          <article class="tour-step" data-state="volume" data-cursor="63,72,63,34"><div class="step-card"><span>09</span><h3 data-i18n="step9Title">Sesi her yerden sürükle.</h3><p data-i18n="step9Text">İki fare tuşu veya Command + Option. Dikey sürükle, ince ses göstergesi elini takip etsin.</p></div></article>
-          <article class="tour-step" data-state="notification" data-cursor="63,34,82,20"><div class="step-card"><span>10</span><h3 data-i18n="step10Title">Yeni şarkı geldi. Odağın gitmedi.</h3><p data-i18n="step10Text">Sekiz konumdan birinde açılan bildirim klavye odağını çalmaz. Nadir görülen terbiyeli bildirim.</p></div></article>
-          <article class="tour-step" data-state="lyrics" data-cursor="82,20,78,10"><div class="step-card"><span>11</span><h3 data-i18n="step11Title">Canlı sözler, üç ayrı sahne.</h3><p data-i18n="step11Text">Vinyl, Cassette ve Glass arasında geç. Senkron sözler, sarma, uyku zamanlayıcısı ve klavye kısayolları aynı ekranda.</p></div></article>
-          <article class="tour-step" data-state="settings" data-cursor="78,10,80,38"><div class="step-card"><span>12</span><h3 data-i18n="step12Title">Son sözü ayarlar söyler.</h3><p data-i18n="step12Text">Hareket grupları, bekleme süresi, bildirim konumu, söz zamanlaması, menü çubuğu ve dil. Ayar var, tesisat dersi yok.</p></div></article>
+          <article class="tour-step" data-state="menubar" data-cursor="78,13,78,4"><div class="step-card"><span>01</span><h3 data-i18n="step1Title">Menü çubuğunda, olması gereken yerde.</h3><p data-i18n="step1Text">Şarkı adı ve temel oynatma kontrolleri ekranın sağında, her zaman aynı yerde.</p><em data-i18n="scrollHint">Kaydır veya okları kullan ↓</em></div></article>
+          <article class="tour-step" data-state="hover" data-cursor="78,13,77,4"><div class="step-card"><span>02</span><h3 data-i18n="step2Title">Üzerine gel, kontroller açılsın.</h3><p data-i18n="step2Text">Kapak, oynatma, ses ve Ambient Mode tek bir sakin panelde toplanır.</p></div></article>
+          <article class="tour-step" data-state="panelplay" data-cursor="77,4,76,42"><div class="step-card"><span>03</span><h3 data-i18n="step3Title">Tek tıkla oynat veya duraklat.</h3><p data-i18n="step3Text">Parça adına tıklamak yeterli. Hızlı kontrol için başka pencere açılmaz.</p></div></article>
+          <article class="tour-step" data-state="ambient" data-cursor="76,42,77,4"><div class="step-card"><span>04</span><h3 data-i18n="step4Title">Sağ tık, Ambient Mode.</h3><p data-i18n="step4Text">Menü çubuğundaki parça adına sağ tıkla. Çalan şarkı tam ekran görünümüne geçer.</p><em data-i18n="rightClick">Sağ tık ön izlemesi</em></div></article>
+          <article class="tour-step" data-state="previous" data-cursor="52,42,1,51"><div class="step-card"><span>05</span><h3 data-i18n="step5Title">Sol kenarda önceki parça.</h3><p data-i18n="step5Text">İmleci sol kenarda kısa süre tut. Halka dolmadan ayrılırsan işlem iptal olur.</p></div></article>
+          <article class="tour-step" data-state="next" data-cursor="20,48,99,51"><div class="step-card"><span>06</span><h3 data-i18n="step6Title">Sağ kenarda sonraki parça.</h3><p data-i18n="step6Text">Aynı hareketi sağda yap. Parça değişimi menü çubuğuna ve bildirime yansır.</p></div></article>
+          <article class="tour-step" data-state="pause" data-cursor="74,45,50,1"><div class="step-card"><span>07</span><h3 data-i18n="step7Title">Üst kenarda oynat veya duraklat.</h3><p data-i18n="step7Text">İmleci üst kenarda beklet. Halka tamamlandığında oynatma durumu değişir.</p></div></article>
+          <article class="tour-step" data-state="resume" data-cursor="58,30,50,1"><div class="step-card"><span>08</span><h3 data-i18n="step8Title">Aynı hareketle devam et.</h3><p data-i18n="step8Text">Üst kenara tekrar gel. Müzik kaldığı yerden devam eder.</p></div></article>
+          <article class="tour-step" data-state="volume" data-cursor="63,72,63,34"><div class="step-card"><span>09</span><h3 data-i18n="step9Title">Sesi bulunduğun yerden ayarla.</h3><p data-i18n="step9Text">İki fare tuşunu ya da Command + Option'ı basılı tutup yukarı aşağı sürükle.</p></div></article>
+          <article class="tour-step" data-state="notification" data-cursor="63,34,82,20"><div class="step-card"><span>10</span><h3 data-i18n="step10Title">Yeni şarkı görünür, odağın kalır.</h3><p data-i18n="step10Text">Bildirim seçtiğin konumdan gelir ve aktif uygulamanı öne geçirmez.</p></div></article>
+          <article class="tour-step" data-state="lyrics" data-cursor="82,20,78,10"><div class="step-card"><span>11</span><h3 data-i18n="step11Title">Ambient Mode'da sözler de var.</h3><p data-i18n="step11Text">Vinyl, Cassette ve Glass temaları arasında geç. Senkron sözler ve kısayollar aynı görünümde kalır.</p></div></article>
+          <article class="tour-step" data-state="settings" data-cursor="78,10,80,38"><div class="step-card"><span>12</span><h3 data-i18n="step12Title">İnce ayarlar, tek yerde.</h3><p data-i18n="step12Text">Hareketler, bildirim konumu, söz zamanlaması, menü çubuğu ve dil ayarları burada.</p></div></article>
         </div>
       </div>
     </section>
 
     <section class="details shell" id="details">
-      <div class="section-heading"><p class="section-kicker" data-i18n="detailsKicker">Geri kalan ince işler</p><h2 data-i18n="detailsTitle">Küçük görünür. İçeride epey iş döner.</h2></div>
+      <div class="section-heading reveal"><p class="section-kicker" data-i18n="detailsKicker">Diğer ayrıntılar</p><h2 data-i18n="detailsTitle">Küçük bir uygulama, düşünülmüş detaylar.</h2></div>
       <div class="feature-grid">
-        <article class="feature-card wide notification-card"><div class="mini-screen"><span class="mini-toast"><i></i><b>Midnight City</b><small>M83</small></span><div class="position-dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div><span class="feature-index">01</span><h3 data-i18n="featureHudTitle">Sekiz konumlu şarkı bildirimi</h3><p data-i18n="featureHudText">İmlecin bulunduğu ekranda açılır, en yakın kenardan girer, uygulama odağını çalmaz.</p></div></article>
-        <article class="feature-card"><div class="feature-visual theme-switcher"><div class="theme-disc"></div><div class="theme-cassette"></div><div class="theme-glass"></div></div><span class="feature-index">02</span><h3 data-i18n="featureAmbientTitle">Üç Ambient teması</h3><p data-i18n="featureAmbientText">Vinyl, Cassette ve Glass. Dekor değil, gerçek oynatma durumu.</p></article>
-        <article class="feature-card"><div class="feature-visual lyric-stack"><span>Neon in the window</span><b>The night keeps moving</b><span>We move with it</span></div><span class="feature-index">03</span><h3 data-i18n="featureLyricsTitle">Senkron sözler</h3><p data-i18n="featureLyricsText">LRC zamanlaması, düz metin desteği ve ayarlanabilir eşzamanlama.</p></article>
-        <article class="feature-card"><div class="feature-visual shortcut-cloud"><kbd>Space</kbd><kbd>←</kbd><kbd>→</kbd><kbd>L</kbd><kbd>T</kbd><kbd>Esc</kbd></div><span class="feature-index">04</span><h3 data-i18n="featureKeysTitle">Klavye de unutulmadı</h3><p data-i18n="featureKeysText">Ambient açıkken oynatma, şarkı, ses, söz ve tema kısayolları.</p></article>
-        <article class="feature-card wide privacy-card" id="privacy"><div><span class="feature-index">05</span><h3 data-i18n="featurePrivacyTitle">Dinlediğin şey iş modeli değil.</h3><p data-i18n="featurePrivacyText">Hesap, analiz ve reklam yok. Kontrol Mac'inde kalır. Söz araması yalnızca eşleşme için gereken parça bilgisini kullanır.</p><a href="https://github.com/burak-bilgen/Songleton" data-i18n="readCode">Kodu oku ↗</a></div><div class="privacy-orb"><span>LOCAL</span><i></i><i></i><i></i></div></article>
+        <article class="feature-card wide notification-card reveal"><div class="mini-screen"><span class="mini-toast"><i></i><b>Midnight City</b><small>M83</small></span><div class="position-dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div><span class="feature-index">01</span><h3 data-i18n="featureHudTitle">Yeni şarkı bildirimi</h3><p data-i18n="featureHudText">İmlecin bulunduğu ekranda seçtiğin konumdan gelir. Klavye odağını almaz.</p></div></article>
+        <article class="feature-card reveal"><div class="feature-visual theme-switcher"><div class="theme-disc"></div><div class="theme-cassette"></div><div class="theme-glass"></div></div><span class="feature-index">02</span><h3 data-i18n="featureAmbientTitle">Üç Ambient teması</h3><p data-i18n="featureAmbientText">Vinyl, Cassette ve Glass. Her biri gerçek oynatma durumunu gösterir.</p></article>
+        <article class="feature-card reveal"><div class="feature-visual lyric-stack"><span>Neon in the window</span><b>The night keeps moving</b><span>We move with it</span></div><span class="feature-index">03</span><h3 data-i18n="featureLyricsTitle">Senkron sözler</h3><p data-i18n="featureLyricsText">LRC zamanlaması, düz metin desteği ve ayarlanabilir gecikme.</p></article>
+        <article class="feature-card reveal"><div class="feature-visual shortcut-cloud"><kbd>Space</kbd><kbd>←</kbd><kbd>→</kbd><kbd>L</kbd><kbd>T</kbd><kbd>Esc</kbd></div><span class="feature-index">04</span><h3 data-i18n="featureKeysTitle">Klavye kısayolları</h3><p data-i18n="featureKeysText">Ambient açıkken oynatma, parça, ses, söz ve tema kontrolleri klavyede de var.</p></article>
+        <article class="feature-card wide privacy-card reveal" id="privacy"><div><span class="feature-index">05</span><h3 data-i18n="featurePrivacyTitle">Dinleme alışkanlığın sende kalır.</h3><p data-i18n="featurePrivacyText">Hesap, reklam ve analiz yok. Kontrol Mac'inde kalır. Söz araması yalnızca eşleşme için gereken parça bilgisini kullanır.</p><a href="https://github.com/burak-bilgen/Songleton" data-i18n="readCode">Koda bak ↗</a></div><div class="privacy-orb"><span>LOCAL</span><i></i><i></i><i></i></div></article>
       </div>
     </section>
 
     <section class="faq shell">
-      <div class="section-heading"><p class="section-kicker">FAQ</p><h2 data-i18n="faqTitle">İşe yarayan sorular.</h2></div>
+      <div class="section-heading reveal"><p class="section-kicker">FAQ</p><h2 data-i18n="faqTitle">Merak edilenler.</h2></div>
       <div class="faq-list">
-        <details><summary data-i18n="faqAppsQ">Hangi uygulamalar destekleniyor?</summary><p data-i18n="faqAppsA">Spotify ve Apple Music masaüstü uygulamaları. Songleton ayrı bir müzik kütüphanesi kurmaz.</p></details>
-        <details><summary data-i18n="faqPermissionQ">Neden oynatıcı erişimi gerekiyor?</summary><p data-i18n="faqPermissionA">macOS, Spotify ve Music'e gönderilen komutları Otomasyon izniyle korur. Şarkıyı okumak ve oynatma kontrollerini kullanmak için bu izin gerekir. Erişilebilirlik izni yalnızca ekran kenarı hareketleri için kullanılır.</p></details>
-        <details><summary data-i18n="faqPrivacyQ">Dinleme geçmişini yüklüyor mu?</summary><p data-i18n="faqPrivacyA">Hayır. Songleton hesabı, analiz yazılımı veya dinleme geçmişi yüklemesi yok.</p></details>
-        <details><summary data-i18n="faqBuildQ">Kendim derleyebilir miyim?</summary><p data-i18n="faqBuildA">Evet. Proje MIT lisanslı Swift ve SwiftUI kodundan oluşuyor. Xcode yüklü bir Mac'te depoyu klonlayıp make çalıştır.</p></details>
+        <details class="reveal"><summary data-i18n="faqAppsQ">Hangi uygulamalar destekleniyor?</summary><p data-i18n="faqAppsA">Spotify ve Apple Music'in masaüstü uygulamaları. Songleton ikinci bir müzik arşivi oluşturmaz.</p></details>
+        <details class="reveal"><summary data-i18n="faqPermissionQ">Neden oynatıcı erişimi gerekiyor?</summary><p data-i18n="faqPermissionA">macOS, Spotify ve Music'e gönderilen komutları Otomasyon izniyle korur. Songleton'ın çalan parçayı görmesi ve oynatma kontrollerini kullanması için bu izin gerekir. Erişilebilirlik izni yalnızca ekran kenarı hareketleri içindir.</p></details>
+        <details class="reveal"><summary data-i18n="faqPrivacyQ">Dinleme geçmişim yükleniyor mu?</summary><p data-i18n="faqPrivacyA">Hayır. Songleton'da hesap, analiz yazılımı veya dinleme geçmişi yüklemesi yok.</p></details>
+        <details class="reveal"><summary data-i18n="faqBuildQ">Kendim derleyebilir miyim?</summary><p data-i18n="faqBuildA">Evet. Proje MIT lisanslı Swift ve SwiftUI kodundan oluşuyor. Xcode yüklü bir Mac'te depoyu klonlayıp make çalıştırabilirsin.</p></details>
       </div>
     </section>
 
-    <section class="final-cta shell">
-      <div class="cta-aura"></div><img src="assets/songleton-app-icon.png" alt="" width="96" height="96"><p class="section-kicker">Songleton for macOS</p><h2 data-i18n="ctaTitle">Müzik zaten açık.<br>Yakınında dursun.</h2><p data-i18n="ctaText">macOS 14 ve sonrası için ücretsiz, yerel ve açık kaynak.</p><div class="hero-actions"><a class="button primary" href="https://github.com/burak-bilgen/Songleton/releases/latest"><span data-i18n="downloadSongleton">Songleton'ı indir</span><span>↓</span></a><a class="button ghost" href="https://github.com/burak-bilgen/Songleton"><span>GitHub</span><span>↗</span></a></div>
+    <section class="final-cta shell reveal">
+      <div class="cta-aura"></div><img src="assets/songleton-app-icon.png" alt="" width="96" height="96"><p class="section-kicker">Songleton for macOS</p><h2 data-i18n="ctaTitle">Müzik açıkken,<br><span>Songleton hazır.</span></h2><p data-i18n="ctaText">macOS 14 ve sonrası için ücretsiz, yerel ve açık kaynak.</p><div class="hero-actions"><a class="button primary" href="https://github.com/burak-bilgen/Songleton/releases/latest"><span data-i18n="downloadSongleton">Songleton'ı indir</span><span>↓</span></a><a class="button ghost" href="https://github.com/burak-bilgen/Songleton"><span>GitHub</span><span>↗</span></a></div>
     </section>
   </main>
 
-  <footer class="site-footer shell"><a class="brand" href="#top"><img src="assets/songleton-app-icon.png" alt="" width="30" height="30"><span>Songleton</span></a><p data-i18n="footer">Swift ile macOS için yapıldı. MIT License.</p><div><a href="https://github.com/burak-bilgen/Songleton">GitHub</a><a href="https://github.com/burak-bilgen/Songleton/issues">Issues</a><a href="https://github.com/burak-bilgen/Songleton/blob/main/LICENSE">License</a></div></footer>
+  <footer class="site-footer shell"><a class="brand" href="#top"><img src="assets/songleton-app-icon.png" alt="" width="30" height="30"><span>Songleton</span></a><p data-i18n="footer">macOS için Swift ile yapıldı. MIT License.</p><div><a href="https://github.com/burak-bilgen/Songleton">GitHub</a><a href="https://github.com/burak-bilgen/Songleton/issues">Issues</a><a href="https://github.com/burak-bilgen/Songleton/blob/main/LICENSE">License</a></div></footer>
 
   <script src="app.js"></script>
 </body>
