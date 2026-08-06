@@ -612,6 +612,15 @@ private struct RightClickOverlayView: NSViewRepresentable {
     class RightClickNSView: NSView {
         var action: (() -> Void)?
 
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            // Intercept ONLY right-click events; let left-clicks, hover, and drags pass through to SwiftUI controls!
+            if let currentEvent = NSApp.currentEvent,
+               currentEvent.type == .rightMouseDown || currentEvent.type == .rightMouseUp {
+                return self
+            }
+            return nil
+        }
+
         override func rightMouseDown(with event: NSEvent) {
             action?()
         }
