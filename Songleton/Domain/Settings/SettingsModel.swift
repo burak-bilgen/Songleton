@@ -122,8 +122,12 @@ final class SettingsModel: ObservableObject {
         }
     }
 
-    @Published var edgeGestureHoldDuration: Double {
-        didSet { defaults.set(edgeGestureHoldDuration, forKey: "edgeGestureHoldDuration") }
+    @Published var horizontalEdgeHoldDuration: Double {
+        didSet { defaults.set(horizontalEdgeHoldDuration, forKey: "horizontalEdgeHoldDuration") }
+    }
+
+    @Published var topEdgeHoldDuration: Double {
+        didSet { defaults.set(topEdgeHoldDuration, forKey: "topEdgeHoldDuration") }
     }
 
     @Published var showMenuBarNavButtons: Bool {
@@ -160,7 +164,6 @@ final class SettingsModel: ObservableObject {
             "trackNotificationPosition": TrackNotificationPosition.bottomTrailing.rawValue,
             "horizontalGesturesEnabled": true,
             "verticalGesturesEnabled": true,
-            "edgeGestureHoldDuration": 0.65,
             "lyricsOffset": 0.9
         ])
         showArtistInMenuBar = userDefaults.bool(forKey: "showArtistInMenuBar")
@@ -179,7 +182,17 @@ final class SettingsModel: ObservableObject {
         ) ?? .bottomTrailing
         horizontalGesturesEnabled = userDefaults.bool(forKey: "horizontalGesturesEnabled")
         verticalGesturesEnabled = userDefaults.bool(forKey: "verticalGesturesEnabled")
-        edgeGestureHoldDuration = min(2, max(0.2, userDefaults.double(forKey: "edgeGestureHoldDuration")))
+        // The single hold duration was split into per-zone settings. Migrate
+        // any previously stored value so users keep their tuned timing.
+        let legacyHoldDuration = userDefaults.double(forKey: "edgeGestureHoldDuration")
+        let storedHorizontal = userDefaults.object(forKey: "horizontalEdgeHoldDuration") != nil
+            ? userDefaults.double(forKey: "horizontalEdgeHoldDuration")
+            : (userDefaults.object(forKey: "edgeGestureHoldDuration") != nil ? legacyHoldDuration : 0.65)
+        let storedTop = userDefaults.object(forKey: "topEdgeHoldDuration") != nil
+            ? userDefaults.double(forKey: "topEdgeHoldDuration")
+            : (userDefaults.object(forKey: "edgeGestureHoldDuration") != nil ? legacyHoldDuration * 0.70 : 0.45)
+        horizontalEdgeHoldDuration = min(2, max(0.2, storedHorizontal))
+        topEdgeHoldDuration = min(2, max(0.2, storedTop))
         
         if let override = userDefaults.object(forKey: "menuBarNavButtonsUserOverride") as? Bool {
             navButtonsUserOverride = override

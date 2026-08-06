@@ -1539,36 +1539,70 @@
         }
       }
     },
-    "settings.edge_gesture_duration" : {
+    "settings.edge_gesture_duration_horizontal" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edge hold duration"
+            "value" : "Left & right edges"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kenarda bekleme süresi"
+            "value" : "Sol ve sağ kenarlar"
           }
         }
       }
     },
-    "settings.edge_gesture_duration_hint" : {
+    "settings.edge_gesture_duration_horizontal_hint" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "How long the pointer waits before a screen-edge gesture runs"
+            "value" : "How long the pointer waits before the previous/next track gesture runs"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekran kenarı hareketi çalışmadan önce imlecin ne kadar bekleyeceği"
+            "value" : "Önceki/sonraki parça hareketi çalışmadan önce imlecin ne kadar bekleyeceği"
+          }
+        }
+      }
+    },
+    "settings.edge_gesture_duration_top" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top edge (play/pause)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üst kenar (oynat/duraklat)"
+          }
+        }
+      }
+    },
+    "settings.edge_gesture_duration_top_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How long the pointer waits before the play/pause gesture runs"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynat/duraklat hareketi çalışmadan önce imlecin ne kadar bekleyeceği"
           }
         }
       }
@@ -2633,13 +2667,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold at the left edge until the ring fills to go back. Let go early and nothing happens."
+            "value" : "Hold at the right edge until the ring fills to skip. Let go early and nothing happens."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İmleci sol kenarda tut, halka dolunca önceki parçaya geçer. Erken bırakırsan iptal olur."
+            "value" : "Sağ kenarda bekle, halka dolunca sonraki parçaya geçer. Erken bırakırsan iptal olur."
           }
         }
       }
@@ -2650,13 +2684,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Left edge and cancel"
+            "value" : "Cancel"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sol kenar ve iptal"
+            "value" : "İptal"
           }
         }
       }
@@ -2831,23 +2865,6 @@
         }
       }
     },
-    "tutorial.edge_status_next" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hold at the right edge until the ring fills to skip."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sağ kenarda bekle, halka dolunca sonraki parçaya geçer."
-          }
-        }
-      }
-    },
     "tutorial.edge_status_playpause" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2861,6 +2878,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Üst kenarda bekle, halka dolunca oynatma durumu değişir."
+          }
+        }
+      }
+    },
+    "tutorial.edge_status_previous" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold at the left edge until the ring fills to go back."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol kenarda bekle, halka dolunca önceki parçaya geçer."
           }
         }
       }
@@ -2933,40 +2967,6 @@
         }
       }
     },
-    "tutorial.next_desc" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Do the same on the right edge and it skips to the next track."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aynısını sağ kenarda yap, halka dolunca sonraki parçaya geçer."
-          }
-        }
-      }
-    },
-    "tutorial.next_header" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Play the next track"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sonraki parçaya geç"
-          }
-        }
-      }
-    },
     "tutorial.playback_paused" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3031,6 +3031,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oynat veya duraklat"
+          }
+        }
+      }
+    },
+    "tutorial.previous_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold at the left edge until the ring fills to go back."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İmleci sol kenarda tut, halka dolunca önceki parçaya geçer."
+          }
+        }
+      }
+    },
+    "tutorial.previous_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play the previous track"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki parçaya geç"
           }
         }
       }
@@ -3228,13 +3262,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Previous track and cancel"
+            "value" : "Cancel"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Önceki parça ve iptal"
+            "value" : "İptal etme"
           }
         }
       }
@@ -3286,6 +3320,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oynat veya duraklat"
+          }
+        }
+      }
+    },
+    "tutorial.stage_previous" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous track"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki parça"
           }
         }
       }

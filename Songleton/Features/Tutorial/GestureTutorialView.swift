@@ -161,6 +161,7 @@ struct GestureTutorialView: View {
     @State private var completionPop = false
 
     @State private var tutorialActiveSnapPosition: TrackNotificationPosition = .topTrailing
+    @State private var tutorialSnapGuidesVisible = true
     @State private var isTutorialDraggingMiniPlayer = false
     @State private var tutorialMiniPlayerPosition: CGPoint = .zero
     @State private var tutorialSnapFlash = false
@@ -259,7 +260,7 @@ struct GestureTutorialView: View {
                             isPermanent: true
                         )
 
-                        if let screen {
+                        if let screen, tutorialSnapGuidesVisible {
                             SnapGuideOverlayView(
                                 screen: screen,
                                 cardSize: layout.size,
@@ -664,8 +665,8 @@ struct GestureTutorialView: View {
 
     private var edgeStatusText: String {
         switch currentStage {
-        case .cancelDemo: localization.string("tutorial.edge_status_cancel")
-        case .rightEdgeSkip: localization.string("tutorial.edge_status_next")
+        case .cancelDemo: localization.string("tutorial.edge_status_previous")
+        case .rightEdgeSkip: localization.string("tutorial.edge_status_cancel")
         case .topEdgePlayPause: localization.string("tutorial.edge_status_playpause")
         default: ""
         }
@@ -690,17 +691,17 @@ struct GestureTutorialView: View {
         ZStack {
             // Left Edge Guide
             Rectangle()
-                .fill(currentStage == .cancelDemo ? Color(red: 0.98, green: 0.28, blue: 0.31).opacity(0.6) : Color.white.opacity(0.1))
+                .fill(currentStage == .cancelDemo ? SongletonTheme.cyan.opacity(0.6) : Color.white.opacity(0.1))
                 .frame(width: 4, height: size.height)
                 .position(x: 2, y: size.height / 2)
-                .shadow(color: currentStage == .cancelDemo ? Color(red: 0.98, green: 0.28, blue: 0.31) : .clear, radius: 12)
+                .shadow(color: currentStage == .cancelDemo ? SongletonTheme.cyan : .clear, radius: 12)
 
             // Right Edge Guide
             Rectangle()
-                .fill(currentStage == .rightEdgeSkip ? SongletonTheme.cyan.opacity(0.6) : Color.white.opacity(0.1))
+                .fill(currentStage == .rightEdgeSkip ? Color(red: 0.98, green: 0.28, blue: 0.31).opacity(0.6) : Color.white.opacity(0.1))
                 .frame(width: 4, height: size.height)
                 .position(x: size.width - 2, y: size.height / 2)
-                .shadow(color: currentStage == .rightEdgeSkip ? SongletonTheme.cyan : .clear, radius: 12)
+                .shadow(color: currentStage == .rightEdgeSkip ? Color(red: 0.98, green: 0.28, blue: 0.31) : .clear, radius: 12)
 
             // Top Edge Guide
             Rectangle()
@@ -951,14 +952,16 @@ struct GestureTutorialView: View {
     private func prepareAudio(for stage: TutorialStage) {
         switch stage {
         case .cancelDemo:
-            TutorialAudioService.shared.start()
-        case .rightEdgeSkip:
-            // Stage 2 demonstrates the transition at the end of the gesture.
-            if TutorialAudioService.shared.currentTrack != 1 {
-                TutorialAudioService.shared.start()
+            // Stage 1 demonstrates the previous-track transition at the end
+            // of the gesture, so the demo starts on the second track.
+            if TutorialAudioService.shared.currentTrack != 2 {
+                TutorialAudioService.shared.switchToSecondTrack()
             } else {
                 TutorialAudioService.shared.resume(fadeIn: true)
             }
+        case .rightEdgeSkip:
+            // Stage 2 demonstrates the cancel behavior; no track change happens.
+            TutorialAudioService.shared.start()
         case .topEdgePlayPause, .volumeControl, .leftClickToggle, .hoverMenu, .ambientMode, .permanentMiniPlayer:
             if TutorialAudioService.shared.currentTrack != 2 {
                 TutorialAudioService.shared.switchToSecondTrack()
@@ -1124,6 +1127,7 @@ struct GestureTutorialView: View {
         completionPop = false
         isTutorialDraggingMiniPlayer = false
         tutorialSnapFlash = false
+        tutorialSnapGuidesVisible = true
         mockManager.simulateEdgeGestureProgress(0)
         mockManager.simulateGestureVolume(8)
         TutorialAudioService.shared.setDemoVolume(8)
@@ -1149,20 +1153,24 @@ struct GestureTutorialView: View {
                 try? await Task.sleep(for: .milliseconds(240))
                 guard !Task.isCancelled else { return }
 
-                for p in 0...45 {
+                for p in 0...100 {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
-                    try? await Task.sleep(for: .milliseconds(14))
+                    try? await Task.sleep(for: .milliseconds(9))
                 }
 
+                // The track change lands exactly when the ring completes, so
+                // the audio transition is heard at the same instant as the burst.
+                TutorialAudioService.shared.start()
+                mockManager.simulateEdgeGestureBurst()
+                mockManager.simulateEdgeGestureProgress(0)
                 await moveCursor(
                     to: CGPoint(x: 164, y: edgeY + 18),
-                    duration: 0.28,
+                    duration: 0.22,
                     rotation: 3,
-                    scale: 1.08
+                    scale: 1.04
                 )
-                mockManager.simulateEdgeGestureCancelBurst()
-                try? await Task.sleep(for: .milliseconds(450))
+                try? await Task.sleep(for: .milliseconds(650))
                 guard !Task.isCancelled else { return }
                 isStageAnimationRunning = false
 
@@ -1177,23 +1185,23 @@ struct GestureTutorialView: View {
                 try? await Task.sleep(for: .milliseconds(240))
                 guard !Task.isCancelled else { return }
 
-                for p in 0...100 {
+                // The ring only partially fills before the pointer is pulled
+                // away early — the gesture is cancelled.
+                for p in 0...45 {
                     guard !Task.isCancelled else { return }
                     mockManager.simulateEdgeGestureProgress(CGFloat(p) / 100.0)
-                    try? await Task.sleep(for: .milliseconds(9))
+                    try? await Task.sleep(for: .milliseconds(14))
                 }
 
-                // The track change lands exactly when the ring completes, so the
-                // audio transition is heard at the same instant as the burst.
-                TutorialAudioService.shared.switchToSecondTrack()
-                mockManager.simulateEdgeGestureBurst()
                 await moveCursor(
-                    to: CGPoint(x: size.width - 74, y: edgeY - 12),
-                    duration: 0.22,
+                    to: CGPoint(x: size.width - 164, y: edgeY + 18),
+                    duration: 0.28,
                     rotation: 3,
-                    scale: 1.04
+                    scale: 1.08
                 )
-                try? await Task.sleep(for: .milliseconds(650))
+                mockManager.simulateEdgeGestureCancelBurst()
+                mockManager.simulateEdgeGestureProgress(0)
+                try? await Task.sleep(for: .milliseconds(450))
                 guard !Task.isCancelled else { return }
                 isStageAnimationRunning = false
 
@@ -1525,13 +1533,17 @@ struct GestureTutorialView: View {
                     onPositionUpdate: { tutorialActiveSnapPosition = nearestSnap($0) }
                 )
 
-                // 4. Release — the magnet snaps the card home.
+                // 4. Release — the magnet pulls the card home. The guides
+                //    disappear the instant the snap takes over, and the stiff
+                //    spring settles without overshoot so the card lands exactly
+                //    on the snap point.
                 try? await Task.sleep(for: .milliseconds(180))
                 guard !Task.isCancelled else { return }
 
                 await setCursorPressed(false)
                 isTutorialDraggingMiniPlayer = false
-                withAnimation(reduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.58, blendDuration: 0.08)) {
+                tutorialSnapGuidesVisible = false
+                withAnimation(reduceMotion ? nil : .spring(response: 0.30, dampingFraction: 0.85, blendDuration: 0.05)) {
                     tutorialMiniPlayerPosition = targetPoint
                 }
                 withAnimation(reduceMotion ? nil : .easeOut(duration: 0.45)) {
@@ -1548,6 +1560,8 @@ struct GestureTutorialView: View {
 
                 try? await Task.sleep(for: .milliseconds(440))
                 guard !Task.isCancelled else { return }
+                // Pin the exact snap point so no residual motion remains.
+                tutorialMiniPlayerPosition = targetPoint
                 withAnimation(reduceMotion ? nil : .easeOut(duration: 0.4)) {
                     tutorialSnapFlash = false
                 }
@@ -1564,8 +1578,8 @@ struct GestureTutorialView: View {
     private func stageTitle(_ stage: TutorialStage) -> String {
         let title: String
         switch stage {
-        case .cancelDemo: title = localization.string("tutorial.stage_cancel")
-        case .rightEdgeSkip: title = localization.string("menu.next_track")
+        case .cancelDemo: title = localization.string("tutorial.stage_previous")
+        case .rightEdgeSkip: title = localization.string("tutorial.stage_cancel")
         case .topEdgePlayPause: title = localization.string("tutorial.stage_playpause")
         case .volumeControl: title = localization.string("tutorial.stage_volume_control")
         case .leftClickToggle: title = localization.string("tutorial.stage_left_click")
@@ -1582,8 +1596,8 @@ struct GestureTutorialView: View {
 
     private func stageHeader(_ stage: TutorialStage) -> String {
         switch stage {
-        case .cancelDemo: localization.string("tutorial.cancel_header")
-        case .rightEdgeSkip: localization.string("tutorial.next_header")
+        case .cancelDemo: localization.string("tutorial.previous_header")
+        case .rightEdgeSkip: localization.string("tutorial.cancel_header")
         case .topEdgePlayPause: localization.string("tutorial.playpause_header")
         case .volumeControl: localization.string("tutorial.volume_control_header")
         case .leftClickToggle: localization.string("tutorial.left_click_header")
@@ -1595,8 +1609,8 @@ struct GestureTutorialView: View {
 
     private func stageDescription(_ stage: TutorialStage) -> String {
         switch stage {
-        case .cancelDemo: localization.string("tutorial.cancel_desc")
-        case .rightEdgeSkip: localization.string("tutorial.next_desc")
+        case .cancelDemo: localization.string("tutorial.previous_desc")
+        case .rightEdgeSkip: localization.string("tutorial.cancel_desc")
         case .topEdgePlayPause: localization.string("tutorial.playpause_desc")
         case .volumeControl: localization.string("tutorial.volume_control_desc")
         case .leftClickToggle: localization.string("tutorial.left_click_desc")

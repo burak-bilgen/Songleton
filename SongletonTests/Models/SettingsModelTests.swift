@@ -22,7 +22,8 @@ final class SettingsModelTests {
         runTest(name: "testPersistence", test: testPersistence)
         runTest(name: "testLaunchAtLoginToggle", test: testLaunchAtLoginToggle)
         runTest(name: "testStoredValuesAreClamped", test: testStoredValuesAreClamped)
-        runTest(name: "testEdgeGestureHoldDuration", test: testEdgeGestureHoldDuration)
+        runTest(name: "testEdgeGestureHoldDurations", test: testEdgeGestureHoldDurations)
+        runTest(name: "testLegacyHoldDurationMigrates", test: testLegacyHoldDurationMigrates)
         runTest(name: "testInvalidFontFallsBackToSystem", test: testInvalidFontFallsBackToSystem)
         runTest(name: "testTrackNotificationPositionPersistence", test: testTrackNotificationPositionPersistence)
         runTest(name: "testInvalidTrackNotificationPositionFallsBack", test: testInvalidTrackNotificationPositionFallsBack)
@@ -45,7 +46,8 @@ final class SettingsModelTests {
         assertEqual(settings.trackNotificationPosition, .bottomTrailing, "trackNotificationPosition should default to bottomTrailing")
         assertTrue(settings.horizontalGesturesEnabled, "horizontalGesturesEnabled should default to true")
         assertTrue(settings.verticalGesturesEnabled, "verticalGesturesEnabled should default to true")
-        assertAccuracy(settings.edgeGestureHoldDuration, 0.65, accuracy: 0.001, "edgeGestureHoldDuration should default to 0.65")
+        assertAccuracy(settings.horizontalEdgeHoldDuration, 0.65, accuracy: 0.001, "horizontalEdgeHoldDuration should default to 0.65")
+        assertAccuracy(settings.topEdgeHoldDuration, 0.45, accuracy: 0.001, "topEdgeHoldDuration should default to 0.45")
         assertAccuracy(settings.lyricsOffset, 0.9, accuracy: 0.001, "lyricsOffset should default to 0.9")
     }
 
@@ -56,7 +58,8 @@ final class SettingsModelTests {
         settings.showTrackNotifications = false
         settings.horizontalGesturesEnabled = false
         settings.verticalGesturesEnabled = false
-        settings.edgeGestureHoldDuration = 1.2
+        settings.horizontalEdgeHoldDuration = 1.2
+        settings.topEdgeHoldDuration = 0.8
         settings.lyricsOffset = 1.5
 
         assertFalse(userDefaults.bool(forKey: "showArtistInMenuBar"))
@@ -65,7 +68,8 @@ final class SettingsModelTests {
         assertFalse(userDefaults.bool(forKey: "showTrackNotifications"))
         assertFalse(userDefaults.bool(forKey: "horizontalGesturesEnabled"))
         assertFalse(userDefaults.bool(forKey: "verticalGesturesEnabled"))
-        assertAccuracy(userDefaults.double(forKey: "edgeGestureHoldDuration"), 1.2, accuracy: 0.001)
+        assertAccuracy(userDefaults.double(forKey: "horizontalEdgeHoldDuration"), 1.2, accuracy: 0.001)
+        assertAccuracy(userDefaults.double(forKey: "topEdgeHoldDuration"), 0.8, accuracy: 0.001)
         assertAccuracy(userDefaults.double(forKey: "lyricsOffset"), 1.5, accuracy: 0.001)
 
         // Create new instance with same userDefaults
@@ -76,7 +80,8 @@ final class SettingsModelTests {
         assertFalse(newSettings.showTrackNotifications)
         assertFalse(newSettings.horizontalGesturesEnabled)
         assertFalse(newSettings.verticalGesturesEnabled)
-        assertAccuracy(newSettings.edgeGestureHoldDuration, 1.2, accuracy: 0.001)
+        assertAccuracy(newSettings.horizontalEdgeHoldDuration, 1.2, accuracy: 0.001)
+        assertAccuracy(newSettings.topEdgeHoldDuration, 0.8, accuracy: 0.001)
         assertAccuracy(newSettings.lyricsOffset, 1.5, accuracy: 0.001)
     }
 
@@ -102,14 +107,25 @@ final class SettingsModelTests {
         assertEqual(lowerClamped.lyricsOffset, 3)
     }
 
-    func testEdgeGestureHoldDuration() {
-        userDefaults.set(-1, forKey: "edgeGestureHoldDuration")
+    func testEdgeGestureHoldDurations() {
+        userDefaults.set(-1, forKey: "horizontalEdgeHoldDuration")
+        userDefaults.set(-1, forKey: "topEdgeHoldDuration")
         let lowerClamped = SettingsModel(userDefaults: userDefaults)
-        assertAccuracy(lowerClamped.edgeGestureHoldDuration, 0.2, accuracy: 0.001)
+        assertAccuracy(lowerClamped.horizontalEdgeHoldDuration, 0.2, accuracy: 0.001)
+        assertAccuracy(lowerClamped.topEdgeHoldDuration, 0.2, accuracy: 0.001)
 
-        userDefaults.set(3, forKey: "edgeGestureHoldDuration")
+        userDefaults.set(3, forKey: "horizontalEdgeHoldDuration")
+        userDefaults.set(3, forKey: "topEdgeHoldDuration")
         let upperClamped = SettingsModel(userDefaults: userDefaults)
-        assertAccuracy(upperClamped.edgeGestureHoldDuration, 2.0, accuracy: 0.001)
+        assertAccuracy(upperClamped.horizontalEdgeHoldDuration, 2.0, accuracy: 0.001)
+        assertAccuracy(upperClamped.topEdgeHoldDuration, 2.0, accuracy: 0.001)
+    }
+
+    func testLegacyHoldDurationMigrates() {
+        userDefaults.set(1.4, forKey: "edgeGestureHoldDuration")
+        let migrated = SettingsModel(userDefaults: userDefaults)
+        assertAccuracy(migrated.horizontalEdgeHoldDuration, 1.4, accuracy: 0.001, "legacy value should seed horizontal duration")
+        assertAccuracy(migrated.topEdgeHoldDuration, 0.98, accuracy: 0.001, "legacy value should seed top duration at its old ratio")
     }
 
     func testInvalidFontFallsBackToSystem() {

@@ -344,10 +344,9 @@ final class MouseGestureManager: ObservableObject {
         let cooldownDelay = max(0, 1.0 - now.timeIntervalSince(lastTriggeredAt))
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, self.activeZone == zone else { return }
-            let configuredDuration = SettingsModel.shared.edgeGestureHoldDuration
             let duration = zone == .playPause
-                ? configuredDuration * 0.70
-                : configuredDuration
+                ? SettingsModel.shared.topEdgeHoldDuration
+                : SettingsModel.shared.horizontalEdgeHoldDuration
             self.edgeGestureDuration = duration
             self.edgeGestureStartedAt = Date()
             self.edgeGestureProgress = 0

@@ -173,17 +173,38 @@ struct SettingsView: View {
 
             settingsPickerRow(
                 icon: "timer",
-                title: localization.string("settings.edge_gesture_duration"),
-                subtitle: localization.string("settings.edge_gesture_duration_hint")
+                title: localization.string("settings.edge_gesture_duration_horizontal"),
+                subtitle: localization.string("settings.edge_gesture_duration_horizontal_hint")
             ) {
-                Slider(value: $settings.edgeGestureHoldDuration, in: 0.2...2.0, step: 0.1)
+                Slider(value: $settings.horizontalEdgeHoldDuration, in: 0.2...2.0, step: 0.1)
                     .tint(SongletonTheme.cyan)
                     .frame(width: 110)
 
                 Text(String(
                     format: localization.string("settings.seconds_format"),
                     locale: localization.locale,
-                    settings.edgeGestureHoldDuration
+                    settings.horizontalEdgeHoldDuration
+                ))
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .frame(width: 34, alignment: .trailing)
+            }
+
+            sectionDivider
+
+            settingsPickerRow(
+                icon: "timer",
+                title: localization.string("settings.edge_gesture_duration_top"),
+                subtitle: localization.string("settings.edge_gesture_duration_top_hint")
+            ) {
+                Slider(value: $settings.topEdgeHoldDuration, in: 0.2...2.0, step: 0.1)
+                    .tint(SongletonTheme.cyan)
+                    .frame(width: 110)
+
+                Text(String(
+                    format: localization.string("settings.seconds_format"),
+                    locale: localization.locale,
+                    settings.topEdgeHoldDuration
                 ))
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
@@ -356,8 +377,8 @@ struct SettingsView: View {
 
     private func gestureDescription(_ key: String) -> String {
         let duration = key == "gesture.top_desc"
-            ? settings.edgeGestureHoldDuration * 0.8
-            : settings.edgeGestureHoldDuration
+            ? settings.topEdgeHoldDuration
+            : settings.horizontalEdgeHoldDuration
         let formattedDuration = String(format: "%.1f", locale: localization.locale, duration)
         return String(format: localization.string(key), formattedDuration)
     }
