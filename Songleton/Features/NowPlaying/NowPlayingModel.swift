@@ -350,6 +350,34 @@ final class NowPlayingModel: ObservableObject {
                 guard let self, self.hasAnyPlayerPermission else { return }
                 self.refresh()
             }
+
+        // Listen for system wake & screen unlock to reset artwork failure caches and force immediate refresh
+        let center = NSWorkspace.shared.notificationCenter
+        center.publisher(for: NSWorkspace.didWakeNotification)
+            .merge(with: center.publisher(for: NSWorkspace.screensDidWakeNotification))
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.handleSystemWake()
+                }
+            }
+            .store(in: &cancellables)
+
+        DistributedNotificationCenter.default()
+            .publisher(for: Notification.Name("com.apple.screenIsUnlocked"))
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.handleSystemWake()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func handleSystemWake() {
+        lastArtworkFailureKey = nil
+        lastArtworkFailureAt = nil
+        currentArtworkKey = nil
+        artwork = nil
+        refresh()
     }
 
     var menuBarTitle: String? {
@@ -699,7 +727,7 @@ final class NowPlayingModel: ObservableObject {
         } else {
             desiredKey = nil
         }
-        if desiredKey == currentArtworkKey {
+        if desiredKey == currentArtworkKey && artwork != nil {
             triggerPendingToastIfMatching()
             return
         }
