@@ -1027,13 +1027,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rest the pointer at the left, right, or top edge to control playback without finding the player."
+            "value" : "Hold the pointer at a screen edge for previous, next, play, or pause."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oynatıcıyı aramadan önceki, sonraki, oynat ve duraklat için imleci ekranın kenarında kısa süre beklet."
+            "value" : "Önceki, sonraki, oynat ve duraklat için imleci ekranın kenarında kısa süre beklet."
           }
         }
       }
@@ -1067,7 +1067,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ne çaldığını gör ve kontrollerine başka pencere açmadan menü çubuğundan ulaş."
+            "value" : "Ne çaldığını gör, kontrollere başka pencere açmadan menü çubuğundan ulaş."
           }
         }
       }
@@ -1180,7 +1180,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Let Songleton read the current track and control playback."
+            "value" : "Grant access so Songleton can read the current track and control playback."
           }
         },
         "tr" : {
@@ -1214,13 +1214,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Control Spotify or Apple Music from the menu bar without breaking your flow."
+            "value" : "Whatever music app you use, control it from the menu bar without breaking your flow."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spotify veya Apple Music'i, yaptığın işi bölmeden menü çubuğundan kontrol et."
+            "value" : "Hangi müzik uygulamasını kullanırsan kullan, işini bölmeden menü çubuğundan kontrol et."
           }
         }
       }
@@ -1231,13 +1231,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your music, your control"
+            "value" : "Control your music easily."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Müziğin kontrolü elinde"
+            "value" : "Müziğini kolayca kontrol et."
           }
         }
       }
@@ -1248,13 +1248,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose Spotify or Apple Music. Accessibility is optional and only enables the screen-edge gestures."
+            "value" : "Connect any app you use. Accessibility is optional and only enables the screen-edge gestures."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spotify veya Apple Music'ten birini bağla. Erişilebilirlik izni isteğe bağlıdır, yalnızca ekran kenarı hareketlerini açar."
+            "value" : "İstediğin uygulamayı bağla. Erişilebilirlik izni isteğe bağlıdır, yalnızca ekran kenarı hareketlerini açar."
           }
         }
       }
@@ -1316,13 +1316,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spotify and Music access"
+            "value" : "Music apps access"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spotify ve Müzik erişimi"
+            "value" : "Müzik uygulamaları erişimi"
           }
         }
       }
@@ -1452,13 +1452,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Spotify or Apple Music"
+            "value" : "Open a music app"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spotify veya Apple Music'i aç"
+            "value" : "Bir müzik uygulaması aç"
           }
         }
       }
@@ -2064,13 +2064,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connect Spotify or Apple Music to control playback."
+            "value" : "Connect a music app to control playback."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oynatmayı yönetmek için Spotify veya Apple Music'i bağla."
+            "value" : "Oynatmayı yönetmek için bir müzik uygulaması bağla."
           }
         }
       }
@@ -2302,7 +2302,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold at the top edge to play or pause. For volume, hold both mouse buttons or ⌘ + ⌥, then drag vertically."
+            "value" : "Hold at the top edge until the ring fills to toggle playback. For volume, hold both mouse buttons or ⌘ + ⌥, then drag vertically."
           }
         },
         "tr" : {
@@ -2404,13 +2404,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connect Spotify or Apple Music when you're ready. Songleton will stay out of the way until then."
+            "value" : "Connect a music app when you are ready. Songleton will stay out of the way until then."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hazır olduğunda Spotify veya Apple Music'i bağla. Songleton o zamana kadar seni rahatsız etmez."
+            "value" : "Hazır olduğunda bir müzik uygulaması bağla. Songleton o zamana kadar seni rahatsız etmez."
           }
         }
       }
@@ -2540,13 +2540,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Right-click the track title in the menu bar to open the current song in a full-screen scene."
+            "value" : "Right-click the track in the menu bar to open it full screen."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Çalan parçayı tam ekran bir sahnede açmak için menü çubuğundaki parça adına sağ tıkla."
+            "value" : "Menü çubuğundaki şarkı adına sağ tıkla, şarkı tam ekrana geçer."
           }
         }
       }
@@ -2574,13 +2574,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Holding at the left edge plays the previous track. Move away before the ring fills to cancel."
+            "value" : "Hold at the left edge until the ring fills to go back. Let go early and nothing happens."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sol kenarda beklemek önceki parçayı açar. İptal etmek için halka dolmadan kenardan uzaklaş."
+            "value" : "İmleci sol kenarda tut, halka dolunca önceki parçaya geçer. Erken bırakırsan iptal olur."
           }
         }
       }
@@ -2710,13 +2710,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move away before the ring fills to cancel."
+            "value" : "Let go early and nothing happens."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İptal etmek için halka dolmadan kenardan uzaklaş."
+            "value" : "Erken bırakırsan iptal olur."
           }
         }
       }
@@ -2727,13 +2727,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold at the right edge for the next track."
+            "value" : "Hold at the right edge until the ring fills to skip."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sonraki parça için sağ kenarda bekle."
+            "value" : "Sağ kenarda bekle, halka dolunca sonraki parçaya geçer."
           }
         }
       }
@@ -2744,13 +2744,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold at the top edge to play or pause."
+            "value" : "Hold at the top edge until the ring fills to toggle playback."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oynatmak veya duraklatmak için üst kenarda bekle."
+            "value" : "Üst kenarda bekle, halka dolunca oynatma durumu değişir."
           }
         }
       }
@@ -2761,13 +2761,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hover over Songleton in the menu bar for 0.4 seconds and the control panel opens."
+            "value" : "Hover the track in the menu bar and artwork, playback, volume, and Ambient Mode open in one panel."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menü çubuğundaki Songleton'un üzerinde 0.4 saniye bekle, kontrol paneli açılır."
+            "value" : "Menü çubuğundaki parçanın üzerine gel, kapak, oynatma, ses ve Ambient Mode tek panelde açılır."
           }
         }
       }
@@ -2795,13 +2795,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Single-click the track title in the menu bar to play or pause current track."
+            "value" : "Click the track name to play or pause. No extra window needed."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Çalan parçayı duraklatmak veya oynatmak için menü çubuğundaki parça adına tek tıkla."
+            "value" : "Şarkı adına tıkla, oynatma başlasın ya da dursun. Başka pencere açılmaz."
           }
         }
       }
@@ -2829,13 +2829,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold the pointer at the right edge until the ring fills to play the next track."
+            "value" : "Do the same on the right edge and it skips to the next track."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sonraki parçaya geçmek için halka dolana kadar imleci sağ kenarda beklet."
+            "value" : "Aynısını sağ kenarda yap, halka dolunca sonraki parçaya geçer."
           }
         }
       }
@@ -2897,13 +2897,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold the pointer at the top edge to play or pause."
+            "value" : "Hold at the top edge and playback toggles when the ring fills."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oynatmak veya duraklatmak için imleci üst kenarda beklet."
+            "value" : "İmleci üst kenarda beklet, halka dolunca oynatma durumu değişir."
           }
         }
       }
@@ -3209,7 +3209,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Command ve Option'a basılı tutup yukarı veya aşağı sürükle. Ses göstergesi hareketi takip eder."
+            "value" : "Command ve Option'ı basılı tutup yukarı veya aşağı sürükle. Ses göstergesi hareketi takip eder."
           }
         }
       }
@@ -3220,13 +3220,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adjust volume from anywhere"
+            "value" : "Volume with ⌘ + ⌥"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sesi bulunduğun yerden ayarla"
+            "value" : "⌘ + ⌥ ile ses"
           }
         }
       }
@@ -3254,13 +3254,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Or hold both mouse buttons and drag."
+            "value" : "Or hold both mouse buttons and drag up or down."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ya da iki fare tuşunu basılı tutup sürükle."
+            "value" : "Ya da iki fare tuşunu basılı tutup yukarı veya aşağı sürükle."
           }
         }
       }
