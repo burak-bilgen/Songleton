@@ -591,6 +591,9 @@ final class HUDToastManager: NSObject, ObservableObject {
 private final class ToastHostingView<Content: View>: NSHostingView<Content> {
     private let cardPath: NSBezierPath
 
+    @_optimize(none)
+    deinit {}
+
     init(rootView: Content, cardInset: CGFloat, cardSize: NSSize, cornerRadius: CGFloat) {
         self.cardPath = NSBezierPath(
             roundedRect: NSRect(
