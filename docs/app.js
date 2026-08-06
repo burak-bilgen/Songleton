@@ -2,7 +2,7 @@ const copy = {
   tr: {
     pageTitle: "Songleton for macOS", pageDescription: "Songleton, 8 müzik uygulamasını (Spotify, Apple Music, TIDAL, Deezer ve daha fazlası) menü çubuğundan, ekran kenarlarından ve Ambient Mode'dan kontrol eden yerel macOS uygulaması.", primaryNav: "Ana menü", languageLabel: "Dil",
     skip: "Tanıtıma geç", navTour: "Nasıl çalışır", navFeatures: "Özellikler", navPrivacy: "Gizlilik", download: "İndir",
-    heroEyebrow: "macOS 14+ için yerel müzik kontrolü", heroTitle: "Müzik açık.<br><span>Yakınında.</span>", heroText: "Hangi müzik uygulamasını açarsan aç — Spotify, Apple Music, TIDAL, Deezer ve daha fazlası — nerede çalıyorsa oradan yönet. Songleton menü çubuğunda durur, ekran kenarlarını da istersen hızlı kontrollere çevirir.", downloadFree: "Ücretsiz indir", watchTour: "Turu izle", openSource: "Açık kaynak", localFirst: "Yerel çalışır", chipEdges: "Ekran kenarları", chipLyrics: "Senkron sözler", platformsKicker: "Desteklenen oynatıcılar", platformsTitle: "Senin müzik uygulaman hangisiyse.", platformsLead: "8 müzik uygulaması. Tek menü çubuğu, hepsinde aynı kontroller.",
+    heroEyebrow: "macOS 14+ için yerel müzik kontrolü", heroTitle: "Müzik açık.<br><span>Yakınında.</span>", heroText: "Hangi müzik uygulamasını açarsan aç — Spotify, Apple Music, TIDAL, Deezer ve daha fazlası — nerede çalıyorsa oradan yönet. Songleton menü çubuğunda durur, ekran kenarlarını da istersen hızlı kontrollere çevirir.", downloadFree: "Ücretsiz indir", watchTour: "Turu izle", openSource: "Açık kaynak", localFirst: "Yerel çalışır", chipEdges: "Ekran kenarları", chipLyrics: "Senkron sözler", platformsKicker: "Desteklenen oynatıcılar", platformsTitle: "Senin müzik uygulaman hangisiyse.", platformsLead: "8 müzik uygulaması. Tek menü çubuğu, hepsinde aynı kontroller.", heroPlatformsLabel: "Çalıştığı uygulamalar:", pdTrack: "Parça & sanatçı", pdArtwork: "Kapak görseli", pdControls: "Oynatma, ses & sıra", pdValFull: "Tam destek", pdValWindowTitle: "Pencere başlığından", pdValDash: "—", pdNote: "Pencere başlığından okunan oynatıcılarda kontroller uygulamanın kendi arayüzünde kalır.",
     tourKicker: "Ürün turu", tourTitle: "Müzik kontrolü, yerini bilsin.", tourLead: "Her kontrol, Songleton'ın Mac'inde nasıl davrandığını sade bir şekilde gösterir.",
     step1Title: "Menü çubuğunda, olması gereken yerde.", step1Text: "Şarkı adı ve temel oynatma kontrolleri ekranın sağında, her zaman aynı yerde.",
     step2Title: "Üzerine gel, kontroller açılsın.", step2Text: "Kapak, oynatma, ses ve Ambient Mode tek bir sakin panelde toplanır.",
@@ -25,7 +25,7 @@ const copy = {
   en: {
     pageTitle: "Songleton for macOS", pageDescription: "Songleton is a native macOS companion for controlling 8 music apps — Spotify, Apple Music, TIDAL, Deezer, and more — from the menu bar, screen edges, and Ambient Mode.", primaryNav: "Primary navigation", languageLabel: "Language",
     skip: "Skip to the tour", navTour: "How it works", navFeatures: "Features", navPrivacy: "Privacy", download: "Download",
-    heroEyebrow: "Native music control for macOS 14+", heroTitle: "Music's on.<br><span>Right here.</span>", heroText: "Whatever app you play music in — Spotify, Apple Music, TIDAL, Deezer, and more — control it without leaving what you are doing. Songleton stays in the menu bar and can turn screen edges into quick controls when you want it to.", downloadFree: "Download free", watchTour: "Take the tour", openSource: "Open source", localFirst: "Runs locally", chipEdges: "Screen edges", chipLyrics: "Synced lyrics", platformsKicker: "Supported players", platformsTitle: "Whatever app you play in.", platformsLead: "Eight music apps. One menu bar with the same controls for all.",
+    heroEyebrow: "Native music control for macOS 14+", heroTitle: "Music's on.<br><span>Right here.</span>", heroText: "Whatever app you play music in — Spotify, Apple Music, TIDAL, Deezer, and more — control it without leaving what you are doing. Songleton stays in the menu bar and can turn screen edges into quick controls when you want it to.", downloadFree: "Download free", watchTour: "Take the tour", openSource: "Open source", localFirst: "Runs locally", chipEdges: "Screen edges", chipLyrics: "Synced lyrics", platformsKicker: "Supported players", platformsTitle: "Whatever app you play in.", platformsLead: "Eight music apps. One menu bar with the same controls for all.", heroPlatformsLabel: "Works with:", pdTrack: "Track & artist", pdArtwork: "Artwork", pdControls: "Playback, volume & order", pdValFull: "Full support", pdValWindowTitle: "From window title", pdValDash: "—", pdNote: "On window-title players, controls stay in the app's own interface.",
     tourKicker: "Product tour", tourTitle: "Music controls that know their place.", tourLead: "Each control, shown the way it behaves on your Mac — nothing else going on.",
     step1Title: "In the menu bar, where it belongs.", step1Text: "The track name and core playback controls stay at the right side of the screen.",
     step2Title: "Hover to open the full panel.", step2Text: "Artwork, playback, volume, and Ambient Mode live in one quiet panel.",
@@ -82,6 +82,36 @@ document.querySelectorAll(".feature-card").forEach((card) => {
     card.style.setProperty("--pointer-y", `${event.clientY - rect.top}px`);
   });
 });
+
+const platformButtons = [...document.querySelectorAll(".platform-item")];
+const platformDetail = document.getElementById("platform-detail");
+const platformGroups = { spotify: "full", applemusic: "full", tidal: "windowtitle", deezer: "windowtitle", amazon: "windowtitle", ytmusic: "windowtitle", soundcloud: "windowtitle", qobuz: "windowtitle" };
+let activePlatform = null;
+
+function showPlatformDetail(platform, button) {
+  if (activePlatform === platform) {
+    activePlatform = null;
+    platformButtons.forEach((item) => { item.classList.remove("active"); item.setAttribute("aria-expanded", "false"); });
+    platformDetail.classList.remove("open");
+    return;
+  }
+  activePlatform = platform;
+  const group = platformGroups[platform] || "windowtitle";
+  const panel = platformDetail.querySelector(`.pd-panel[data-group="${group}"]`);
+  platformButtons.forEach((item) => {
+    const on = item === button;
+    item.classList.toggle("active", on);
+    item.setAttribute("aria-expanded", String(on));
+  });
+  panel.querySelector(".pd-mark").className = `pmark pd-mark pmark-${platform}`;
+  panel.querySelector(".pd-mark-use").setAttribute("href", `#mark-${platform}`);
+  panel.querySelector(".pd-name").textContent = button.querySelector("b")?.textContent || platform;
+  platformDetail.querySelectorAll(".pd-panel").forEach((item) => item.classList.toggle("active", item === panel));
+  platformDetail.classList.add("open");
+}
+
+platformButtons.forEach((button) => button.addEventListener("click", () => showPlatformDetail(button.dataset.platform, button)));
+if (platformButtons.length) showPlatformDetail("spotify", platformButtons[0]);
 
 const scrollProgressBar = document.querySelector(".scroll-progress");
 function updateScrollProgress() {

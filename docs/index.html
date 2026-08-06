@@ -49,6 +49,17 @@
     </div>
   </nav>
 
+  <svg class="svg-defs" aria-hidden="true" focusable="false">
+    <symbol id="mark-spotify" viewBox="0 0 24 24"><path fill="#0a0a0a" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.25 14.3a.6.6 0 0 1-.82.2c-2.25-1.38-5.08-1.69-8.42-.93a.6.6 0 0 1-.26-1.17c3.66-.84 6.8-.48 9.3 1.07a.6.6 0 0 1 .2.83zm1.18-2.7a.75.75 0 0 1-1.03.25c-2.58-1.58-6.5-2.04-9.55-1.12a.75.75 0 0 1-.43-1.44c3.45-1.03 7.75-.5 10.76 1.28a.75.75 0 0 1 .25 1.03zm.1-2.8C13.9 8.9 9.2 8.8 6.5 9.6a.9.9 0 0 1-.52-1.72c3.15-.96 8.35-.85 11.7 1.24a.9.9 0 0 1-.95 1.52z"/></symbol>
+    <symbol id="mark-applemusic" viewBox="0 0 24 24"><path fill="#fff" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.99-.2 1.94-.87 3.23-.78 1.53.12 2.68.73 3.44 1.83-3.16 1.89-2.64 6.05.54 7.22-.64 1.67-1.45 3.32-3.29 4.9zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></symbol>
+    <symbol id="mark-tidal" viewBox="0 0 24 24"><g fill="#00ffff"><rect x="4" y="11" width="3" height="9" rx="1.5"/><rect x="10.5" y="7" width="3" height="13" rx="1.5"/><rect x="17" y="12.5" width="3" height="7.5" rx="1.5"/></g></symbol>
+    <symbol id="mark-deezer" viewBox="0 0 24 24"><rect x="3.75" y="12.75" width="3.5" height="3.5" rx="1" fill="#ff007f"/><rect x="3.75" y="16.75" width="3.5" height="3.5" rx="1" fill="#ff6600"/><rect x="10.25" y="6.75" width="3.5" height="3.5" rx="1" fill="#00c7ff"/><rect x="10.25" y="10.75" width="3.5" height="3.5" rx="1" fill="#ffe000"/><rect x="10.25" y="14.75" width="3.5" height="3.5" rx="1" fill="#ff007f"/><rect x="16.75" y=".75" width="3.5" height="3.5" rx="1" fill="#a100ff"/><rect x="16.75" y="4.75" width="3.5" height="3.5" rx="1" fill="#00c7ff"/><rect x="16.75" y="8.75" width="3.5" height="3.5" rx="1" fill="#ffe000"/><rect x="16.75" y="12.75" width="3.5" height="3.5" rx="1" fill="#ff007f"/></symbol>
+    <symbol id="mark-amazon" viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="18" cy="16" r="3" fill="none" stroke="#fff" stroke-width="1.8"/></symbol>
+    <symbol id="mark-ytmusic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="#fff" stroke-width="1.8"/><path fill="#fff" d="M10.2 9.1v5.8l5-2.9z"/></symbol>
+    <symbol id="mark-soundcloud" viewBox="0 0 24 24"><path fill="#fff" d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></symbol>
+    <symbol id="mark-qobuz" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.8" fill="none" stroke="#9d67ff" stroke-width="1.8"/><path d="M12 4.6a7.4 7.4 0 1 0 .01 0z" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M17.4 17.4l4.1 4.1" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  </svg>
+
   <main id="top">
     <section class="hero shell">
       <div class="hero-copy">
@@ -58,6 +69,19 @@
         <div class="hero-actions">
           <a class="button primary" href="https://github.com/burak-bilgen/Songleton/releases/latest"><span data-i18n="downloadFree">Ücretsiz indir</span><span aria-hidden="true">↓</span></a>
           <a class="button ghost" href="#tour"><span data-i18n="watchTour">Turu izle</span><span aria-hidden="true">⌄</span></a>
+        </div>
+        <div class="hero-platforms" aria-hidden="true">
+          <span class="hero-platforms-label" data-i18n="heroPlatformsLabel">Çalıştığı uygulamalar:</span>
+          <span class="hero-platforms-marks">
+            <span class="pmark pmark-spotify"><svg class="pmark-icon"><use href="#mark-spotify"/></svg></span>
+            <span class="pmark pmark-applemusic"><svg class="pmark-icon"><use href="#mark-applemusic"/></svg></span>
+            <span class="pmark pmark-tidal"><svg class="pmark-icon"><use href="#mark-tidal"/></svg></span>
+            <span class="pmark pmark-deezer"><svg class="pmark-icon"><use href="#mark-deezer"/></svg></span>
+            <span class="pmark pmark-amazon"><svg class="pmark-icon"><use href="#mark-amazon"/></svg></span>
+            <span class="pmark pmark-ytmusic"><svg class="pmark-icon"><use href="#mark-ytmusic"/></svg></span>
+            <span class="pmark pmark-soundcloud"><svg class="pmark-icon"><use href="#mark-soundcloud"/></svg></span>
+            <span class="pmark pmark-qobuz"><svg class="pmark-icon"><use href="#mark-qobuz"/></svg></span>
+          </span>
         </div>
         <div class="hero-meta"><span>SwiftUI</span><i></i><span data-i18n="openSource">Açık kaynak</span><i></i><span data-i18n="localFirst">Yerel çalışır</span></div>
       </div>
@@ -80,37 +104,62 @@
         <p data-i18n="platformsLead">8 müzik uygulaması. Tek menü çubuğu, hepsinde aynı kontroller.</p>
       </div>
       <div class="platform-grid">
-        <div class="platform-item reveal">
-          <span class="pmark pmark-spotify" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#0a0a0a"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.25 14.3a.6.6 0 0 1-.82.2c-2.25-1.38-5.08-1.69-8.42-.93a.6.6 0 0 1-.26-1.17c3.66-.84 6.8-.48 9.3 1.07a.6.6 0 0 1 .2.83zm1.18-2.7a.75.75 0 0 1-1.03.25c-2.58-1.58-6.5-2.04-9.55-1.12a.75.75 0 0 1-.43-1.44c3.45-1.03 7.75-.5 10.76 1.28a.75.75 0 0 1 .25 1.03zm.1-2.8C13.9 8.9 9.2 8.8 6.5 9.6a.9.9 0 0 1-.52-1.72c3.15-.96 8.35-.85 11.7 1.24a.9.9 0 0 1-.95 1.52z"/></svg></span>
+        <button type="button" class="platform-item reveal" data-platform="spotify" aria-expanded="false" aria-controls="platform-detail">
+          <span class="pmark pmark-spotify" aria-hidden="true"><svg class="pmark-icon"><use href="#mark-spotify"/></svg></span>
           <b>Spotify</b>
-        </div>
-        <div class="platform-item reveal">
-          <span class="pmark pmark-applemusic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.99-.2 1.94-.87 3.23-.78 1.53.12 2.68.73 3.44 1.83-3.16 1.89-2.64 6.05.54 7.22-.64 1.67-1.45 3.32-3.29 4.9zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg></span>
+        </button>
+        <button type="button" class="platform-item reveal" data-platform="applemusic" aria-expanded="false" aria-controls="platform-detail">
+          <span class="pmark pmark-applemusic" aria-hidden="true"><svg class="pmark-icon"><use href="#mark-applemusic"/></svg></span>
           <b>Apple Music</b>
-        </div>
-        <div class="platform-item reveal">
-          <span class="pmark pmark-tidal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#00ffff"><rect x="4" y="11" width="3" height="9" rx="1.5"/><rect x="10.5" y="7" width="3" height="13" rx="1.5"/><rect x="17" y="12.5" width="3" height="7.5" rx="1.5"/></svg></span>
+        </button>
+        <button type="button" class="platform-item reveal" data-platform="tidal" aria-expanded="false" aria-controls="platform-detail">
+          <span class="pmark pmark-tidal" aria-hidden="true"><svg class="pmark-icon"><use href="#mark-tidal"/></svg></span>
           <b>TIDAL</b>
-        </div>
-        <div class="platform-item reveal">
-          <span class="pmark pmark-deezer" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.75" y="12.75" width="3.5" height="3.5" rx="1" fill="#ff007f"/><rect x="3.75" y="16.75" width="3.5" height="3.5" rx="1" fill="#ff6600"/><rect x="10.25" y="6.75" width="3.5" height="3.5" rx="1" fill="#00c7ff"/><rect x="10.25" y="10.75" width="3.5" height="3.5" rx="1" fill="#ffe000"/><rect x="10.25" y="14.75" width="3.5" height="3.5" rx="1" fill="#ff007f"/><rect x="16.75" y=".75" width="3.5" height="3.5" rx="1" fill="#a100ff"/><rect x="16.75" y="4.75" width="3.5" height="3.5" rx="1" fill="#00c7ff"/><rect x="16.75" y="8.75" width="3.5" height="3.5" rx="1" fill="#ffe000"/><rect x="16.75" y="12.75" width="3.5" height="3.5" rx="1" fill="#ff007f"/></svg></span>
+        </button>
+        <button type="button" class="platform-item reveal" data-platform="deezer" aria-expanded="false" aria-controls="platform-detail">
+          <span class="pmark pmark-deezer" aria-hidden="true"><svg class="pmark-icon"><use href="#mark-deezer"/></svg></span>
           <b>Deezer</b>
-        </div>
-        <div class="platform-item reveal">
-          <span class="pmark pmark-amazon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+        </button>
+        <button type="button" class="platform-item reveal" data-platform="amazon" aria-expanded="false" aria-controls="platform-detail">
+          <span class="pmark pmark-amazon" aria-hidden="true"><svg class="pmark-icon"><use href="#mark-amazon"/></svg></span>
           <b>Amazon Music</b>
-        </div>
-        <div class="platform-item reveal">
-          <span class="pmark pmark-ytmusic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M10.2 9.1v5.8l5-2.9z" fill="#fff"/></svg></span>
+        </button>
+        <button type="button" class="platform-item reveal" data-platform="ytmusic" aria-expanded="false" aria-controls="platform-detail">
+          <span class="pmark pmark-ytmusic" aria-hidden="true"><svg class="pmark-icon"><use href="#mark-ytmusic"/></svg></span>
           <b>YouTube Music</b>
-        </div>
-        <div class="platform-item reveal">
-          <span class="pmark pmark-soundcloud" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></span>
+        </button>
+        <button type="button" class="platform-item reveal" data-platform="soundcloud" aria-expanded="false" aria-controls="platform-detail">
+          <span class="pmark pmark-soundcloud" aria-hidden="true"><svg class="pmark-icon"><use href="#mark-soundcloud"/></svg></span>
           <b>SoundCloud</b>
-        </div>
-        <div class="platform-item reveal">
-          <span class="pmark pmark-qobuz" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="#9d67ff" stroke-width="1.8"/></svg><b class="pmark-q">Q</b></span>
+        </button>
+        <button type="button" class="platform-item reveal" data-platform="qobuz" aria-expanded="false" aria-controls="platform-detail">
+          <span class="pmark pmark-qobuz" aria-hidden="true"><svg class="pmark-icon"><use href="#mark-qobuz"/></svg></span>
           <b>Qobuz</b>
+        </button>
+      </div>
+      <div class="platform-detail" id="platform-detail" role="region" aria-live="polite">
+        <div class="pd-panel" data-group="full">
+          <div class="pd-head">
+            <span class="pmark pmark-spotify pd-mark" aria-hidden="true"><svg class="pmark-icon"><use class="pd-mark-use" href="#mark-spotify"/></svg></span>
+            <b class="pd-name">Spotify</b>
+          </div>
+          <div class="pd-rows">
+            <div class="pd-row"><b data-i18n="pdTrack">Parça & sanatçı</b><em data-i18n="pdValFull">Tam destek</em></div>
+            <div class="pd-row"><b data-i18n="pdArtwork">Kapak görseli</b><em data-i18n="pdValFull">Tam destek</em></div>
+            <div class="pd-row"><b data-i18n="pdControls">Oynatma, ses & sıra</b><em data-i18n="pdValFull">Tam destek</em></div>
+          </div>
+        </div>
+        <div class="pd-panel" data-group="windowtitle">
+          <div class="pd-head">
+            <span class="pmark pmark-tidal pd-mark" aria-hidden="true"><svg class="pmark-icon"><use class="pd-mark-use" href="#mark-tidal"/></svg></span>
+            <b class="pd-name">TIDAL</b>
+          </div>
+          <div class="pd-rows">
+            <div class="pd-row"><b data-i18n="pdTrack">Parça & sanatçı</b><em data-i18n="pdValWindowTitle">Pencere başlığından</em></div>
+            <div class="pd-row"><b data-i18n="pdArtwork">Kapak görseli</b><em data-i18n="pdValDash">—</em></div>
+            <div class="pd-row"><b data-i18n="pdControls">Oynatma, ses & sıra</b><em data-i18n="pdValDash">—</em></div>
+          </div>
+          <small class="pd-note" data-i18n="pdNote">Pencere başlığından okunan oynatıcılarda kontroller uygulamanın kendi arayüzünde kalır.</small>
         </div>
       </div>
     </section>
