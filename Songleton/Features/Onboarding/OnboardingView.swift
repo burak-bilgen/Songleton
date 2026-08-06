@@ -368,6 +368,14 @@ struct OnboardingView: View {
 
             VStack(spacing: 10) {
                 if ungrantedCount > 0 {
+                    // Shown once for the whole list, not repeated per player card.
+                    Text(localization.string("onboarding.permission_automation_hint"))
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
                     grantAllButton(ungrantedCount: ungrantedCount)
                 }
 
@@ -514,13 +522,6 @@ struct OnboardingView: View {
                 Text(statusText(for: status))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(statusColor(for: status))
-                if status != .granted {
-                    Text(localization.string("onboarding.permission_automation_hint"))
-                        .font(.system(size: 9.5, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.45))
-                        .lineLimit(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
             }
 
             Spacer()
