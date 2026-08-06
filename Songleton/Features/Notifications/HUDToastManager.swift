@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 struct TrackNotificationLayout {
@@ -107,9 +108,20 @@ final class HUDToastManager: NSObject {
 
     private var toastWindow: NonActivatingToastPanel?
     private var dismissTask: Task<Void, Never>?
+    private var cancellables = Set<AnyCancellable>()
 
     override init() {
         super.init()
+        AmbientModeManager.shared.$isPresented
+            .receive(on: RunLoop.main)
+            .sink { [weak self] isAmbient in
+                if isAmbient {
+                    self?.dismiss()
+                } else {
+                    self?.updatePermanentMode()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     func show(
@@ -120,6 +132,12 @@ final class HUDToastManager: NSObject {
         isPreview: Bool = false
     ) {
         dismissTask?.cancel()
+
+        // Hide mini player in Ambient Mode (unless this is a settings/tutorial preview)
+        if AmbientModeManager.shared.isPresented && !isPreview {
+            dismiss()
+            return
+        }
 
         let isPermanent = SettingsModel.shared.permanentHUDMode && !isPreview
 
@@ -273,7 +291,9 @@ final class HUDToastManager: NSObject {
     }
 
     func updatePermanentMode() {
-        if SettingsModel.shared.permanentHUDMode && SettingsModel.shared.showTrackNotifications {
+        if SettingsModel.shared.permanentHUDMode &&
+           SettingsModel.shared.showTrackNotifications &&
+           !AmbientModeManager.shared.isPresented {
             if case .loaded(let info, _) = NowPlayingModel.shared.state {
                 show(
                     track: info.track,
