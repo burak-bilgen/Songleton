@@ -1,13 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "easter_egg.badge" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "SECRET STASH" } },
-        "tr" : { "stringUnit" : { "state" : "translated", "value" : "GİZLİ STASH" } }
-      }
-    },
     "easter_egg.title" : {
       "extractionState" : "manual",
       "localizations" : {

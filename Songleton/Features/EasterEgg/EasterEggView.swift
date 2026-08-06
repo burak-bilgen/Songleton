@@ -82,21 +82,6 @@ struct EasterEggView: View {
 
             // 4. Center Easter Egg Animated Card
             VStack(spacing: 22) {
-                // Top Badge
-                HStack(spacing: 6) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(spotifyGreen)
-                    Text(localization.string("easter_egg.badge"))
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 7)
-                .background(spotifyGreen.opacity(0.20), in: Capsule())
-                .overlay(Capsule().stroke(spotifyGreen.opacity(0.65), lineWidth: 1))
-                .shadow(color: spotifyGreen.opacity(0.35), radius: 10, x: 0, y: 3)
-
                 // Spinning Vinyl Centerpiece
                 ZStack {
                     Circle()
