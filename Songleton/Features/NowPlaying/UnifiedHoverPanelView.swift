@@ -152,6 +152,9 @@ struct UnifiedHoverPanelView: View {
                     .store(in: &cancellables)
             }
         }
+        .onRightClick {
+            AmbientModeManager.shared.show()
+        }
         .onChange(of: modelVolume) { _, newVol in
             if !isDraggingVolume && Date().timeIntervalSince(lastVolumeSetTime) >= 2.0 {
                 localVolume = newVol
@@ -581,6 +584,36 @@ struct UnifiedHoverPanelView: View {
         } else {
             localVolume = 50
             model.setVolume(50)
+        }
+    }
+}
+
+// MARK: - Right Click Interceptor Extension
+
+extension View {
+    fileprivate func onRightClick(perform action: @escaping () -> Void) -> some View {
+        self.overlay(RightClickOverlayView(action: action))
+    }
+}
+
+private struct RightClickOverlayView: NSViewRepresentable {
+    let action: () -> Void
+
+    func makeNSView(context: Context) -> RightClickNSView {
+        let view = RightClickNSView()
+        view.action = action
+        return view
+    }
+
+    func updateNSView(_ nsView: RightClickNSView, context: Context) {
+        nsView.action = action
+    }
+
+    class RightClickNSView: NSView {
+        var action: (() -> Void)?
+
+        override func rightMouseDown(with event: NSEvent) {
+            action?()
         }
     }
 }
