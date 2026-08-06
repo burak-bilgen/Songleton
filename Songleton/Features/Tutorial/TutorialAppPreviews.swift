@@ -15,21 +15,16 @@ struct TutorialMenuBarPreview: View {
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(.white.opacity(0.85))
 
-            // Square Album Artwork
+            // Square Album Artwork (mini cover)
             RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(white: 0.40), Color(white: 0.18)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
+                .fill(LinearGradient(colors: [Color(red: 1.00, green: 0.42, blue: 0.20), Color(red: 0.24, green: 0.10, blue: 0.45)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .overlay(
+                    Circle()
+                        .fill(Color(red: 1.00, green: 0.72, blue: 0.35).opacity(0.9))
+                        .frame(width: 8, height: 8)
+                        .offset(x: 3, y: -2)
                 )
                 .frame(width: 15, height: 15)
-                .overlay(
-                    Image(systemName: "music.note")
-                        .font(.system(size: 8, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.9))
-                )
 
             Text(localization.string("tutorial.demo_track"))
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -159,17 +154,45 @@ struct TutorialHoverPanelPreview: View {
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [SongletonTheme.violet, SongletonTheme.cyan, SongletonTheme.pink],
+                                    colors: [Color(red: 1.00, green: 0.52, blue: 0.24), Color(red: 0.55, green: 0.20, blue: 0.75)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
                             .frame(width: 88, height: 88)
                             .shadow(color: SongletonTheme.violet.opacity(0.4), radius: 10, y: 4)
-
-                        Image(systemName: "music.note")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.95))
+                            .overlay(
+                                GeometryReader { proxy in
+                                    let w = proxy.size.width
+                                    ZStack {
+                                        // Setting sun
+                                        Circle()
+                                            .fill(Color(red: 1.00, green: 0.78, blue: 0.38).opacity(0.95))
+                                            .frame(width: w * 0.42, height: w * 0.42)
+                                            .offset(x: -w * 0.10, y: -w * 0.14)
+                                        // Horizon haze
+                                        LinearGradient(
+                                            colors: [Color(red: 1.00, green: 0.55, blue: 0.25).opacity(0.85), Color.clear],
+                                            startPoint: .bottom,
+                                            endPoint: .top
+                                        )
+                                        .frame(height: w * 0.34)
+                                        .offset(y: w * 0.28)
+                                        // City skyline silhouette
+                                        HStack(spacing: 3) {
+                                            ForEach(0..<7, id: \.self) { index in
+                                                Capsule()
+                                                    .fill(Color(red: 0.08, green: 0.05, blue: 0.16).opacity(0.95))
+                                                    .frame(width: w * 0.07, height: w * (0.10 + Double(index % 3) * 0.045))
+                                            }
+                                        }
+                                        .frame(maxHeight: .infinity, alignment: .bottom)
+                                        .padding(.bottom, 5)
+                                    }
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                }
+                            )
                     }
 
                     VStack(alignment: .leading, spacing: 4) {

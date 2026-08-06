@@ -2619,6 +2619,57 @@
         }
       }
     },
+    "tutorial.complete_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All the controls are ready. Control your music easily."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm kontroller hazır. Müziğini kolayca kontrol et."
+          }
+        }
+      }
+    },
+    "tutorial.complete_start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start using Songleton"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanmaya başla"
+          }
+        }
+      }
+    },
+    "tutorial.complete_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're all set!"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artık kullanabilirsin!"
+          }
+        }
+      }
+    },
     "tutorial.continue_hint" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2642,13 +2693,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Songleton Demo"
+            "value" : "M83"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Songleton Tanıtım"
+            "value" : "M83"
           }
         }
       }
@@ -2676,13 +2727,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Midnight Signal"
+            "value" : "Midnight City"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gece Sinyali"
+            "value" : "Midnight City"
           }
         }
       }

@@ -94,7 +94,8 @@ struct GestureTutorialView: View {
     @State private var cursorMoveSequence = 0
     @State private var isCmdOptKeyPressed = false
     @State private var isDualMousePressed = false
-    @State private var activeVolumeMethod = ""
+    @State private var isTutorialComplete = false
+    @State private var completionPop = false
 
     // Mock MouseGestureManager for real overlay component
     @StateObject private var mockManager = MouseGestureManager()
@@ -190,50 +191,13 @@ struct GestureTutorialView: View {
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
 
-                if !isAmbientPreviewVisible {
+                if isTutorialComplete {
+                    tutorialCompletionView
+                        .zIndex(200)
+                        .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                } else if !isAmbientPreviewVisible {
                     tutorialChrome(size: geo.size)
                         .zIndex(60)
-                } else {
-                    VStack {
-                        Spacer()
-                        HStack(spacing: 16) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(localization.string("tutorial.prompt_title"))
-                                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.white)
-                                Text(localization.string("tutorial.ambient_mode_desc"))
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white.opacity(0.70))
-                            }
-
-                            Spacer()
-
-                            Button(action: onComplete) {
-                                HStack(spacing: 6) {
-                                    Text(localization.string("tutorial.prompt_start"))
-                                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                                    Image(systemName: "checkmark.circle.fill")
-                                }
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 10)
-                                .background(SongletonTheme.cyan, in: Capsule())
-                                .foregroundStyle(.black)
-                                .shadow(color: SongletonTheme.cyan.opacity(0.4), radius: 8)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .padding(.horizontal, 22)
-                        .padding(.vertical, 14)
-                        .background(Color.black.opacity(0.88), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.white.opacity(0.18), lineWidth: 1)
-                        )
-                        .padding(.horizontal, 32)
-                        .padding(.bottom, 28)
-                        .zIndex(100)
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .onAppear {
@@ -253,7 +217,11 @@ struct GestureTutorialView: View {
     }
 
     private func songletonMenuBarX(for size: CGSize) -> CGFloat {
-        let rightOffset: CGFloat = 160 + (290 / 2)
+        // Right side of the menu bar mockup holds, from the right edge:
+        // ~145pt of system icons (wifi, battery, control center, search, clock)
+        // + 14pt gap + half of the ~150pt Songleton item. The track title sits
+        // near the item's center, so the cursor tip should land at this x.
+        let rightOffset: CGFloat = 145 + 14 + (150 / 2)
         return max(180, size.width - rightOffset)
     }
 
@@ -274,6 +242,117 @@ struct GestureTutorialView: View {
     private func edgeDemoY(for size: CGSize) -> CGFloat {
         let bounds = size.height - controlClearance(for: size) - 70
         return min(size.height * 0.44, bounds)
+    }
+
+    // MARK: - Completion Screen ("You're all set!")
+
+    private var tutorialCompletionView: some View {
+        ZStack {
+            Color.black.opacity(0.92)
+                .ignoresSafeArea()
+
+            RadialGradient(
+                colors: [SongletonTheme.cyan.opacity(0.16), .black.opacity(0.96)],
+                center: .center,
+                startRadius: 120,
+                endRadius: 760
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 26) {
+                ZStack {
+                    Circle()
+                        .fill(SongletonTheme.cyan.opacity(0.15))
+                        .frame(width: 150, height: 150)
+                        .blur(radius: 22)
+
+                    Circle()
+                        .strokeBorder(
+                            AngularGradient(
+                                colors: [SongletonTheme.cyan, .clear, SongletonTheme.violet, SongletonTheme.pink.opacity(0.5), .clear],
+                                center: .center
+                            ),
+                            lineWidth: 2.5
+                        )
+                        .frame(width: 132, height: 132)
+                        .rotationEffect(.degrees(completionPop ? 360 : 0))
+                        .animation(.linear(duration: 1.6).repeatForever(autoreverses: false), value: completionPop)
+
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [SongletonTheme.cyan, SongletonTheme.violet],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 78, height: 78)
+                        .shadow(color: SongletonTheme.cyan.opacity(0.55), radius: 18)
+                        .scaleEffect(completionPop ? 1 : 0.4)
+                        .opacity(completionPop ? 1 : 0)
+                        .animation(.spring(response: 0.55, dampingFraction: 0.6), value: completionPop)
+
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 36, weight: .black))
+                        .foregroundStyle(.black)
+                        .scaleEffect(completionPop ? 1 : 0.4)
+                        .opacity(completionPop ? 1 : 0)
+                        .animation(.spring(response: 0.55, dampingFraction: 0.6).delay(0.08), value: completionPop)
+                }
+                .frame(height: 150)
+
+                VStack(spacing: 9) {
+                    Text(localization.string("tutorial.complete_title"))
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .offset(y: completionPop ? 0 : 14)
+                        .opacity(completionPop ? 1 : 0)
+                        .animation(.easeOut(duration: 0.4).delay(0.12), value: completionPop)
+
+                    Text(localization.string("tutorial.complete_desc"))
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.68))
+                        .multilineTextAlignment(.center)
+                        .offset(y: completionPop ? 0 : 12)
+                        .opacity(completionPop ? 1 : 0)
+                        .animation(.easeOut(duration: 0.4).delay(0.18), value: completionPop)
+                }
+
+                Button(action: onComplete) {
+                    HStack(spacing: 9) {
+                        Text(localization.string("tutorial.complete_start"))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.system(size: 16, weight: .bold))
+                    }
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 30)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            colors: [SongletonTheme.cyan, SongletonTheme.violet.opacity(0.85)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        in: Capsule()
+                    )
+                    .shadow(color: SongletonTheme.cyan.opacity(0.4), radius: 14, y: 6)
+                    .scaleEffect(completionPop ? 1 : 0.85)
+                    .opacity(completionPop ? 1 : 0)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.65).delay(0.24), value: completionPop)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(30)
+        }
+        .onAppear {
+            completionPop = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
+                    completionPop = true
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -530,8 +609,11 @@ struct GestureTutorialView: View {
                         .opacity(isCursorPressed ? 0.65 : 0.18),
                     radius: isCursorPressed ? 12 : 4
                 )
-                .scaleEffect(cursorScale)
+                .scaleEffect(cursorScale, anchor: .topLeading)
                 .rotationEffect(.degrees(cursorRotation), anchor: .topLeading)
+                // cursorarrow's tip is its top-left corner; shift the glyph so the
+                // tip lands exactly on cursorPosition (menu bar track name etc.).
+                .offset(x: 15.5, y: 15.5)
         }
         .position(cursorPosition)
         .accessibilityHidden(true)
@@ -850,6 +932,8 @@ struct GestureTutorialView: View {
         isHoverPanelVisible = false
         isTrackRightClicking = false
         isAmbientPreviewVisible = false
+        isTutorialComplete = false
+        completionPop = false
         mockManager.simulateEdgeGestureProgress(0)
         mockManager.simulateGestureVolume(8)
         TutorialAudioService.shared.setDemoVolume(8)
@@ -1140,9 +1224,18 @@ struct GestureTutorialView: View {
                 withAnimation(.spring(response: 0.65, dampingFraction: 0.8)) {
                     isAmbientPreviewVisible = true
                 }
-                try? await Task.sleep(for: .milliseconds(800))
+
+                // Let Ambient breathe on screen for a moment, then crossfade
+                // into the "You're all set!" completion screen. Flipping both
+                // flags in one transaction avoids re-showing tutorialChrome in
+                // the gap between Ambient fading out and completion fading in.
+                try? await Task.sleep(for: .seconds(2.8))
                 guard !Task.isCancelled else { return }
                 isStageAnimationRunning = false
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) {
+                    isAmbientPreviewVisible = false
+                    isTutorialComplete = true
+                }
             }
         }
     }

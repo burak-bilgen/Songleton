@@ -530,6 +530,8 @@ final class NowPlayingModel: ObservableObject {
             repeatMode: .off
         )
         self.state = .loaded(mockInfo, source: "Spotify")
-        self.dominantColor = SongletonTheme.cyan
+        // Matches the synthwave cover (sunset orange -> violet) used in the
+        // tutorial's mock menu bar / hover panel artwork.
+        self.dominantColor = Color(red: 0.85, green: 0.36, blue: 0.45)
     }
 }

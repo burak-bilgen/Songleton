@@ -60,18 +60,12 @@ a { text-decoration: none; }
 /* --- Classic download button (hero) --- */
 .download-btn { position: relative; gap: 16px; min-height: 64px; padding: 0 18px 0 32px; border-radius: 18px; font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
 .hero .button.ghost { min-height: 64px; border-radius: 18px; font-size: 16px; font-weight: 800; padding: 0 30px; }
-.dl-label, .dl-thanks { display: inline-block; transition: opacity .28s ease; }
-.dl-thanks { position: absolute; opacity: 0; pointer-events: none; }
+.dl-label { display: inline-block; }
 .dl-icon { position: relative; display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 50%; background: rgba(255,255,255,.16); box-shadow: inset 0 1px rgba(255,255,255,.22); }
 .dl-icon svg { width: 19px; height: 19px; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
 .dl-tray { position: absolute; left: 50%; bottom: 5px; width: 22px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.85); transform: translateX(-50%) scaleX(0); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
 .download-btn:hover .dl-icon svg { transform: translateY(6px); }
 .download-btn:hover .dl-tray { transform: translateX(-50%) scaleX(1); }
-.download-btn.downloading { pointer-events: none; }
-.download-btn.downloading .dl-label { position: absolute; opacity: 0; }
-.download-btn.downloading .dl-thanks { position: static; opacity: 1; }
-.download-btn.downloading .dl-icon svg { transform: translateY(8px); }
-.download-btn.downloading .dl-tray { transform: translateX(-50%) scaleX(1); }
 .final-cta .download-btn .dl-icon { background: rgba(22,34,78,.08); box-shadow: inset 0 1px rgba(22,34,78,.06); }
 .final-cta .download-btn .dl-tray { background: rgba(22,34,78,.75); }
 .hero-meta { display: flex; align-items: center; gap: 12px; margin-top: 26px; color: var(--dim); font-size: 11px; font-weight: 650; }
@@ -86,12 +80,16 @@ a { text-decoration: none; }
 .hero-install { display: inline-flex; align-items: center; gap: 12px; margin-top: 22px; padding: 12px 16px 12px 18px; border: 1px solid rgba(13,22,41,.12); border-radius: 14px; background: rgba(255,255,255,.75); box-shadow: inset 0 1px rgba(255,255,255,.9), 0 8px 22px rgba(13,22,41,.06); }
 .hero-install-label { color: var(--dim); font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .hero-install code { font-family: "SF Mono", ui-monospace, "Menlo", monospace; font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; }
-.hero-install-copy { position: relative; display: grid; place-items: center; min-width: 27px; height: 27px; padding: 0 8px; border: 0; border-radius: 8px; background: rgba(13,22,41,.06); color: var(--dim); font-size: 13px; cursor: pointer; transition: background .2s, color .2s, transform .2s; }
+.hero-install-copy { position: relative; display: grid; place-items: center; min-width: 27px; height: 27px; padding: 0 8px; border: 0; border-radius: 8px; background: rgba(13,22,41,.06); color: var(--dim); font-size: 13px; cursor: pointer; transition: background .2s, color .2s, transform .2s, min-width .25s cubic-bezier(.2,.8,.2,1); }
 .hero-install-copy:hover { background: rgba(47,107,255,.12); color: var(--cyan); }
 .hero-install-copy:active { transform: scale(.94); }
-.hero-install-copy .hicon { font-style: normal; }
-.hero-install-copy .hcopied { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: rgba(47,107,255,.12); color: var(--cyan); font-size: 11px; font-weight: 800; white-space: nowrap; opacity: 0; transition: opacity .25s ease; }
-.hero-install.copied .hero-install-copy .hcopied { opacity: 1; }
+.hero-install-copy .hicon { display: inline-block; font-style: normal; transition: opacity .18s ease, transform .18s ease; }
+.hero-install-copy .hcopied { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: inherit; background: #12924f; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .02em; white-space: nowrap; opacity: 0; transform: scale(.6); transition: opacity .18s ease, transform .25s cubic-bezier(.2,.8,.2,1); box-shadow: 0 6px 16px rgba(18,146,79,.35); }
+.hero-install-copy .hcopied::before { content: "✓"; font-size: 11px; font-weight: 900; }
+.hero-install.copied .hero-install-copy { min-width: 94px; background: rgba(18,146,79,.14); }
+.hero-install.copied .hero-install-copy .hicon { opacity: 0; transform: scale(.4); }
+.hero-install.copied .hero-install-copy .hcopied { opacity: 1; transform: scale(1); }
+.hero-install.copied { border-color: rgba(18,146,79,.4); box-shadow: inset 0 1px rgba(255,255,255,.9), 0 8px 22px rgba(18,146,79,.14); }
 
 .benefits { padding-top: 130px; padding-bottom: 40px; }
 .benefit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -358,7 +356,7 @@ a { text-decoration: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .download-btn .dl-icon svg, .download-btn .dl-tray { transition: none; }
+  .download-btn .dl-icon svg, .download-btn .dl-tray, .hero-install-copy .hcopied { transition: none; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   .js .reveal { opacity: 1; transform: none; }
