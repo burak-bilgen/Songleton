@@ -3171,6 +3171,57 @@
         }
       }
     },
+    "tutorial.stage_permanent_mini_player" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permanent Mini Player"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalıcı Mini Player"
+          }
+        }
+      }
+    },
+    "tutorial.permanent_mini_player_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always-On Mini Player & Magnetic 8-Point Drag Snap"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her An Masaüstünde & 8 Noktaya Mıknatıslı Snap"
+          }
+        }
+      }
+    },
+    "tutorial.permanent_mini_player_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep your music controls on screen permanently. Drag the widget anywhere across the desktop to magnetically snap it to any of the 8 preset screen locations."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Müzik kontrollerini masaüstünde kalıcı olarak açık tutun. Kartı ekran üzerinde sürükleyerek 8 farklı köşeye mıknatıs gibi yapıştırabilirsiniz."
+          }
+        }
+      }
+    },
     "tutorial.stage_cancel" : {
       "extractionState" : "manual",
       "localizations" : {

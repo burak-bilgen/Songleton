@@ -9,6 +9,7 @@ enum TutorialStage: Int, CaseIterable, Identifiable {
     case leftClickToggle = 4
     case hoverMenu = 5
     case ambientMode = 6
+    case permanentMiniPlayer = 7
 
     var id: Int { rawValue }
 }
@@ -163,6 +164,25 @@ struct GestureTutorialView: View {
                         )
                         .position(edgeOverlayPosition(for: currentStage, size: geo.size))
                         .zIndex(15)
+                    }
+
+                    if currentStage == .permanentMiniPlayer {
+                        let layout = TrackNotificationLayout.make(
+                            track: localization.string("notification.preview_track"),
+                            artist: localization.string("notification.preview_artist"),
+                            in: NSRect(origin: .zero, size: geo.size),
+                            isPermanent: true
+                        )
+                        HUDToastView(
+                            track: localization.string("notification.preview_track"),
+                            artist: localization.string("notification.preview_artist"),
+                            artwork: nil,
+                            layout: layout,
+                            accentColor: SongletonTheme.cyan,
+                            isPreview: true
+                        )
+                        .position(x: geo.size.width / 2, y: demoCenterY(for: geo.size))
+                        .zIndex(20)
                     }
 
                     animatedMouseCursor(size: geo.size)
@@ -807,7 +827,7 @@ struct GestureTutorialView: View {
             } else {
                 TutorialAudioService.shared.resume(fadeIn: true)
             }
-        case .topEdgePlayPause, .volumeControl, .leftClickToggle, .hoverMenu, .ambientMode:
+        case .topEdgePlayPause, .volumeControl, .leftClickToggle, .hoverMenu, .ambientMode, .permanentMiniPlayer:
             if TutorialAudioService.shared.currentTrack != 2 {
                 TutorialAudioService.shared.switchToSecondTrack()
             } else {
@@ -1228,14 +1248,44 @@ struct GestureTutorialView: View {
                 }
 
                 // Let Ambient breathe on screen for a moment, then crossfade
-                // into the "You're all set!" completion screen. Flipping both
-                // flags in one transaction avoids re-showing tutorialChrome in
-                // the gap between Ambient fading out and completion fading in.
-                try? await Task.sleep(for: .seconds(2.8))
+                // into the Permanent Mini Player stage.
+                try? await Task.sleep(for: .seconds(2.4))
                 guard !Task.isCancelled else { return }
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.45)) {
+                    isAmbientPreviewVisible = false
+                }
+                switchStage(to: .permanentMiniPlayer, size: size)
+
+            case .permanentMiniPlayer:
+                let demoY = demoCenterY(for: size)
+                let startPoint = CGPoint(x: size.width / 2, y: demoY)
+                let targetPoint = CGPoint(x: size.width * 0.70, y: demoY - 45)
+
+                await moveCursor(
+                    to: startPoint,
+                    duration: 0.65,
+                    rotation: -5,
+                    scale: 0.96
+                )
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return }
+
+                await setCursorPressed(true)
+                await moveCursor(
+                    to: targetPoint,
+                    duration: 0.85,
+                    rotation: -2,
+                    scale: 0.94
+                )
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+
+                await setCursorPressed(false)
+                try? await Task.sleep(for: .seconds(1.8))
+                guard !Task.isCancelled else { return }
+
                 isStageAnimationRunning = false
                 withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) {
-                    isAmbientPreviewVisible = false
                     isTutorialComplete = true
                 }
             }
@@ -1254,6 +1304,7 @@ struct GestureTutorialView: View {
         case .leftClickToggle: title = localization.string("tutorial.stage_left_click")
         case .hoverMenu: title = localization.string("tutorial.stage_hover_menu")
         case .ambientMode: title = localization.string("tutorial.stage_ambient_mode")
+        case .permanentMiniPlayer: title = localization.string("tutorial.stage_permanent_mini_player")
         }
         return String(
             format: localization.string("tutorial.stage_title_format"),
@@ -1271,6 +1322,7 @@ struct GestureTutorialView: View {
         case .leftClickToggle: localization.string("tutorial.left_click_header")
         case .hoverMenu: localization.string("tutorial.hover_menu_header")
         case .ambientMode: localization.string("tutorial.ambient_mode_header")
+        case .permanentMiniPlayer: localization.string("tutorial.permanent_mini_player_header")
         }
     }
 
@@ -1283,6 +1335,7 @@ struct GestureTutorialView: View {
         case .leftClickToggle: localization.string("tutorial.left_click_desc")
         case .hoverMenu: localization.string("tutorial.hover_menu_desc")
         case .ambientMode: localization.string("tutorial.ambient_mode_desc")
+        case .permanentMiniPlayer: localization.string("tutorial.permanent_mini_player_desc")
         }
     }
 }
