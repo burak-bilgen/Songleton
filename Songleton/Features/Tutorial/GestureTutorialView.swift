@@ -98,6 +98,10 @@ struct GestureTutorialView: View {
     @State private var isTutorialComplete = false
     @State private var completionPop = false
 
+    @State private var tutorialActiveSnapPosition: TrackNotificationPosition = .topTrailing
+    @State private var isTutorialDraggingMiniPlayer = false
+    @State private var tutorialMiniPlayerPosition: CGPoint = .zero
+
     // Mock MouseGestureManager for real overlay component
     @StateObject private var mockManager = MouseGestureManager()
 
@@ -167,21 +171,54 @@ struct GestureTutorialView: View {
                     }
 
                     if currentStage == .permanentMiniPlayer {
+                        let pointerLocation = NSEvent.mouseLocation
+                        let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
+                            ?? NSScreen.main
+                            ?? NSScreen.screens.first
+
+                        let (cardTrack, cardArtist, cardArtwork): (String, String, NSImage?) = {
+                            if case .loaded(let info, _) = NowPlayingModel.shared.state {
+                                return (info.track, info.artist, NowPlayingModel.shared.artwork)
+                            } else {
+                                return (
+                                    localization.string("notification.preview_track"),
+                                    localization.string("notification.preview_artist"),
+                                    nil
+                                )
+                            }
+                        }()
+
                         let layout = TrackNotificationLayout.make(
-                            track: localization.string("notification.preview_track"),
-                            artist: localization.string("notification.preview_artist"),
-                            in: NSRect(origin: .zero, size: geo.size),
+                            track: cardTrack,
+                            artist: cardArtist,
+                            in: screen?.visibleFrame ?? NSRect(origin: .zero, size: geo.size),
                             isPermanent: true
                         )
+
+                        if let screen {
+                            SnapGuideOverlayView(
+                                screen: screen,
+                                cardSize: layout.size,
+                                activePosition: tutorialActiveSnapPosition
+                            )
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .zIndex(10)
+                        }
+
+                        let initialPt = screen != nil
+                            ? swiftUIPoint(for: .topTrailing, cardSize: layout.size, in: screen!, size: geo.size)
+                            : CGPoint(x: geo.size.width * 0.8, y: geo.size.height * 0.2)
+                        let targetPos = tutorialMiniPlayerPosition == .zero ? initialPt : tutorialMiniPlayerPosition
+
                         HUDToastView(
-                            track: localization.string("notification.preview_track"),
-                            artist: localization.string("notification.preview_artist"),
-                            artwork: nil,
+                            track: cardTrack,
+                            artist: cardArtist,
+                            artwork: cardArtwork,
                             layout: layout,
                             accentColor: SongletonTheme.cyan,
                             isPreview: true
                         )
-                        .position(x: geo.size.width / 2, y: demoCenterY(for: geo.size))
+                        .position(targetPos)
                         .zIndex(20)
                     }
 
@@ -230,6 +267,18 @@ struct GestureTutorialView: View {
                 TutorialAudioService.shared.stop()
             }
         }
+    }
+
+    private func swiftUIPoint(
+        for pos: TrackNotificationPosition,
+        cardSize: NSSize,
+        in screen: NSScreen,
+        size: CGSize
+    ) -> CGPoint {
+        let origin = HUDToastManager.toastOrigin(in: screen.visibleFrame, toastSize: cardSize, position: pos)
+        let x = origin.x + cardSize.width / 2
+        let y = screen.frame.height - (origin.y + cardSize.height / 2)
+        return CGPoint(x: x, y: y)
     }
 
     private func menuBarCenterY(for size: CGSize) -> CGFloat {
@@ -1257,9 +1306,38 @@ struct GestureTutorialView: View {
                 switchStage(to: .permanentMiniPlayer, size: size)
 
             case .permanentMiniPlayer:
-                let demoY = demoCenterY(for: size)
-                let startPoint = CGPoint(x: size.width / 2, y: demoY)
-                let targetPoint = CGPoint(x: size.width * 0.70, y: demoY - 45)
+                let pointerLocation = NSEvent.mouseLocation
+                let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
+                    ?? NSScreen.main
+                    ?? NSScreen.screens.first
+                guard let screen else { return }
+
+                let (cardTrack, cardArtist): (String, String) = {
+                    if case .loaded(let info, _) = NowPlayingModel.shared.state {
+                        return (info.track, info.artist)
+                    } else {
+                        return (
+                            localization.string("notification.preview_track"),
+                            localization.string("notification.preview_artist")
+                        )
+                    }
+                }()
+
+                let layout = TrackNotificationLayout.make(
+                    track: cardTrack,
+                    artist: cardArtist,
+                    in: screen.visibleFrame,
+                    isPermanent: true
+                )
+
+                let startPos: TrackNotificationPosition = .topTrailing
+                let targetPos: TrackNotificationPosition = .bottomTrailing
+
+                let startPoint = swiftUIPoint(for: startPos, cardSize: layout.size, in: screen, size: size)
+                let targetPoint = swiftUIPoint(for: targetPos, cardSize: layout.size, in: screen, size: size)
+
+                tutorialActiveSnapPosition = startPos
+                tutorialMiniPlayerPosition = startPoint
 
                 await moveCursor(
                     to: startPoint,
@@ -1271,17 +1349,35 @@ struct GestureTutorialView: View {
                 guard !Task.isCancelled else { return }
 
                 await setCursorPressed(true)
-                await moveCursor(
-                    to: targetPoint,
-                    duration: 0.85,
-                    rotation: -2,
-                    scale: 0.94
-                )
-                try? await Task.sleep(for: .milliseconds(250))
+                isTutorialDraggingMiniPlayer = true
+
+                let steps = reduceMotion ? 6 : 40
+                for step in 1...steps {
+                    guard !Task.isCancelled else { return }
+                    let t = CGFloat(step) / CGFloat(steps)
+                    let currentX = startPoint.x + (targetPoint.x - startPoint.x) * t
+                    let currentY = startPoint.y + (targetPoint.y - startPoint.y) * t
+                    let currentPt = CGPoint(x: currentX, y: currentY)
+
+                    cursorPosition = currentPt
+                    tutorialMiniPlayerPosition = currentPt
+
+                    if t > 0.40 {
+                        tutorialActiveSnapPosition = targetPos
+                    }
+                    try? await Task.sleep(for: .milliseconds(16))
+                }
+
+                try? await Task.sleep(for: .milliseconds(200))
                 guard !Task.isCancelled else { return }
 
                 await setCursorPressed(false)
-                try? await Task.sleep(for: .seconds(1.8))
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    tutorialMiniPlayerPosition = targetPoint
+                }
+                isTutorialDraggingMiniPlayer = false
+
+                try? await Task.sleep(for: .seconds(2.0))
                 guard !Task.isCancelled else { return }
 
                 isStageAnimationRunning = false
