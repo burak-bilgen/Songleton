@@ -757,11 +757,11 @@ struct AmbientView: View {
                     .shadow(color: .black.opacity(0.8), radius: 36, x: -8, y: 16)
                     .transition(.asymmetric(
                         insertion: .modifier(
-                            active: ScreenOffsetModifier(offset: slideDirection == .next ? 350 : -350),
+                            active: ScreenOffsetModifier(offset: slideDirection == .next ? 1600 : -1600),
                             identity: ScreenOffsetModifier(offset: 0)
                         ).combined(with: .opacity).combined(with: .scale(scale: 0.92)),
                         removal: .modifier(
-                            active: ScreenOffsetModifier(offset: slideDirection == .next ? -350 : 350),
+                            active: ScreenOffsetModifier(offset: slideDirection == .next ? -1600 : 1600),
                             identity: ScreenOffsetModifier(offset: 0)
                         ).combined(with: .opacity)
                     ))
