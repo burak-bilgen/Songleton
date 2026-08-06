@@ -9,8 +9,9 @@ fail() {
 command -v node >/dev/null || fail "node is required"
 node --check docs/app.js
 
-grep -q 'class="desktop-shell" aria-hidden="true" inert' docs/index.html \
-  || fail "the scripted desktop must be inert and hidden from assistive technology"
+if rg -q 'class="mac-desktop"|class="scripted-cursor"|class="tour-stage-wrap"' docs/index.html; then
+  fail "the legacy scripted macOS scene must not be present (replaced by the card grid in 2026)"
+fi
 grep -q 'rel="canonical"' docs/index.html || fail "canonical URL is missing"
 grep -q 'name="twitter:card"' docs/index.html || fail "social card metadata is missing"
 [ -f docs/.nojekyll ] || fail ".nojekyll is missing; GitHub Pages would process the site with Jekyll"
@@ -27,7 +28,7 @@ const vm = require("vm");
 
 const html = fs.readFileSync("docs/index.html", "utf8");
 const script = fs.readFileSync("docs/app.js", "utf8");
-const match = script.match(/const copy = (\{[\s\S]*?\n\});\n\nconst demo/);
+const match = script.match(/const copy = (\{[\s\S]*?\n\});/);
 if (!match) throw new Error("Could not parse website translation dictionary");
 const copy = vm.runInNewContext(`(${match[1]})`, Object.create(null));
 

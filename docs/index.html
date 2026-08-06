@@ -104,105 +104,168 @@
         <p data-i18n="tourLead">Her adımda Songleton'ın Mac masaüstünde nasıl davrandığını gör.</p>
       </div>
 
-      <div class="tour-stage-wrap">
-        <div class="stage-sticky">
-          <div class="desktop-shell" aria-hidden="true" inert>
-            <div class="mac-desktop" id="mac-demo" data-state="menubar">
-              <div class="wallpaper"><span></span><span></span><span></span></div>
-
-              <div class="mac-menu-bar">
-                <div class="menu-left"><span class="apple">●</span><b>Finder</b><span data-i18n="menuFile">Dosya</span><span data-i18n="menuEdit">Düzen</span><span data-i18n="menuView">Görüntü</span></div>
-                <div class="menu-right">
-                  <div class="songleton-status" id="songleton-status">
-                    <button class="status-nav" aria-label="Previous">◀</button>
-                    <button class="status-nav" aria-label="Next">▶</button>
-                    <button class="track-pill" aria-label="Songleton now playing">
-                      <span class="tiny-cover"></span><span class="status-title">Midnight City</span><span class="status-play">Ⅱ</span>
-                    </button>
-                    <button class="status-volume" aria-label="Volume">◖)))</button>
-                    <button class="status-ambient" aria-label="Ambient Mode">✦</button>
-                  </div>
-                  <span class="menu-lang">TR</span><span>⌁</span><span>◉</span><span class="menu-clock">Çar 01:18</span>
-                </div>
-              </div>
-
-              <div class="desktop-widgets">
-                <div class="widget greeting"><span data-i18n="desktopHello">İyi geceler.</span><b data-i18n="desktopFocus">Müzik açık. Akış bölünmedi.</b></div>
-                <div class="widget mini-note"><i></i><span data-i18n="desktopNote">Sonraki parça için sağ kenarı dene.</span></div>
-              </div>
-
-              <div class="hover-arrow"></div>
-              <section class="hover-panel" aria-label="Songleton hover panel">
-                <div class="panel-aura"></div>
-                <div class="panel-top">
-                  <button class="ambient-pill"><span>✦</span> Ambient</button>
-                  <div class="panel-top-actions"><button aria-label="Settings">⚙</button><button aria-label="Quit">⏻</button></div>
-                </div>
-                <div class="album-art"><div class="art-sun"></div><div class="art-city"></div></div>
-                <div class="track-copy"><strong class="panel-track">Midnight City</strong><span class="panel-artist">M83</span></div>
-                <div class="player-controls">
-                  <button class="small shuffle">⌘</button><button class="medium">◀</button><button class="large panel-play">Ⅱ</button><button class="medium">▶</button><button class="small repeat">↻</button>
-                </div>
-                <div class="panel-volume"><button>◖</button><div class="volume-line"><i></i><b></b></div><span>37%</span></div>
-              </section>
-
-              <div class="edge-feedback"><div class="edge-ring"><span></span></div><b class="edge-icon">▶</b><small class="edge-label">NEXT</small></div>
-
-              <div class="volume-hud">
-                <span>◖)))</span><div class="volume-rail"><i></i><b></b></div><strong>78</strong>
-              </div>
-
-              <div class="track-notification">
-                <div class="notification-art"></div><div><small>SONGLETON</small><b class="notification-title">Midnight City</b><span class="notification-artist">M83 · Hurry Up, We're Dreaming</span></div><i></i>
-              </div>
-
-              <section class="ambient-screen" aria-label="Ambient Mode demonstration">
-                <div class="ambient-glow"></div>
-                <header><button>×</button><span class="ambient-mode-name">AMBIENT · VINYL</span><div><button>☾ 25</button><button>◫</button><button>⌨</button></div></header>
-                <div class="ambient-content">
-                  <div class="record-scene"><div class="record"><div class="record-art"></div></div><div class="tone-arm"></div><div class="cassette"><div class="cassette-window"><i></i><i></i></div></div><div class="glass-cover"><div></div></div></div>
-                  <div class="ambient-player"><p data-i18n="nowPlaying">ŞİMDİ ÇALIYOR</p><h3 class="ambient-track">Midnight City</h3><span class="ambient-artist">M83</span><div class="ambient-progress"><i></i><b></b></div><div class="ambient-time"><span>2:20</span><span>-1:43</span></div><div class="ambient-controls"><button>⌘</button><button>◀</button><button class="ambient-play">Ⅱ</button><button>▶</button><button>↻</button></div></div>
-                  <div class="ambient-lyrics"><small><i></i> LIVE LYRICS</small><p>Neon in the window</p><p>Footsteps under city light</p><p class="active">The night keeps moving</p><p>We move with it</p></div>
-                </div>
-                <footer><span>SPACE <b>PLAY / PAUSE</b></span><span>← → <b>TRACK</b></span><span>L <b>LYRICS</b></span><span>T <b>THEME</b></span><span>ESC <b>EXIT</b></span></footer>
-              </section>
-
-              <section class="settings-window" aria-label="Songleton settings demonstration">
-                <div class="window-titlebar"><div><i></i><i></i><i></i></div><b>Songleton</b><span>⌕</span></div>
-                <aside><button class="active">⌁ <span data-i18n="settingsGeneral">Genel</span></button><button>⌁ <span data-i18n="settingsGestures">Hareketler</span></button><button>▣ <span data-i18n="settingsHud">Bildirim</span></button><button>◉ Ambient</button><button>⌘ <span data-i18n="settingsAccess">Erişim</span></button></aside>
-                <div class="settings-content"><p class="settings-overline" data-i18n="settingsOverline">SONGLETON AYARLARI</p><h3 data-i18n="settingsTitle">Sade ayarlar, net kontroller.</h3><div class="setting-row"><span><b data-i18n="settingLaunch">Girişte başlat</b><small data-i18n="settingLaunchSub">Mac açıldığında Songleton hazır olsun.</small></span><i class="toggle on"></i></div><div class="setting-row"><span><b data-i18n="settingNotice">Yeni şarkı bildirimi</b><small data-i18n="settingNoticeSub">Bildirimin ekrandaki yerini seç.</small></span><i class="toggle on"></i></div><div class="setting-row"><span><b data-i18n="settingAccessName">Spotify ve Music erişimi</b><small data-i18n="settingAccessSub">Şarkıyı gör ve oynatmayı yönet.</small></span><strong class="granted" data-i18n="granted">İzin verildi</strong></div><div class="setting-row"><span><b data-i18n="settingLanguage">Dil</b><small data-i18n="settingLanguageSub">Türkçe, English veya Sistem.</small></span><strong>Türkçe⌄</strong></div></div>
-              </section>
-
-              <div class="scripted-cursor" aria-hidden="true"><svg viewBox="0 0 34 42"><path d="M3 2 3 31 11 24 17 39 23 36 17 22 29 22Z" fill="#fff" stroke="#101321" stroke-width="2.2" stroke-linejoin="round"/></svg><i></i></div>
-              <div class="click-caption"><b></b><span data-i18n="scripted">Etkileşimli ön izleme</span></div>
-
-              <div class="dock">
-                <div class="dock-icon finder">◒</div><div class="dock-icon safari">⌁</div><div class="dock-icon messages">•••</div><div class="dock-divider"></div><div class="dock-icon spotify">)))</div><div class="dock-icon songleton"><img src="assets/songleton-app-icon.png" alt="" width="45" height="45"></div><div class="dock-icon music">♫</div><div class="dock-divider"></div><div class="dock-icon bin">▥</div>
-              </div>
+            <div class="tour-grid shell">
+        <article class="tour-card reveal">
+          <div class="tour-visual tv-strip-wrap" aria-hidden="true">
+            <div class="tv-strip">
+              <span class="tv-apple"></span>
+              <span class="tv-track"><i class="tv-cover"></i><b>Midnight City</b><em>Ⅱ</em></span>
+              <span class="tv-strip-icons">⌁ ◉</span>
             </div>
           </div>
+          <span class="tour-index">01</span>
+          <h3 data-i18n="step1Title">Menü çubuğunda, olması gereken yerde.</h3>
+          <p data-i18n="step1Text">Şarkı adı ve temel oynatma kontrolleri ekranın sağında, her zaman aynı yerde.</p>
+        </article>
 
-          <nav class="tour-controls" aria-label="Tur adımları" data-i18n-label="tourControls">
-            <button class="tour-previous" type="button" aria-label="Önceki adım" data-i18n-label="previousStep">↑</button>
-            <span class="tour-counter" aria-live="polite"><b>01</b><i></i><span>12</span></span>
-            <button class="tour-next" type="button" aria-label="Sonraki adım" data-i18n-label="nextStep">↓</button>
-          </nav>
-        </div>
+        <article class="tour-card reveal">
+          <div class="tour-visual" aria-hidden="true">
+            <div class="tv-panel">
+              <div class="tv-panel-top"><span class="tv-ambient-pill"><i>✦</i> Ambient</span><span class="tv-circles"><i></i><i></i></span></div>
+              <div class="tv-panel-art"></div>
+              <div class="tv-panel-copy"><b>Midnight City</b><span>M83</span></div>
+              <div class="tv-panel-controls"><span>◀</span><span class="play">Ⅱ</span><span>▶</span></div>
+              <div class="tv-panel-vol"><span>◖</span><i class="tv-pline"><b></b></i><span>37%</span></div>
+            </div>
+          </div>
+          <span class="tour-index">02</span>
+          <h3 data-i18n="step2Title">Üzerine gel, kontroller açılsın.</h3>
+          <p data-i18n="step2Text">Kapak, oynatma, ses ve Ambient Mode tek bir sakin panelde toplanır.</p>
+        </article>
 
-        <div class="tour-steps shell">
-          <article class="tour-step" data-state="menubar" data-cursor="78,13,78,4"><div class="step-card"><span>01</span><h3 data-i18n="step1Title">Menü çubuğunda, olması gereken yerde.</h3><p data-i18n="step1Text">Şarkı adı ve temel oynatma kontrolleri ekranın sağında, her zaman aynı yerde.</p><em data-i18n="scrollHint">Kaydır veya okları kullan ↓</em></div></article>
-          <article class="tour-step" data-state="hover" data-cursor="78,13,77,4"><div class="step-card"><span>02</span><h3 data-i18n="step2Title">Üzerine gel, kontroller açılsın.</h3><p data-i18n="step2Text">Kapak, oynatma, ses ve Ambient Mode tek bir sakin panelde toplanır.</p></div></article>
-          <article class="tour-step" data-state="panelplay" data-cursor="77,4,76,42"><div class="step-card"><span>03</span><h3 data-i18n="step3Title">Tek tıkla oynat veya duraklat.</h3><p data-i18n="step3Text">Parça adına tıklamak yeterli. Hızlı kontrol için başka pencere açılmaz.</p></div></article>
-          <article class="tour-step" data-state="ambient" data-cursor="76,42,77,4"><div class="step-card"><span>04</span><h3 data-i18n="step4Title">Sağ tık, Ambient Mode.</h3><p data-i18n="step4Text">Menü çubuğundaki parça adına sağ tıkla. Çalan şarkı tam ekran görünümüne geçer.</p><em data-i18n="rightClick">Sağ tık ön izlemesi</em></div></article>
-          <article class="tour-step" data-state="previous" data-cursor="52,42,1,51"><div class="step-card"><span>05</span><h3 data-i18n="step5Title">Sol kenarda önceki parça.</h3><p data-i18n="step5Text">İmleci sol kenarda kısa süre tut. Halka dolmadan ayrılırsan işlem iptal olur.</p></div></article>
-          <article class="tour-step" data-state="next" data-cursor="20,48,99,51"><div class="step-card"><span>06</span><h3 data-i18n="step6Title">Sağ kenarda sonraki parça.</h3><p data-i18n="step6Text">Aynı hareketi sağda yap. Parça değişimi menü çubuğuna ve bildirime yansır.</p></div></article>
-          <article class="tour-step" data-state="pause" data-cursor="74,45,50,1"><div class="step-card"><span>07</span><h3 data-i18n="step7Title">Üst kenarda oynat veya duraklat.</h3><p data-i18n="step7Text">İmleci üst kenarda beklet. Halka tamamlandığında oynatma durumu değişir.</p></div></article>
-          <article class="tour-step" data-state="resume" data-cursor="58,30,50,1"><div class="step-card"><span>08</span><h3 data-i18n="step8Title">Aynı hareketle devam et.</h3><p data-i18n="step8Text">Üst kenara tekrar gel. Müzik kaldığı yerden devam eder.</p></div></article>
-          <article class="tour-step" data-state="volume" data-cursor="78,72,78,34"><div class="step-card"><span>09</span><h3 data-i18n="step9Title">Sesi bulunduğun yerden ayarla.</h3><p data-i18n="step9Text">İki fare tuşunu ya da Command + Option'ı basılı tutup yukarı aşağı sürükle.</p></div></article>
-          <article class="tour-step" data-state="notification" data-cursor="63,34,82,20"><div class="step-card"><span>10</span><h3 data-i18n="step10Title">Yeni şarkı görünür, odağın kalır.</h3><p data-i18n="step10Text">Bildirim seçtiğin konumdan gelir ve aktif uygulamanı öne geçirmez.</p></div></article>
-          <article class="tour-step" data-state="lyrics" data-cursor="82,20,78,10"><div class="step-card"><span>11</span><h3 data-i18n="step11Title">Ambient Mode'da sözler de var.</h3><p data-i18n="step11Text">Vinyl, Cassette ve Glass temaları arasında geç. Senkron sözler ve kısayollar aynı görünümde kalır.</p></div></article>
-          <article class="tour-step" data-state="settings" data-cursor="78,10,80,38"><div class="step-card"><span>12</span><h3 data-i18n="step12Title">İnce ayarlar, tek yerde.</h3><p data-i18n="step12Text">Hareketler, bildirim konumu, söz zamanlaması, menü çubuğu ve dil ayarları burada.</p></div></article>
-        </div>
+        <article class="tour-card reveal">
+          <div class="tour-visual tv-strip-wrap" aria-hidden="true">
+            <div class="tv-strip">
+              <span class="tv-apple"></span>
+              <span class="tv-track click"><i class="tv-cover"></i><b>Midnight City</b><em>Ⅱ</em><i class="tv-ripple"></i></span>
+              <span class="tv-strip-icons">⌁ ◉</span>
+            </div>
+          </div>
+          <span class="tour-index">03</span>
+          <h3 data-i18n="step3Title">Tek tıkla oynat veya duraklat.</h3>
+          <p data-i18n="step3Text">Parça adına tıklamak yeterli. Hızlı kontrol için başka pencere açılmaz.</p>
+        </article>
+
+        <article class="tour-card reveal">
+          <div class="tour-visual tv-strip-wrap" aria-hidden="true">
+            <div class="tv-strip">
+              <span class="tv-apple"></span>
+              <span class="tv-track"><i class="tv-cover"></i><b>Midnight City</b><em>Ⅱ</em></span>
+              <span class="tv-strip-icons">⌁ ◉</span>
+            </div>
+            <div class="tv-ambient-badge">✦ <span>AMBIENT</span></div>
+          </div>
+          <span class="tour-index">04</span>
+          <h3 data-i18n="step4Title">Sağ tık, Ambient Mode.</h3>
+          <p data-i18n="step4Text">Menü çubuğundaki parça adına sağ tıkla. Çalan şarkı tam ekran görünümüne geçer.</p>
+        </article>
+
+        <article class="tour-card reveal">
+          <div class="tour-visual" aria-hidden="true">
+            <div class="tv-screen">
+              <div class="tv-screen-bg"></div>
+              <div class="tv-edge left">◀</div>
+              <small>PREVIOUS</small>
+            </div>
+          </div>
+          <span class="tour-index">05</span>
+          <h3 data-i18n="step5Title">Sol kenarda önceki parça.</h3>
+          <p data-i18n="step5Text">İmleci sol kenarda kısa süre tut. Halka dolmadan ayrılırsan işlem iptal olur.</p>
+        </article>
+
+        <article class="tour-card reveal">
+          <div class="tour-visual" aria-hidden="true">
+            <div class="tv-screen">
+              <div class="tv-screen-bg"></div>
+              <div class="tv-edge right">▶</div>
+              <small>NEXT</small>
+            </div>
+          </div>
+          <span class="tour-index">06</span>
+          <h3 data-i18n="step6Title">Sağ kenarda sonraki parça.</h3>
+          <p data-i18n="step6Text">Aynı hareketi sağda yap. Parça değişimi menü çubuğuna ve bildirime yansır.</p>
+        </article>
+
+        <article class="tour-card reveal">
+          <div class="tour-visual" aria-hidden="true">
+            <div class="tv-screen">
+              <div class="tv-screen-bg"></div>
+              <div class="tv-edge top">Ⅱ</div>
+              <small>PAUSE</small>
+            </div>
+          </div>
+          <span class="tour-index">07</span>
+          <h3 data-i18n="step7Title">Üst kenarda oynat veya duraklat.</h3>
+          <p data-i18n="step7Text">İmleci üst kenarda beklet. Halka tamamlandığında oynatma durumu değişir.</p>
+        </article>
+
+        <article class="tour-card reveal">
+          <div class="tour-visual" aria-hidden="true">
+            <div class="tv-screen">
+              <div class="tv-screen-bg"></div>
+              <div class="tv-edge top resume">▶</div>
+              <small>PLAY</small>
+            </div>
+          </div>
+          <span class="tour-index">08</span>
+          <h3 data-i18n="step8Title">Aynı hareketle devam et.</h3>
+          <p data-i18n="step8Text">Üst kenara tekrar gel. Müzik kaldığı yerden devam eder.</p>
+        </article>
+
+        <article class="tour-card reveal">
+          <div class="tour-visual" aria-hidden="true">
+            <div class="tv-volume">
+              <span>◖)))</span>
+              <div class="tv-vrail"><i></i><b></b></div>
+              <strong>78</strong>
+            </div>
+          </div>
+          <span class="tour-index">09</span>
+          <h3 data-i18n="step9Title">Sesi bulunduğun yerden ayarla.</h3>
+          <p data-i18n="step9Text">İki fare tuşunu ya da Command + Option'ı basılı tutup yukarı aşağı sürükle.</p>
+        </article>
+
+        <article class="tour-card reveal">
+          <div class="tour-visual" aria-hidden="true">
+            <div class="tv-toast">
+              <i class="tv-toast-art"></i>
+              <div><small>SONGLETON</small><b>Midnight City</b><span>M83 · Songleton Session</span></div>
+              <em></em>
+            </div>
+          </div>
+          <span class="tour-index">10</span>
+          <h3 data-i18n="step10Title">Yeni şarkı görünür, odağın kalır.</h3>
+          <p data-i18n="step10Text">Bildirim seçtiğin konumdan gelir ve aktif uygulamanı öne geçirmez.</p>
+        </article>
+
+        <article class="tour-card reveal">
+          <div class="tour-visual" aria-hidden="true">
+            <div class="tv-ambient">
+              <span class="tv-ambient-kicker">NOW PLAYING</span>
+              <b class="tv-ambient-track">Midnight City</b>
+              <span class="tv-ambient-artist">M83</span>
+              <div class="tv-ambient-prog"><i></i></div>
+              <div class="tv-lyrics"><p>Neon in the window</p><p class="on">The night keeps moving</p><p>We move with it</p></div>
+            </div>
+          </div>
+          <span class="tour-index">11</span>
+          <h3 data-i18n="step11Title">Ambient Mode'da sözler de var.</h3>
+          <p data-i18n="step11Text">Vinyl, Cassette ve Glass temaları arasında geç. Senkron sözler ve kısayollar aynı görünümde kalır.</p>
+        </article>
+
+        <article class="tour-card reveal">
+          <div class="tour-visual" aria-hidden="true">
+            <div class="tv-settings">
+              <div class="tv-sbar"><i></i><i></i><i></i><b>Songleton</b></div>
+              <div class="tv-set-row"><b data-i18n="settingLaunch">Girişte başlat</b><i class="on"></i></div>
+              <div class="tv-set-row"><b data-i18n="settingNotice">Yeni şarkı bildirimi</b><i class="on"></i></div>
+              <div class="tv-set-row"><b data-i18n="settingAccessName">Spotify ve Music erişimi</b><em class="granted" data-i18n="granted">İzin verildi</em></div>
+            </div>
+          </div>
+          <span class="tour-index">12</span>
+          <h3 data-i18n="step12Title">İnce ayarlar, tek yerde.</h3>
+          <p data-i18n="step12Text">Hareketler, bildirim konumu, söz zamanlaması, menü çubuğu ve dil ayarları burada.</p>
+        </article>
       </div>
     </section>
 
