@@ -314,7 +314,11 @@ struct OnboardingView: View {
     // MARK: - Step 2: Permissions & Launch
 
     private var permissionsStepView: some View {
-        VStack(spacing: 20) {
+        // Compute the installed set once per render instead of re-running
+        // LaunchServices lookups for every subview.
+        let installed = model.installedControllers
+        let ungrantedCount = installed.filter { model.permissionStatus(for: $0.bundleID) != .granted }.count
+        return VStack(spacing: 20) {
             badgeIcon(automationStatusIcon, color: automationStatusColor)
                 .entrance(0, appeared: appeared)
 
@@ -335,14 +339,17 @@ struct OnboardingView: View {
                 ScrollView(.vertical, showsIndicators: true) {
                     VStack(spacing: 8) {
                         accessibilityPermissionCard
-                        playerPermissionCard(appName: "Spotify", bundleID: "com.spotify.client", color: .green)
-                        playerPermissionCard(appName: "Apple Music", bundleID: "com.apple.Music", color: .pink)
-                        playerPermissionCard(appName: "TIDAL", bundleID: "com.tidal.desktop", color: .cyan)
-                        playerPermissionCard(appName: "Deezer", bundleID: "com.deezer.deezer-desktop", color: .orange)
-                        playerPermissionCard(appName: "Amazon Music", bundleID: "com.amazon.music", color: .blue)
-                        playerPermissionCard(appName: "YouTube Music", bundleID: "com.github.th-ch.youtube-music", color: .red)
-                        playerPermissionCard(appName: "SoundCloud", bundleID: "com.soundcloud.desktop", color: .orange)
-                        playerPermissionCard(appName: "Qobuz", bundleID: "com.qobuz.QobuzDesktop", color: .purple)
+                        if installed.isEmpty {
+                            noSupportedPlayersCard
+                        } else {
+                            ForEach(installed, id: \.bundleID) { controller in
+                                playerPermissionCard(
+                                    appName: controller.displayName,
+                                    bundleID: controller.bundleID,
+                                    color: playerColor(for: controller.bundleID)
+                                )
+                            }
+                        }
                     }
                     .padding(.horizontal, 4)
                     .padding(.vertical, 4)
@@ -360,6 +367,10 @@ struct OnboardingView: View {
             .entranceFade(2, appeared: appeared)
 
             VStack(spacing: 10) {
+                if ungrantedCount > 0 {
+                    grantAllButton(ungrantedCount: ungrantedCount)
+                }
+
                 let isGranted = model.automationStatus == .granted
                 actionButton(
                     title: localization.string("common.start"),
@@ -555,6 +566,87 @@ struct OnboardingView: View {
         .padding(12)
         .background(SongletonTheme.card.opacity(0.68), in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06), lineWidth: 1))
+    }
+
+    private func grantAllButton(ungrantedCount: Int) -> some View {
+        Button {
+            model.requestPermissionsForAllInstalled()
+        } label: {
+            HStack(spacing: 8) {
+                if model.isGrantAllInProgress {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.white)
+                } else {
+                    Image(systemName: "wand.and.stars")
+                        .font(.system(size: 12, weight: .bold))
+                }
+                Text(localization.string("onboarding.grant_all"))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                if !model.isGrantAllInProgress, ungrantedCount > 1 {
+                    Text(verbatim: "\(ungrantedCount)")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(.black.opacity(0.25), in: Capsule())
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 38)
+            .background(
+                LinearGradient(
+                    colors: [SongletonTheme.violet, SongletonTheme.cyan.opacity(0.9)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
+            )
+            .foregroundStyle(.white)
+            .shadow(color: SongletonTheme.violet.opacity(0.30), radius: 8, y: 3)
+        }
+        .buttonStyle(.plain)
+        .disabled(model.isGrantAllInProgress)
+        .opacity(model.isGrantAllInProgress ? 0.75 : 1)
+    }
+
+    private var noSupportedPlayersCard: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.orange.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                Image(systemName: "music.note.list")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.orange)
+            }
+
+            Text(localization.string("onboarding.no_players_found"))
+                .font(.system(size: 12.5, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.8))
+
+            Spacer()
+        }
+        .padding(12)
+        .background(SongletonTheme.card.opacity(0.68), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange.opacity(0.3), lineWidth: 1))
+    }
+
+    private func playerColor(for bundleID: String) -> Color {
+        switch bundleID {
+        case "com.spotify.client": .green
+        case "com.apple.Music": .pink
+        case "com.tidal.desktop": .cyan
+        case "com.deezer.deezer-desktop": .orange
+        case "com.amazon.music": .blue
+        case "com.github.th-ch.youtube-music": .red
+        case "com.soundcloud.desktop": .orange
+        case "com.qobuz.QobuzDesktop": .purple
+        default: SongletonTheme.cyan
+        }
     }
 
     private var accessibilityPermissionCard: some View {

@@ -38,6 +38,7 @@ final class NowPlayingModel: ObservableObject {
     @Published private(set) var dominantColor: Color = .accentColor
     @Published var automationStatus: AutomationStatus = .notDetermined
     @Published private(set) var permissionRequestsInFlight: Set<String> = []
+    @Published private(set) var isGrantAllInProgress = false
 
     let controllers: [any MediaController] = [
         SpotifyController(),
@@ -155,6 +156,12 @@ final class NowPlayingModel: ObservableObject {
         controllers.contains(where: { permissionStatus(for: $0.bundleID) == .granted })
     }
 
+    /// Only the players that are actually installed on this Mac, in the
+    /// original controller order.
+    var installedControllers: [any MediaController] {
+        controllers.filter { $0.isInstalled }
+    }
+
     func checkAutomationPermission() {
         let statuses = controllers.map { controller in
             let cached = UserDefaults.standard.object(
@@ -205,18 +212,40 @@ final class NowPlayingModel: ObservableObject {
         Task { [weak self] in
             guard let self else { return }
             defer { permissionRequestsInFlight.remove(bundleID) }
-            NSApp.activate(ignoringOtherApps: true)
-            logger.info("Requesting player access for \(bundleID, privacy: .public)")
-            let status = await requestAutomationPermission(for: bundleID)
-            applyAutomationStatuses([(bundleID, status)])
-            logger.info(
-                "Player access request finished for \(bundleID, privacy: .public): \(String(describing: status), privacy: .public)"
-            )
-            if status == .granted {
-                refresh()
-            } else if status == .denied {
-                Self.openAutomationSettings()
+            await performPermissionRequest(for: bundleID, openSettingsOnDeny: true)
+        }
+    }
+
+    /// Requests Automation permission for every installed player that has not
+    /// been granted yet, one at a time. macOS still shows one system prompt
+    /// per target app (a TCC limitation), but the user only taps this once.
+    func requestPermissionsForAllInstalled() {
+        let targets = installedControllers.filter { permissionStatus(for: $0.bundleID) != .granted }
+        guard !targets.isEmpty, !isGrantAllInProgress else { return }
+        isGrantAllInProgress = true
+        Task { [weak self] in
+            guard let self else { return }
+            defer { self.isGrantAllInProgress = false }
+            for controller in targets {
+                guard !Task.isCancelled else { return }
+                if permissionRequestsInFlight.contains(controller.bundleID) { continue }
+                await performPermissionRequest(for: controller.bundleID, openSettingsOnDeny: false)
             }
+        }
+    }
+
+    private func performPermissionRequest(for bundleID: String, openSettingsOnDeny: Bool) async {
+        NSApp.activate(ignoringOtherApps: true)
+        logger.info("Requesting player access for \(bundleID, privacy: .public)")
+        let status = await requestAutomationPermission(for: bundleID)
+        applyAutomationStatuses([(bundleID, status)])
+        logger.info(
+            "Player access request finished for \(bundleID, privacy: .public): \(String(describing: status), privacy: .public)"
+        )
+        if status == .granted {
+            refresh()
+        } else if status == .denied, openSettingsOnDeny {
+            Self.openAutomationSettings()
         }
     }
 

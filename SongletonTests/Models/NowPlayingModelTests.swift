@@ -15,6 +15,7 @@ final class NowPlayingModelTests {
         await runTest(name: "testResolverReportsPermissionDenied", test: testResolverReportsPermissionDenied)
         await runTest(name: "testAutomationPermissionUsesCachedState", test: testAutomationPermissionUsesCachedState)
         await runTest(name: "testAutomationPermissionReportsMissingTarget", test: testAutomationPermissionReportsMissingTarget)
+        await runTest(name: "testInstalledControllersOnlyReportsInstalledPlayers", test: testInstalledControllersOnlyReportsInstalledPlayers)
         await runTest(name: "testLyricsActiveLineBoundaries", test: testLyricsActiveLineBoundaries)
     }
 
@@ -156,6 +157,14 @@ final class NowPlayingModelTests {
             AutomationPermission.status(bundleID: "bilgenworks.app.Songleton.tests.missing-player"),
             .targetNotRunning
         )
+    }
+
+    func testInstalledControllersOnlyReportsInstalledPlayers() async {
+        let installed = NowPlayingModel.shared.installedControllers
+        // Apple Music ships with every macOS install, so it must always appear.
+        assertTrue(installed.contains { $0.bundleID == "com.apple.Music" }, "Apple Music should be detected as installed")
+        // Apps that are not installed must never appear in the list.
+        assertFalse(installed.contains { $0.bundleID == "bilgenworks.app.Songleton.tests.missing-player" })
     }
 
     func testLyricsActiveLineBoundaries() async {

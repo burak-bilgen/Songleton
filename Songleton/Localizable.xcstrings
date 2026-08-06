@@ -1089,6 +1089,23 @@
         }
       }
     },
+    "onboarding.grant_all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grant access to all"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hepsine izin ver"
+          }
+        }
+      }
+    },
     "onboarding.language_picker_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1102,6 +1119,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dil"
+          }
+        }
+      }
+    },
+    "onboarding.no_players_found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No supported music app detected on this Mac"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac'te desteklenen müzik uygulaması bulunamadı"
           }
         }
       }

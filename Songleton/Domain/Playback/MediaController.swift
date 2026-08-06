@@ -167,6 +167,7 @@ protocol MediaController: Sendable {
     nonisolated var displayName: String { get }
     nonisolated var scriptAppName: String { get }
     nonisolated var isRunning: Bool { get }
+    nonisolated var isInstalled: Bool { get }
 
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo
     nonisolated func togglePlayPause() throws
@@ -181,6 +182,10 @@ protocol MediaController: Sendable {
 extension MediaController {
     nonisolated var isRunning: Bool {
         !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty
+    }
+
+    nonisolated var isInstalled: Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) != nil
     }
 
     nonisolated func togglePlayPause() throws { try runCommand("playpause") }
@@ -380,6 +385,11 @@ nonisolated final class TidalController: MediaController {
         !NSRunningApplication.runningApplications(withBundleIdentifier: "com.tidal.TIDAL").isEmpty
     }
 
+    nonisolated var isInstalled: Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.tidal.desktop") != nil ||
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.tidal.TIDAL") != nil
+    }
+
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""
         try
@@ -420,6 +430,11 @@ nonisolated final class DeezerController: MediaController {
     nonisolated var isRunning: Bool {
         !NSRunningApplication.runningApplications(withBundleIdentifier: "com.deezer.deezer-desktop").isEmpty ||
         !NSRunningApplication.runningApplications(withBundleIdentifier: "com.deezer.Deezer").isEmpty
+    }
+
+    nonisolated var isInstalled: Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.deezer.deezer-desktop") != nil ||
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.deezer.Deezer") != nil
     }
 
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
@@ -500,6 +515,12 @@ nonisolated final class YouTubeMusicController: MediaController {
         !NSRunningApplication.runningApplications(withBundleIdentifier: "com.google.Chrome.app.YouTube-Music").isEmpty
     }
 
+    nonisolated var isInstalled: Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.github.th-ch.youtube-music") != nil ||
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "app.ytmdesktop.ytmdesktop") != nil ||
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.google.Chrome.app.YouTube-Music") != nil
+    }
+
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""
         try
@@ -540,6 +561,11 @@ nonisolated final class SoundCloudController: MediaController {
         !NSRunningApplication.runningApplications(withBundleIdentifier: "com.google.Chrome.app.SoundCloud").isEmpty
     }
 
+    nonisolated var isInstalled: Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.soundcloud.desktop") != nil ||
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.google.Chrome.app.SoundCloud") != nil
+    }
+
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""
         try
@@ -578,6 +604,11 @@ nonisolated final class QobuzController: MediaController {
     nonisolated var isRunning: Bool {
         !NSRunningApplication.runningApplications(withBundleIdentifier: "com.qobuz.QobuzDesktop").isEmpty ||
         !NSRunningApplication.runningApplications(withBundleIdentifier: "com.qobuz.qobuzdesktop-app").isEmpty
+    }
+
+    nonisolated var isInstalled: Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.qobuz.QobuzDesktop") != nil ||
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.qobuz.qobuzdesktop-app") != nil
     }
 
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
