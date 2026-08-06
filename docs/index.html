@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; media-src 'none'; manifest-src 'none'; upgrade-insecure-requests">
-  <meta name="description" content="Songleton, Spotify ve Apple Music'i menü çubuğundan, ekran kenarlarından ve Ambient Mode'dan kontrol eden yerel macOS uygulaması.">
+  <meta name="description" content="Songleton, 8 müzik uygulamasını (Spotify, Apple Music, TIDAL, Deezer ve daha fazlası) menü çubuğundan, ekran kenarlarından ve Ambient Mode'dan kontrol eden yerel macOS uygulaması.">
   <meta property="og:title" content="Songleton for macOS">
   <meta property="og:description" content="Müzik açık, sen devam et. Şarkını menü çubuğundan yönet, ekran kenarlarıyla kontrol et, Ambient Mode ile bütün ekrana yay.">
   <meta property="og:type" content="website">
@@ -19,7 +19,7 @@
   <meta property="og:image:alt" content="Songleton for macOS — menü çubuğu, ekran kenarı hareketleri ve Ambient Mode ön izlemesi">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Songleton for macOS">
-  <meta name="twitter:description" content="Müzik açık, sen devam et. Spotify ve Apple Music'i menü çubuğundan, ekran kenarlarından ve Ambient Mode'dan yönet.">
+  <meta name="twitter:description" content="Müzik açık, sen devam et. Spotify, Apple Music, TIDAL, Deezer ve daha fazlasını menü çubuğundan, ekran kenarlarından ve Ambient Mode'dan yönet.">
   <title>Songleton for macOS</title>
   <link rel="canonical" href="https://burak-bilgen.github.io/Songleton/">
   <link rel="icon" href="assets/songleton-app-icon.png">
@@ -54,7 +54,7 @@
       <div class="hero-copy">
         <div class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="heroEyebrow">macOS 14+ için yerel müzik kontrolü</span></div>
         <h1 data-i18n="heroTitle">Müzik açık.<br><span>Yakınında.</span></h1>
-        <p data-i18n="heroText">Spotify veya Apple Music'i nerede çalışıyorsan oradan yönet. Songleton menü çubuğunda durur, ekran kenarlarını da istersen hızlı kontrollere çevirir.</p>
+        <p data-i18n="heroText">Hangi müzik uygulamasını açarsan aç — Spotify, Apple Music, TIDAL, Deezer ve daha fazlası — nerede çalıyorsa oradan yönet. Songleton menü çubuğunda durur, ekran kenarlarını da istersen hızlı kontrollere çevirir.</p>
         <div class="hero-actions">
           <a class="button primary" href="https://github.com/burak-bilgen/Songleton/releases/latest"><span data-i18n="downloadFree">Ücretsiz indir</span><span aria-hidden="true">↓</span></a>
           <a class="button ghost" href="#tour"><span data-i18n="watchTour">Turu izle</span><span aria-hidden="true">⌄</span></a>
@@ -73,6 +73,48 @@
       <div class="hero-scroll-cue" aria-hidden="true"><div class="cue-mouse"><span></span></div></div>
     </section>
 
+    <section class="platforms shell" aria-labelledby="platforms-title">
+      <div class="platforms-head reveal">
+        <p class="section-kicker" data-i18n="platformsKicker">Desteklenen oynatıcılar</p>
+        <h2 id="platforms-title" data-i18n="platformsTitle">Senin müzik uygulaman hangisiyse.</h2>
+        <p data-i18n="platformsLead">8 müzik uygulaması. Tek menü çubuğu, hepsinde aynı kontroller.</p>
+      </div>
+      <div class="platform-grid">
+        <div class="platform-item reveal">
+          <span class="pmark pmark-spotify" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#0a0a0a"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.25 14.3a.6.6 0 0 1-.82.2c-2.25-1.38-5.08-1.69-8.42-.93a.6.6 0 0 1-.26-1.17c3.66-.84 6.8-.48 9.3 1.07a.6.6 0 0 1 .2.83zm1.18-2.7a.75.75 0 0 1-1.03.25c-2.58-1.58-6.5-2.04-9.55-1.12a.75.75 0 0 1-.43-1.44c3.45-1.03 7.75-.5 10.76 1.28a.75.75 0 0 1 .25 1.03zm.1-2.8C13.9 8.9 9.2 8.8 6.5 9.6a.9.9 0 0 1-.52-1.72c3.15-.96 8.35-.85 11.7 1.24a.9.9 0 0 1-.95 1.52z"/></svg></span>
+          <b>Spotify</b>
+        </div>
+        <div class="platform-item reveal">
+          <span class="pmark pmark-applemusic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.99-.2 1.94-.87 3.23-.78 1.53.12 2.68.73 3.44 1.83-3.16 1.89-2.64 6.05.54 7.22-.64 1.67-1.45 3.32-3.29 4.9zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg></span>
+          <b>Apple Music</b>
+        </div>
+        <div class="platform-item reveal">
+          <span class="pmark pmark-tidal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#00ffff"><rect x="4" y="11" width="3" height="9" rx="1.5"/><rect x="10.5" y="7" width="3" height="13" rx="1.5"/><rect x="17" y="12.5" width="3" height="7.5" rx="1.5"/></svg></span>
+          <b>TIDAL</b>
+        </div>
+        <div class="platform-item reveal">
+          <span class="pmark pmark-deezer" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.75" y="12.75" width="3.5" height="3.5" rx="1" fill="#ff007f"/><rect x="3.75" y="16.75" width="3.5" height="3.5" rx="1" fill="#ff6600"/><rect x="10.25" y="6.75" width="3.5" height="3.5" rx="1" fill="#00c7ff"/><rect x="10.25" y="10.75" width="3.5" height="3.5" rx="1" fill="#ffe000"/><rect x="10.25" y="14.75" width="3.5" height="3.5" rx="1" fill="#ff007f"/><rect x="16.75" y=".75" width="3.5" height="3.5" rx="1" fill="#a100ff"/><rect x="16.75" y="4.75" width="3.5" height="3.5" rx="1" fill="#00c7ff"/><rect x="16.75" y="8.75" width="3.5" height="3.5" rx="1" fill="#ffe000"/><rect x="16.75" y="12.75" width="3.5" height="3.5" rx="1" fill="#ff007f"/></svg></span>
+          <b>Deezer</b>
+        </div>
+        <div class="platform-item reveal">
+          <span class="pmark pmark-amazon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+          <b>Amazon Music</b>
+        </div>
+        <div class="platform-item reveal">
+          <span class="pmark pmark-ytmusic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M10.2 9.1v5.8l5-2.9z" fill="#fff"/></svg></span>
+          <b>YouTube Music</b>
+        </div>
+        <div class="platform-item reveal">
+          <span class="pmark pmark-soundcloud" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></span>
+          <b>SoundCloud</b>
+        </div>
+        <div class="platform-item reveal">
+          <span class="pmark pmark-qobuz" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="#9d67ff" stroke-width="1.8"/></svg><b class="pmark-q">Q</b></span>
+          <b>Qobuz</b>
+        </div>
+      </div>
+    </section>
+
     <section class="benefits shell" id="benefits" aria-labelledby="benefits-title">
       <div class="section-heading">
         <p class="section-kicker" data-i18n="benefitsKicker">Neden Songleton?</p>
@@ -87,7 +129,7 @@
         <article class="benefit-card reveal">
           <div class="benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 10 5-10 5L2 7z"></path><path d="m2 17 10 5 10-5"></path><path d="m2 12 10 5 10-5"></path></svg></div>
           <h3 data-i18n="benefit2Title">İkinci bir müzik arşivi yok</h3>
-          <p data-i18n="benefit2Text">Hesap ve ayrı bir kütüphane kurmaz. Spotify ve Apple Music'i kullandığın haliyle, kendisi görünmeden yönetir.</p>
+          <p data-i18n="benefit2Text">Hesap ve ayrı bir kütüphane kurmaz. Spotify, Apple Music, TIDAL ve diğerlerini kullandığın haliyle, kendisi görünmeden yönetir.</p>
         </article>
         <article class="benefit-card reveal">
           <div class="benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg></div>
@@ -259,7 +301,7 @@
               <div class="tv-sbar"><i></i><i></i><i></i><b>Songleton</b></div>
               <div class="tv-set-row"><b data-i18n="settingLaunch">Girişte başlat</b><i class="on"></i></div>
               <div class="tv-set-row"><b data-i18n="settingNotice">Yeni şarkı bildirimi</b><i class="on"></i></div>
-              <div class="tv-set-row"><b data-i18n="settingAccessName">Spotify ve Music erişimi</b><em class="granted" data-i18n="granted">İzin verildi</em></div>
+              <div class="tv-set-row"><b data-i18n="settingAccessName">Müzik uygulamaları erişimi</b><em class="granted" data-i18n="granted">İzin verildi</em></div>
             </div>
           </div>
           <span class="tour-index">12</span>
@@ -283,8 +325,8 @@
     <section class="faq shell">
       <div class="section-heading reveal"><p class="section-kicker">FAQ</p><h2 data-i18n="faqTitle">Merak edilenler.</h2></div>
       <div class="faq-list">
-        <details class="reveal"><summary data-i18n="faqAppsQ">Hangi uygulamalar destekleniyor?</summary><p data-i18n="faqAppsA">Spotify ve Apple Music'in masaüstü uygulamaları. Songleton ikinci bir müzik arşivi oluşturmaz.</p></details>
-        <details class="reveal"><summary data-i18n="faqPermissionQ">Neden oynatıcı erişimi gerekiyor?</summary><p data-i18n="faqPermissionA">macOS, Spotify ve Music'e gönderilen komutları Otomasyon izniyle korur. Songleton'ın çalan parçayı görmesi ve oynatma kontrollerini kullanması için bu izin gerekir. Erişilebilirlik izni yalnızca ekran kenarı hareketleri içindir.</p></details>
+        <details class="reveal"><summary data-i18n="faqAppsQ">Hangi uygulamalar destekleniyor?</summary><p data-i18n="faqAppsA">Spotify, Apple Music, TIDAL, Deezer, Amazon Music, YouTube Music, SoundCloud ve Qobuz masaüstü uygulamaları. Songleton ikinci bir müzik arşivi oluşturmaz.</p></details>
+        <details class="reveal"><summary data-i18n="faqPermissionQ">Neden oynatıcı erişimi gerekiyor?</summary><p data-i18n="faqPermissionA">macOS, müzik uygulamalarına gönderilen komutları Otomasyon izniyle korur. Songleton'ın çalan parçayı görmesi ve oynatma kontrollerini kullanması için bu izin gerekir. Erişilebilirlik izni yalnızca ekran kenarı hareketleri içindir.</p></details>
         <details class="reveal"><summary data-i18n="faqPrivacyQ">Dinleme geçmişim yükleniyor mu?</summary><p data-i18n="faqPrivacyA">Hayır. Songleton'da hesap, analiz yazılımı veya dinleme geçmişi yüklemesi yok.</p></details>
         <details class="reveal"><summary data-i18n="faqBuildQ">Kendim derleyebilir miyim?</summary><p data-i18n="faqBuildA">Evet. Proje MIT lisanslı Swift ve SwiftUI kodundan oluşuyor. Xcode yüklü bir Mac'te depoyu klonlayıp make çalıştırabilirsin.</p></details>
       </div>
