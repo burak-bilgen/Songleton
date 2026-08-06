@@ -137,7 +137,7 @@ final class HUDToastManager: NSObject {
             isPermanent: isPermanent
         )
         let position = SettingsModel.shared.trackNotificationPosition
-        let cardOrigin = toastOrigin(
+        let cardOrigin = Self.toastOrigin(
             in: visibleFrame,
             toastSize: layout.size,
             position: position
@@ -168,8 +168,8 @@ final class HUDToastManager: NSObject {
                 backing: .buffered,
                 defer: false
             )
-            panel.level = .statusBar
-            panel.backgroundColor = .clear
+            panel.level = NSWindow.Level.statusBar
+            panel.backgroundColor = NSColor.clear
             panel.isOpaque = false
             panel.hasShadow = false
             panel.ignoresMouseEvents = false
@@ -219,8 +219,8 @@ final class HUDToastManager: NSObject {
             backing: .buffered,
             defer: false
         )
-        panel.level = .statusBar
-        panel.backgroundColor = .clear
+        panel.level = NSWindow.Level.statusBar
+        panel.backgroundColor = NSColor.clear
         panel.isOpaque = false
         panel.hasShadow = false
         panel.ignoresMouseEvents = !isPermanent && !isPreview
@@ -431,7 +431,7 @@ final class HUDToastManager: NSObject {
         let nearestPosition = findNearestPosition(forWindowOrigin: window.frame.origin, windowSize: window.frame.size, on: screen)
 
         let visibleFrame = screen.visibleFrame
-        let cardOrigin = toastOrigin(in: visibleFrame, toastSize: layout.size, position: nearestPosition)
+        let cardOrigin = Self.toastOrigin(in: visibleFrame, toastSize: layout.size, position: nearestPosition)
         let finalPanelFrame = NSRect(
             origin: NSPoint(x: cardOrigin.x - TrackNotificationLayout.shadowInset, y: cardOrigin.y - TrackNotificationLayout.shadowInset),
             size: layout.panelSize
@@ -460,7 +460,7 @@ final class HUDToastManager: NSObject {
         var minDistance: CGFloat = .greatestFiniteMagnitude
 
         for pos in TrackNotificationPosition.allCases {
-            let cardPosOrigin = toastOrigin(in: visibleFrame, toastSize: cardSize, position: pos)
+            let cardPosOrigin = Self.toastOrigin(in: visibleFrame, toastSize: cardSize, position: pos)
             let posPanelOrigin = NSPoint(x: cardPosOrigin.x - shadowInset, y: cardPosOrigin.y - shadowInset)
 
             let dist = hypot(currentOrigin.x - posPanelOrigin.x, currentOrigin.y - posPanelOrigin.y)
@@ -472,7 +472,7 @@ final class HUDToastManager: NSObject {
         return nearestPosition
     }
 
-    private func toastOrigin(
+    static func toastOrigin(
         in frame: NSRect,
         toastSize: NSSize,
         position: TrackNotificationPosition
@@ -580,7 +580,7 @@ final class SnapGuideOverlayWindow: NSPanel {
         self.ignoresMouseEvents = true
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
 
-        let view = SnapGuideOverlayView(screenFrame: screen.visibleFrame, cardSize: cardSize, activePosition: activePosition)
+        let view = SnapGuideOverlayView(screen: screen, cardSize: cardSize, activePosition: activePosition)
         let hosting = NSHostingView(rootView: view)
         self.contentView = hosting
         self.hostingView = hosting
@@ -588,9 +588,9 @@ final class SnapGuideOverlayWindow: NSPanel {
 
     func updateActivePosition(_ position: TrackNotificationPosition, cardSize: NSSize) {
         guard let hostingView else { return }
-        let currentFrame = hostingView.rootView.screenFrame
+        let currentScreen = hostingView.rootView.screen
         hostingView.rootView = SnapGuideOverlayView(
-            screenFrame: currentFrame,
+            screen: currentScreen,
             cardSize: cardSize,
             activePosition: position
         )
@@ -598,7 +598,7 @@ final class SnapGuideOverlayWindow: NSPanel {
 }
 
 struct SnapGuideOverlayView: View {
-    let screenFrame: NSRect
+    let screen: NSScreen
     let cardSize: NSSize
     let activePosition: TrackNotificationPosition
 
@@ -610,8 +610,11 @@ struct SnapGuideOverlayView: View {
                 .ignoresSafeArea()
 
             ForEach(TrackNotificationPosition.allCases) { pos in
-                let origin = ghostCardOrigin(for: pos)
+                let cardOrigin = HUDToastManager.toastOrigin(in: screen.visibleFrame, toastSize: cardSize, position: pos)
                 let isActive = (pos == activePosition)
+
+                let swiftUIX = cardOrigin.x + cardSize.width / 2
+                let swiftUIY = screen.frame.height - (cardOrigin.y + cardSize.height / 2)
 
                 ZStack {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -633,41 +636,11 @@ struct SnapGuideOverlayView: View {
                         .foregroundStyle(isActive ? .white : .white.opacity(0.40))
                 }
                 .frame(width: cardSize.width, height: cardSize.height)
-                .position(
-                    x: origin.x + cardSize.width / 2,
-                    y: screenFrame.height - (origin.y + cardSize.height / 2)
-                )
+                .position(x: swiftUIX, y: swiftUIY)
                 .scaleEffect(isActive ? 1.04 : 1.0)
                 .animation(.spring(response: 0.22, dampingFraction: 0.7), value: isActive)
             }
         }
-        .frame(width: screenFrame.width, height: screenFrame.height)
-    }
-
-    private func ghostCardOrigin(for pos: TrackNotificationPosition) -> NSPoint {
-        let horizontalPadding = min(22, max(12, (screenFrame.width - cardSize.width) / 2))
-        let verticalPadding = min(22, max(12, (screenFrame.height - cardSize.height) / 2))
-
-        let x: CGFloat
-        switch pos {
-        case .topLeading, .leading, .bottomLeading:
-            x = horizontalPadding
-        case .top, .bottom:
-            x = (screenFrame.width - cardSize.width) / 2
-        case .topTrailing, .trailing, .bottomTrailing:
-            x = screenFrame.width - cardSize.width - horizontalPadding
-        }
-
-        let y: CGFloat
-        switch pos {
-        case .topLeading, .top, .topTrailing:
-            y = screenFrame.height - cardSize.height - verticalPadding
-        case .leading, .trailing:
-            y = (screenFrame.height - cardSize.height) / 2
-        case .bottomLeading, .bottom, .bottomTrailing:
-            y = verticalPadding
-        }
-
-        return NSPoint(x: x, y: y)
+        .frame(width: screen.frame.width, height: screen.frame.height)
     }
 }
