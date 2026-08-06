@@ -11,6 +11,30 @@ No separate music library. No account layer. No floating player that competes wi
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-Native-6D5DFB?style=for-the-badge&logo=swift&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-38BDF8?style=for-the-badge)
 
+## Screenshots
+
+### 1. Mini Player, Hover Menu & Menu Bar App
+![Songleton Mini Player, Hover Panel & Menu Bar](assets/screenshots/1.png)
+*Songleton integrates seamlessly into your macOS menu bar, displaying current playback status, offering a rich hover panel, and keeping a draggable Mini Player on your desktop.*
+
+---
+
+### 2. Draggable Permanent Mini Player & 8-Point Magnetic Snap Guides
+![Songleton Permanent Mini Player & 8-Point Snap Guides](assets/screenshots/2.png)
+*Drag the Permanent Mini Player anywhere across your screen. Real-time translucent ghost guides illuminate to magnetically snap the player into 8 preset screen positions.*
+
+---
+
+### 3. Full-Screen Ambient Mode
+![Songleton Full-Screen Ambient Mode](assets/screenshots/3.png)
+*Transform your Mac display into an immersive visual music experience featuring dynamic album aura glow, vinyl/cassette/glass themes, and integrated controls.*
+
+---
+
+### 4. Ambient Mode with Synchronized Live Lyrics
+![Songleton Ambient Mode with Live Lyrics](assets/screenshots/4.png)
+*Synchronized real-time lyrics overlay inside Ambient Mode with smooth active line highlighting and automatic scrolling.*
+
 ## Why Songleton exists
 
 Music controls should be near, not noisy. Songleton puts the song title, previous, next, and play or pause controls in the menu bar. Hover once for the full controller. Hold the cursor at an edge when you need to move fast. Open Ambient Mode when the music deserves the screen.
