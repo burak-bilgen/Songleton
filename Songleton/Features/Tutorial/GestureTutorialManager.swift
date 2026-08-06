@@ -72,12 +72,13 @@ final class GestureTutorialManager: ObservableObject {
             screen: screen
         )
         window.isReleasedWhenClosed = false
-        window.level = .statusBar
+        window.level = .screenSaver
+        window.hidesOnDeactivate = false
         window.backgroundColor = .clear
         window.isOpaque = false
         window.hasShadow = false
         window.isMovableByWindowBackground = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenPrimary, .transient]
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.contentView = NSHostingView(rootView: containerView)
         window.setFrame(screen.frame, display: true)
 

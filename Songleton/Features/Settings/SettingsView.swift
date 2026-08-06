@@ -427,7 +427,10 @@ struct SettingsView: View {
                     icon: "forward.fill",
                     title: localization.string("settings.menu_bar_nav_buttons"),
                     subtitle: localization.string("settings.menu_bar_nav_buttons_hint"),
-                    isOn: $settings.showMenuBarNavButtons
+                    isOn: Binding(
+                        get: { settings.showMenuBarNavButtons },
+                        set: { settings.setMenuBarNavButtonsUserChoice($0) }
+                    )
                 )
 
                 sectionDivider

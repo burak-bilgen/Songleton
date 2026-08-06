@@ -6,8 +6,9 @@ enum TutorialStage: Int, CaseIterable, Identifiable {
     case rightEdgeSkip = 1
     case topEdgePlayPause = 2
     case volumeControl = 3
-    case hoverMenu = 4
-    case ambientMode = 5
+    case leftClickToggle = 4
+    case hoverMenu = 5
+    case ambientMode = 6
 
     var id: Int { rawValue }
 }
@@ -91,6 +92,9 @@ struct GestureTutorialView: View {
     @State private var cursorRotation: Double = -5
     @State private var isCursorPressed = false
     @State private var cursorMoveSequence = 0
+    @State private var isCmdOptKeyPressed = false
+    @State private var isDualMousePressed = false
+    @State private var activeVolumeMethod = ""
 
     // Mock MouseGestureManager for real overlay component
     @StateObject private var mockManager = MouseGestureManager()
@@ -126,8 +130,9 @@ struct GestureTutorialView: View {
                             .transition(.scale(scale: 0.95).combined(with: .opacity))
                     }
 
-                    if currentStage == .hoverMenu || currentStage == .ambientMode {
-                        tutorialMenuBarPreview
+                    if currentStage == .leftClickToggle || currentStage == .hoverMenu || currentStage == .ambientMode {
+                        FullMacOSMenuBarPreview(isRightClicking: isTrackRightClicking, isPlaying: !isPlaybackPaused)
+                            .frame(width: geo.size.width)
                             .position(x: geo.size.width / 2, y: menuBarCenterY(for: geo.size))
                             .zIndex(25)
                     }
@@ -136,26 +141,17 @@ struct GestureTutorialView: View {
                         TutorialHoverPanelPreview()
                             .scaleEffect(0.88)
                             .allowsHitTesting(false)
-                            .position(x: geo.size.width / 2, y: demoCenterY(for: geo.size))
+                            .position(x: songletonMenuBarX(for: geo.size), y: menuBarCenterY(for: geo.size) + 152)
                             .zIndex(24)
                             .transition(.scale(scale: 0.92).combined(with: .opacity))
                     }
 
                     if isAmbientPreviewVisible {
                         AmbientView(onClose: {})
-                            .frame(
-                                width: min(680, max(280, geo.size.width - 64)),
-                                height: min(390, max(250, geo.size.height * 0.38))
-                            )
-                            .allowsHitTesting(false)
-                            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
-                            )
-                            .shadow(color: .black.opacity(0.60), radius: 30, y: 16)
-                            .position(x: geo.size.width / 2, y: demoCenterY(for: geo.size))
-                            .zIndex(24)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .ignoresSafeArea()
+                            .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                            .zIndex(30)
                     }
 
                     // REAL APP EDGE GESTURE OVERLAY COMPONENT (Left / Right / Top)
@@ -194,8 +190,51 @@ struct GestureTutorialView: View {
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
 
-                tutorialChrome(size: geo.size)
-                    .zIndex(60)
+                if !isAmbientPreviewVisible {
+                    tutorialChrome(size: geo.size)
+                        .zIndex(60)
+                } else {
+                    VStack {
+                        Spacer()
+                        HStack(spacing: 16) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(localization.string("tutorial.prompt_title"))
+                                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.white)
+                                Text(localization.string("tutorial.ambient_mode_desc"))
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.70))
+                            }
+
+                            Spacer()
+
+                            Button(action: onComplete) {
+                                HStack(spacing: 6) {
+                                    Text(localization.string("tutorial.prompt_start"))
+                                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    Image(systemName: "checkmark.circle.fill")
+                                }
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 10)
+                                .background(SongletonTheme.cyan, in: Capsule())
+                                .foregroundStyle(.black)
+                                .shadow(color: SongletonTheme.cyan.opacity(0.4), radius: 8)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, 22)
+                        .padding(.vertical, 14)
+                        .background(Color.black.opacity(0.88), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        )
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 28)
+                        .zIndex(100)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
             .onAppear {
                 cursorPosition = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
@@ -211,6 +250,11 @@ struct GestureTutorialView: View {
 
     private func menuBarCenterY(for size: CGSize) -> CGFloat {
         min(84, max(66, size.height * 0.10))
+    }
+
+    private func songletonMenuBarX(for size: CGSize) -> CGFloat {
+        let rightOffset: CGFloat = 160 + (290 / 2)
+        return max(180, size.width - rightOffset)
     }
 
     private func controlClearance(for size: CGSize) -> CGFloat {
@@ -257,21 +301,19 @@ struct GestureTutorialView: View {
                 Text(localization.string("tutorial.volume_control_desc"))
                     .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.70))
-                    .frame(width: 250, alignment: .leading)
+                    .frame(width: 260, alignment: .leading)
 
                 HStack(spacing: 8) {
-                    tutorialInputPill(symbol: "⌘", label: localization.string("key.command"))
-                    tutorialInputPill(symbol: "⌥", label: localization.string("key.option"))
+                    tutorialInputPill(symbol: "⌘", label: localization.string("key.command"), isPressed: isCmdOptKeyPressed)
+                    tutorialInputPill(symbol: "⌥", label: localization.string("key.option"), isPressed: isCmdOptKeyPressed)
                     Image(systemName: "arrow.up.and.down")
-                        .foregroundStyle(SongletonTheme.cyan)
+                        .foregroundStyle(isCmdOptKeyPressed ? SongletonTheme.cyan : .white.opacity(0.6))
                     Text(localization.string("tutorial.volume_drag_short"))
                         .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.85))
+                        .foregroundStyle(isCmdOptKeyPressed ? .white : .white.opacity(0.75))
                 }
 
-                Label(localization.string("tutorial.volume_mouse_alternative"), systemImage: "computermouse.fill")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.58))
+                tutorialMousePill(isPressed: isDualMousePressed)
             }
 
             VolumeGestureHUDView(manager: mockManager, visualMaximum: 20)
@@ -281,22 +323,59 @@ struct GestureTutorialView: View {
         .background(SongletonTheme.card.opacity(0.90), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(SongletonTheme.cyan.opacity(0.45), lineWidth: 1)
+                .stroke(isCmdOptKeyPressed || isDualMousePressed ? SongletonTheme.cyan : Color.white.opacity(0.18), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.5), radius: 24, y: 12)
     }
 
-    private func tutorialInputPill(symbol: String, label: String) -> some View {
+    private func tutorialInputPill(symbol: String, label: String, isPressed: Bool) -> some View {
         VStack(spacing: 2) {
             Text(symbol)
                 .font(.system(size: 20, weight: .bold))
             Text(label)
                 .font(.system(size: 8, weight: .semibold, design: .rounded))
         }
-        .foregroundStyle(SongletonTheme.cyan)
+        .foregroundStyle(isPressed ? Color.black : SongletonTheme.cyan)
         .frame(width: 58, height: 46)
-        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.white.opacity(0.14), lineWidth: 1))
+        .background(
+            isPressed
+                ? LinearGradient(colors: [SongletonTheme.cyan, .white], startPoint: .top, endPoint: .bottom)
+                : LinearGradient(colors: [Color.white.opacity(0.12), Color.white.opacity(0.06)], startPoint: .top, endPoint: .bottom),
+            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(isPressed ? SongletonTheme.cyan : Color.white.opacity(0.14), lineWidth: isPressed ? 2 : 1)
+        )
+        .scaleEffect(isPressed ? 0.92 : 1.0)
+        .shadow(color: isPressed ? SongletonTheme.cyan.opacity(0.8) : .clear, radius: 10)
+        .animation(.easeInOut(duration: 0.16), value: isPressed)
+    }
+
+    private func tutorialMousePill(isPressed: Bool) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "computermouse.fill")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(isPressed ? Color.black : SongletonTheme.cyan)
+            Text(localization.string("tutorial.volume_mouse_alternative"))
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(isPressed ? Color.black : .white.opacity(0.82))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            isPressed
+                ? LinearGradient(colors: [SongletonTheme.cyan, .white], startPoint: .top, endPoint: .bottom)
+                : LinearGradient(colors: [Color.white.opacity(0.08), Color.white.opacity(0.04)], startPoint: .top, endPoint: .bottom),
+            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(isPressed ? SongletonTheme.cyan : Color.white.opacity(0.14), lineWidth: isPressed ? 2 : 1)
+        )
+        .scaleEffect(isPressed ? 0.94 : 1.0)
+        .shadow(color: isPressed ? SongletonTheme.cyan.opacity(0.8) : .clear, radius: 10)
+        .animation(.easeInOut(duration: 0.16), value: isPressed)
     }
 
     private var tutorialMenuBarPreview: some View {
@@ -405,6 +484,38 @@ struct GestureTutorialView: View {
 
     private func animatedMouseCursor(size: CGSize) -> some View {
         ZStack {
+            if currentStage == .volumeControl && isCursorPressed {
+                VStack(spacing: 4) {
+                    Image(systemName: "chevron.compact.up")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(SongletonTheme.cyan)
+                        .opacity(0.8)
+                    Rectangle()
+                        .fill(LinearGradient(colors: [SongletonTheme.cyan, SongletonTheme.violet], startPoint: .top, endPoint: .bottom))
+                        .frame(width: 2, height: 90)
+                    Image(systemName: "chevron.compact.down")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(SongletonTheme.violet)
+                        .opacity(0.8)
+                }
+                .shadow(color: SongletonTheme.cyan.opacity(0.6), radius: 8)
+
+                HStack(spacing: 5) {
+                    Image(systemName: "arrow.up.and.down.circle.fill")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(SongletonTheme.cyan)
+                    Text(localization.string("tutorial.volume_drag_short"))
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.black.opacity(0.88), in: Capsule())
+                .overlay(Capsule().stroke(SongletonTheme.cyan.opacity(0.6), lineWidth: 1))
+                .shadow(color: .black.opacity(0.6), radius: 10)
+                .offset(x: 75, y: -24)
+            }
+
             Circle()
                 .fill((isTrackRightClicking ? SongletonTheme.violet : SongletonTheme.cyan).opacity(isCursorPressed ? 0.28 : 0.0))
                 .frame(width: 42, height: 42)
@@ -614,7 +725,7 @@ struct GestureTutorialView: View {
             } else {
                 TutorialAudioService.shared.resume(fadeIn: true)
             }
-        case .topEdgePlayPause, .volumeControl, .hoverMenu, .ambientMode:
+        case .topEdgePlayPause, .volumeControl, .leftClickToggle, .hoverMenu, .ambientMode:
             if TutorialAudioService.shared.currentTrack != 2 {
                 TutorialAudioService.shared.switchToSecondTrack()
             } else {
@@ -872,13 +983,18 @@ struct GestureTutorialView: View {
 
             case .volumeControl:
                 let volumeCenterY = demoCenterY(for: size)
-                let volumeX = size.width / 2 + 150
+                let volumeX = min(size.width - 65, size.width / 2 + 250)
                 let topY = volumeCenterY - 82
                 let bottomY = volumeCenterY + 72
 
+                // --- METHOD 1: KEYBOARD SHORTCUT (⌘ + ⌥ + DRAG) ---
+                withAnimation {
+                    isCmdOptKeyPressed = true
+                    isDualMousePressed = false
+                }
                 await moveCursor(
                     to: CGPoint(x: volumeX, y: topY),
-                    duration: 0.58,
+                    duration: 0.52,
                     rotation: -4,
                     scale: 0.96
                 )
@@ -891,61 +1007,140 @@ struct GestureTutorialView: View {
                     cursorTarget: CGPoint(x: volumeX, y: bottomY),
                     duration: 0.74
                 )
-                try? await Task.sleep(for: .milliseconds(350))
+                try? await Task.sleep(for: .milliseconds(250))
                 guard !Task.isCancelled else { return }
+
                 await animateVolume(
                     from: 0,
                     to: 20,
                     cursorTarget: CGPoint(x: volumeX, y: topY),
-                    duration: 1.02
+                    duration: 0.95
                 )
+                try? await Task.sleep(for: .milliseconds(220))
                 guard !Task.isCancelled else { return }
+
+                await setCursorPressed(false)
+                withAnimation { isCmdOptKeyPressed = false }
+                try? await Task.sleep(for: .milliseconds(400))
+                guard !Task.isCancelled else { return }
+
+                // --- METHOD 2: DUAL MOUSE BUTTON HOLD & DRAG ---
+                withAnimation {
+                    isDualMousePressed = true
+                    isCmdOptKeyPressed = false
+                }
+                await moveCursor(
+                    to: CGPoint(x: volumeX, y: topY),
+                    duration: 0.45,
+                    rotation: -6,
+                    scale: 0.96
+                )
+                await setCursorPressed(true, rightClick: true)
+                try? await Task.sleep(for: .milliseconds(180))
+                guard !Task.isCancelled else { return }
+
+                // Drag DOWN (20 -> 5)
                 await animateVolume(
                     from: 20,
-                    to: 8,
-                    cursorTarget: CGPoint(x: volumeX, y: topY + 82),
-                    duration: 0.58
+                    to: 5,
+                    cursorTarget: CGPoint(x: volumeX, y: bottomY),
+                    duration: 0.75
                 )
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+
+                // Drag UP (5 -> 14)
+                await animateVolume(
+                    from: 5,
+                    to: 14,
+                    cursorTarget: CGPoint(x: volumeX, y: topY),
+                    duration: 0.75
+                )
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+
                 await setCursorPressed(false)
+                withAnimation { isDualMousePressed = false }
                 isStageAnimationRunning = false
 
-            case .hoverMenu:
+            case .leftClickToggle:
+                let menuBarX = songletonMenuBarX(for: size)
+                let menuBarY = menuBarCenterY(for: size)
                 await moveCursor(
-                    to: CGPoint(x: size.width / 2, y: menuBarCenterY(for: size)),
+                    to: CGPoint(x: menuBarX, y: menuBarY),
                     duration: 0.66,
                     rotation: -5,
                     scale: 0.95
                 )
-                try? await Task.sleep(for: .milliseconds(360))
+                try? await Task.sleep(for: .milliseconds(280))
                 guard !Task.isCancelled else { return }
+
+                // 1st Click: Pause song
+                await setCursorPressed(true)
+                TutorialAudioService.shared.pause()
+                withAnimation { isPlaybackPaused = true }
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
+                await setCursorPressed(false)
+                try? await Task.sleep(for: .milliseconds(900))
+                guard !Task.isCancelled else { return }
+
+                // 2nd Click: Resume song
+                await setCursorPressed(true)
+                TutorialAudioService.shared.resume(fadeIn: true)
+                withAnimation { isPlaybackPaused = false }
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
+                await setCursorPressed(false)
+                try? await Task.sleep(for: .milliseconds(900))
+                guard !Task.isCancelled else { return }
+                isStageAnimationRunning = false
+
+            case .hoverMenu:
+                let menuBarX = songletonMenuBarX(for: size)
+                let menuBarY = menuBarCenterY(for: size)
+                await moveCursor(
+                    to: CGPoint(x: menuBarX, y: menuBarY),
+                    duration: 0.66,
+                    rotation: -5,
+                    scale: 0.95
+                )
+                try? await Task.sleep(for: .milliseconds(260))
+                guard !Task.isCancelled else { return }
+
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
                     isHoverPanelVisible = true
                 }
-                try? await Task.sleep(for: .milliseconds(1000))
+                try? await Task.sleep(for: .milliseconds(1200))
                 guard !Task.isCancelled else { return }
                 isStageAnimationRunning = false
 
             case .ambientMode:
+                let menuBarX = songletonMenuBarX(for: size)
+                let menuBarY = menuBarCenterY(for: size)
                 await moveCursor(
-                    to: CGPoint(x: size.width / 2, y: menuBarCenterY(for: size)),
+                    to: CGPoint(x: menuBarX, y: menuBarY),
                     duration: 0.62,
                     rotation: -5,
                     scale: 0.95
                 )
-                try? await Task.sleep(for: .milliseconds(420))
+                try? await Task.sleep(for: .milliseconds(320))
                 guard !Task.isCancelled else { return }
+
                 withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) {
                     isTrackRightClicking = true
                 }
-                isHoverPanelVisible = true
                 await setCursorPressed(true, rightClick: true)
                 try? await Task.sleep(for: .milliseconds(240))
                 guard !Task.isCancelled else { return }
                 await setCursorPressed(false, rightClick: true)
+
+                // Populate mock now playing data and open FULL SCREEN Ambient Mode!
+                NowPlayingModel.shared.setMockStateForTutorial()
                 withAnimation(.spring(response: 0.65, dampingFraction: 0.8)) {
                     isAmbientPreviewVisible = true
                 }
-                try? await Task.sleep(for: .milliseconds(1100))
+                try? await Task.sleep(for: .milliseconds(800))
                 guard !Task.isCancelled else { return }
                 isStageAnimationRunning = false
             }
@@ -961,6 +1156,7 @@ struct GestureTutorialView: View {
         case .rightEdgeSkip: title = localization.string("menu.next_track")
         case .topEdgePlayPause: title = localization.string("tutorial.stage_playpause")
         case .volumeControl: title = localization.string("tutorial.stage_volume_control")
+        case .leftClickToggle: title = localization.string("tutorial.stage_left_click")
         case .hoverMenu: title = localization.string("tutorial.stage_hover_menu")
         case .ambientMode: title = localization.string("tutorial.stage_ambient_mode")
         }
@@ -977,6 +1173,7 @@ struct GestureTutorialView: View {
         case .rightEdgeSkip: localization.string("tutorial.next_header")
         case .topEdgePlayPause: localization.string("tutorial.playpause_header")
         case .volumeControl: localization.string("tutorial.volume_control_header")
+        case .leftClickToggle: localization.string("tutorial.left_click_header")
         case .hoverMenu: localization.string("tutorial.hover_menu_header")
         case .ambientMode: localization.string("tutorial.ambient_mode_header")
         }
@@ -988,6 +1185,7 @@ struct GestureTutorialView: View {
         case .rightEdgeSkip: localization.string("tutorial.next_desc")
         case .topEdgePlayPause: localization.string("tutorial.playpause_desc")
         case .volumeControl: localization.string("tutorial.volume_control_desc")
+        case .leftClickToggle: localization.string("tutorial.left_click_desc")
         case .hoverMenu: localization.string("tutorial.hover_menu_desc")
         case .ambientMode: localization.string("tutorial.ambient_mode_desc")
         }

@@ -28,7 +28,7 @@ struct MenuBarMainLabelView: View {
     }
 
     private var remainingTextWidth: CGFloat {
-        max(30, settings.menuBarWidth - 21)
+        max(30, settings.menuBarWidth - 20)
     }
 
     var body: some View {
@@ -44,30 +44,29 @@ struct MenuBarMainLabelView: View {
                 .foregroundStyle(Color.secondary.opacity(0.55))
                 .transition(.opacity)
             } else {
-                // Album artwork stays fixed on the left.
+                // Square Album Artwork (Tight next to track title, 4px spacing)
                 ZStack {
                     if let artwork = model.artwork {
                         Image(nsImage: artwork)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 16, height: 16)
-                            .clipShape(RoundedRectangle(cornerRadius: 3.5))
+                            .frame(width: 15, height: 15)
+                            .clipShape(RoundedRectangle(cornerRadius: 3.5, style: .continuous))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 3.5)
-                                    .stroke(Color.white.opacity(0.15), lineWidth: 0.5)
+                                RoundedRectangle(cornerRadius: 3.5, style: .continuous)
+                                    .stroke(Color.white.opacity(0.18), lineWidth: 0.5)
                             )
                             .shadow(color: .black.opacity(0.2), radius: 1, x: 0, y: 1)
                     } else {
                         Image(systemName: isPlaying ? "waveform" : "music.note")
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(.system(size: 9, weight: .semibold))
                             .foregroundStyle(isPlaying ? model.platformAccentColor : .secondary)
-                            .symbolEffect(.bounce, value: isPlaying)
                     }
                 }
-                .frame(width: 16, height: 16)
+                .frame(width: 15, height: 15)
                 .scaleEffect(artworkScale)
 
-                // Track text is centered in the remaining space.
+                // Track text is centered in the middle.
                 MarqueeText(
                     text: currentTitle,
                     font: settings.menuBarFont.font(size: 12),
@@ -81,7 +80,6 @@ struct MenuBarMainLabelView: View {
                         removal: .move(edge: .bottom).combined(with: .opacity)
                     )
                 )
-                .transition(.opacity)
             }
         }
         .padding(.horizontal, 2)

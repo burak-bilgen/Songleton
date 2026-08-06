@@ -84,6 +84,7 @@ final class SettingsModel: ObservableObject {
             defaults.set(horizontalGesturesEnabled, forKey: "horizontalGesturesEnabled")
             Task { @MainActor in
                 MouseGestureManager.shared.updateMonitoring()
+                applyAutoNavButtonsVisibility()
             }
         }
     }
@@ -93,6 +94,7 @@ final class SettingsModel: ObservableObject {
             defaults.set(verticalGesturesEnabled, forKey: "verticalGesturesEnabled")
             Task { @MainActor in
                 MouseGestureManager.shared.updateMonitoring()
+                applyAutoNavButtonsVisibility()
             }
         }
     }
@@ -116,6 +118,8 @@ final class SettingsModel: ObservableObject {
 
     let defaults: UserDefaults
     private let launchAtLoginApplier: ((Bool) throws -> Void)?
+    private var navButtonsUserOverride: Bool?
+    private var gestureDependencyCancellable: AnyCancellable?
 
     init(
         userDefaults: UserDefaults = .standard,
@@ -125,7 +129,7 @@ final class SettingsModel: ObservableObject {
         self.launchAtLoginApplier = launchAtLoginApplier
         userDefaults.register(defaults: [
             "showArtistInMenuBar": false,
-            "menuBarWidth": 80.0,
+            "menuBarWidth": 100.0,
             "menuBarFont": MenuBarFont.system.rawValue,
             "launchAtLogin": false,
             "showTrackNotifications": true,
@@ -133,11 +137,11 @@ final class SettingsModel: ObservableObject {
             "horizontalGesturesEnabled": true,
             "verticalGesturesEnabled": true,
             "edgeGestureHoldDuration": 0.65,
-            "showMenuBarNavButtons": true,
             "lyricsOffset": 0.9
         ])
         showArtistInMenuBar = userDefaults.bool(forKey: "showArtistInMenuBar")
-        menuBarWidth = min(300, max(80, userDefaults.double(forKey: "menuBarWidth")))
+        let storedWidth = userDefaults.object(forKey: "menuBarWidth") != nil ? userDefaults.double(forKey: "menuBarWidth") : 100.0
+        menuBarWidth = min(300, max(80, storedWidth))
         menuBarFont = MenuBarFont(rawValue: userDefaults.string(forKey: "menuBarFont") ?? "") ?? .system
         if launchAtLoginApplier != nil {
             launchAtLogin = userDefaults.bool(forKey: "launchAtLogin")
@@ -151,8 +155,40 @@ final class SettingsModel: ObservableObject {
         horizontalGesturesEnabled = userDefaults.bool(forKey: "horizontalGesturesEnabled")
         verticalGesturesEnabled = userDefaults.bool(forKey: "verticalGesturesEnabled")
         edgeGestureHoldDuration = min(2, max(0.2, userDefaults.double(forKey: "edgeGestureHoldDuration")))
-        showMenuBarNavButtons = userDefaults.bool(forKey: "showMenuBarNavButtons")
+        
+        if let override = userDefaults.object(forKey: "menuBarNavButtonsUserOverride") as? Bool {
+            navButtonsUserOverride = override
+            showMenuBarNavButtons = override
+        } else {
+            navButtonsUserOverride = nil
+            showMenuBarNavButtons = true
+        }
         lyricsOffset = min(3, max(-3, userDefaults.double(forKey: "lyricsOffset")))
+    }
+
+    func wireGestureDependencies() {
+        guard gestureDependencyCancellable == nil else { return }
+        gestureDependencyCancellable = MouseGestureManager.shared.$isAccessibilityTrusted
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.applyAutoNavButtonsVisibility()
+            }
+        applyAutoNavButtonsVisibility()
+    }
+
+    func setMenuBarNavButtonsUserChoice(_ value: Bool) {
+        navButtonsUserOverride = value
+        defaults.set(value, forKey: "menuBarNavButtonsUserOverride")
+        if showMenuBarNavButtons != value {
+            showMenuBarNavButtons = value
+        }
+    }
+
+    func applyAutoNavButtonsVisibility() {
+        guard navButtonsUserOverride == nil else { return }
+        let gesturesActive = MouseGestureManager.shared.isAccessibilityTrusted
+            && (horizontalGesturesEnabled || verticalGesturesEnabled)
+        showMenuBarNavButtons = !gesturesActive
     }
 
     func applyLaunchAtLogin() {

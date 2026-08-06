@@ -57,7 +57,7 @@ struct OnboardingView: View {
                 Spacer(minLength: 10)
             }
         }
-        .frame(width: 540, height: 680)
+        .frame(width: 590, height: 740)
         .onAppear {
             model.checkAutomationPermission()
             if !reduceMotion {
@@ -331,12 +331,33 @@ struct OnboardingView: View {
             }
             .entrance(1, appeared: appeared)
 
-            VStack(spacing: 10) {
-                playerPermissionCard(appName: "Spotify", bundleID: "com.spotify.client", iconName: "music.note.list", color: .green)
-                playerPermissionCard(appName: "Apple Music", bundleID: "com.apple.Music", iconName: "music.note", color: .pink)
-                accessibilityPermissionCard
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: true) {
+                    VStack(spacing: 8) {
+                        accessibilityPermissionCard
+                        playerPermissionCard(appName: "Spotify", bundleID: "com.spotify.client", color: .green)
+                        playerPermissionCard(appName: "Apple Music", bundleID: "com.apple.Music", color: .pink)
+                        playerPermissionCard(appName: "TIDAL", bundleID: "com.tidal.desktop", color: .cyan)
+                        playerPermissionCard(appName: "Deezer", bundleID: "com.deezer.deezer-desktop", color: .orange)
+                        playerPermissionCard(appName: "Amazon Music", bundleID: "com.amazon.music", color: .blue)
+                        playerPermissionCard(appName: "YouTube Music", bundleID: "com.github.th-ch.youtube-music", color: .red)
+                        playerPermissionCard(appName: "SoundCloud", bundleID: "com.soundcloud.desktop", color: .orange)
+                        playerPermissionCard(appName: "Qobuz", bundleID: "com.qobuz.QobuzDesktop", color: .purple)
+                    }
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 4)
+                    .id("permissionListTop")
+                }
+                .frame(maxHeight: 310)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        withAnimation(nil) {
+                            proxy.scrollTo("permissionListTop", anchor: .top)
+                        }
+                    }
+                }
             }
-            .entrance(2, appeared: appeared)
+            .entranceFade(2, appeared: appeared)
 
             VStack(spacing: 10) {
                 let isGranted = model.automationStatus == .granted
@@ -470,17 +491,10 @@ struct OnboardingView: View {
         }
     }
 
-    private func playerPermissionCard(appName: String, bundleID: String, iconName: String, color: Color) -> some View {
+    private func playerPermissionCard(appName: String, bundleID: String, color: Color) -> some View {
         let status = model.permissionStatus(for: bundleID)
         return HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(color.opacity(0.15))
-                    .frame(width: 36, height: 36)
-                Image(systemName: iconName)
-                    .font(.system(size: 15))
-                    .foregroundStyle(color)
-            }
+            PlatformLogoView(bundleID: bundleID, size: 36)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(appName)
@@ -492,8 +506,9 @@ struct OnboardingView: View {
                 if status != .granted {
                     Text(localization.string("onboarding.permission_automation_hint"))
                         .font(.system(size: 9.5, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.38))
-                        .lineLimit(1)
+                        .foregroundStyle(.white.opacity(0.45))
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -564,8 +579,9 @@ struct OnboardingView: View {
                 if !isGranted {
                     Text(localization.string("onboarding.permission_accessibility_hint"))
                         .font(.system(size: 9.5, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.38))
-                        .lineLimit(1)
+                        .foregroundStyle(.white.opacity(0.45))
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -697,6 +713,24 @@ private struct EntranceModifier: ViewModifier {
     }
 }
 
+// Offset-based entrances make ScrollViews drift from the top, so scrollable
+// content fades in without moving instead.
+private struct EntranceFadeModifier: ViewModifier {
+    let index: Int
+    let appeared: Bool
+    let delay: Double
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(appeared ? 1 : 0)
+            .animation(
+                .easeOut(duration: 0.45)
+                    .delay(delay + Double(index) * 0.07),
+                value: appeared
+            )
+    }
+}
+
 private struct GlowPulse: ViewModifier {
     let pulse: Bool
     var color: Color = SongletonTheme.cyan
@@ -717,5 +751,9 @@ private struct GlowPulse: ViewModifier {
 private extension View {
     func entrance(_ index: Int, appeared: Bool, delay: Double = 0.04) -> some View {
         modifier(EntranceModifier(index: index, appeared: appeared, delay: delay))
+    }
+
+    func entranceFade(_ index: Int, appeared: Bool, delay: Double = 0.04) -> some View {
+        modifier(EntranceFadeModifier(index: index, appeared: appeared, delay: delay))
     }
 }

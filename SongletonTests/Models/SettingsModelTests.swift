@@ -26,6 +26,7 @@ final class SettingsModelTests {
         runTest(name: "testInvalidFontFallsBackToSystem", test: testInvalidFontFallsBackToSystem)
         runTest(name: "testTrackNotificationPositionPersistence", test: testTrackNotificationPositionPersistence)
         runTest(name: "testInvalidTrackNotificationPositionFallsBack", test: testInvalidTrackNotificationPositionFallsBack)
+        runTest(name: "testMenuBarNavButtonsUserOverridePersists", test: testMenuBarNavButtonsUserOverridePersists)
     }
 
     private func runTest(name: String, test: () -> Void) {
@@ -38,7 +39,7 @@ final class SettingsModelTests {
 
     func testDefaultValues() {
         assertFalse(settings.showArtistInMenuBar, "showArtistInMenuBar should default to false")
-        assertEqual(settings.menuBarWidth, 80.0, "menuBarWidth should default to 80.0")
+        assertEqual(settings.menuBarWidth, 100.0, "menuBarWidth should default to 100.0")
         assertEqual(settings.menuBarFont, .system, "menuBarFont should default to .system")
         assertTrue(settings.showTrackNotifications, "showTrackNotifications should default to true")
         assertEqual(settings.trackNotificationPosition, .bottomTrailing, "trackNotificationPosition should default to bottomTrailing")
@@ -131,5 +132,21 @@ final class SettingsModelTests {
         userDefaults.set("center", forKey: "trackNotificationPosition")
         let reloaded = SettingsModel(userDefaults: userDefaults, launchAtLoginApplier: { _ in })
         assertEqual(reloaded.trackNotificationPosition, .bottomTrailing)
+    }
+
+    func testMenuBarNavButtonsUserOverridePersists() {
+        assertTrue(settings.showMenuBarNavButtons, "nav buttons should default to visible until auto logic runs")
+        settings.setMenuBarNavButtonsUserChoice(false)
+        assertFalse(settings.showMenuBarNavButtons)
+        assertFalse(userDefaults.bool(forKey: "showMenuBarNavButtons"))
+        assertFalse(userDefaults.bool(forKey: "menuBarNavButtonsUserOverride"))
+
+        let reloaded = SettingsModel(userDefaults: userDefaults, launchAtLoginApplier: { _ in })
+        assertFalse(reloaded.showMenuBarNavButtons, "user override should survive a reload")
+
+        settings.setMenuBarNavButtonsUserChoice(true)
+        assertTrue(settings.showMenuBarNavButtons)
+        let reloadedAgain = SettingsModel(userDefaults: userDefaults, launchAtLoginApplier: { _ in })
+        assertTrue(reloadedAgain.showMenuBarNavButtons)
     }
 }

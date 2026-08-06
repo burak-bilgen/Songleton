@@ -44,6 +44,7 @@ final class AppContainer {
     func bootstrap() {
         menuBar.setup()
         nowPlaying.checkAutomationPermission()
+        settings.wireGestureDependencies()
     }
 
     /// Stops monitoring and tears down transient state. Called on quit.

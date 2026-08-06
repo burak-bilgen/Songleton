@@ -150,10 +150,7 @@ final class MouseGestureManager: ObservableObject {
     }
 
     func start() {
-        guard eventTap == nil else {
-            logger.debug("Global mouse monitor is already running")
-            return
-        }
+        guard eventTap == nil else { return }
         guard requestAccessibilityAccess(promptForPermission: false) else {
             logger.warning("Accessibility permission is not granted; global mouse monitor was not started")
             return
@@ -247,12 +244,6 @@ final class MouseGestureManager: ObservableObject {
         } else if isVolumeGestureActive {
             endVolumeGesture()
         }
-
-        if now.timeIntervalSince(lastEventLogDate) >= 1.0 {
-            lastEventLogDate = now
-            logger.debug("Global mouse move event received")
-        }
-
         handleMouseLocation(appKitLocation, now: now)
     }
 

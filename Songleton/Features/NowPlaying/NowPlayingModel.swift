@@ -39,7 +39,16 @@ final class NowPlayingModel: ObservableObject {
     @Published var automationStatus: AutomationStatus = .notDetermined
     @Published private(set) var permissionRequestsInFlight: Set<String> = []
 
-    let controllers: [any MediaController] = [SpotifyController(), AppleMusicController()]
+    let controllers: [any MediaController] = [
+        SpotifyController(),
+        AppleMusicController(),
+        TidalController(),
+        DeezerController(),
+        AmazonMusicController(),
+        YouTubeMusicController(),
+        SoundCloudController(),
+        QobuzController()
+    ]
     private var activeController: (any MediaController)?
     private var isFetching = false
     private var currentArtworkKey: String?
@@ -143,8 +152,7 @@ final class NowPlayingModel: ObservableObject {
     }
 
     var hasAnyPlayerPermission: Bool {
-        permissionStatus(for: "com.spotify.client") == .granted ||
-        permissionStatus(for: "com.apple.Music") == .granted
+        controllers.contains(where: { permissionStatus(for: $0.bundleID) == .granted })
     }
 
     func checkAutomationPermission() {
@@ -279,8 +287,8 @@ final class NowPlayingModel: ObservableObject {
             if let result {
                 self.state = result.state
                 self.activeController = result.active
-                await self.syncArtwork(with: result.state)
 
+                var shownToastKey: String?
                 if case .loaded(let info, let src) = result.state {
                     let key = "\(src)|\(info.track)|\(info.artist)"
                     let previousKey = self.lastLoadedKey
@@ -293,11 +301,18 @@ final class NowPlayingModel: ObservableObject {
                            !MenuBarManager.shared.isHoverPopoverShown,
                            !AmbientModeManager.shared.isPresented,
                            isDesktopMusicApp {
-                            HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: self.artwork)
+                            HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: nil, trackKey: key)
+                            shownToastKey = key
                         }
                     }
                 } else if case .permissionDenied = result.state {
                     self.checkAutomationPermission()
+                }
+
+                await self.syncArtwork(with: result.state)
+
+                if let shownToastKey {
+                    HUDToastManager.shared.updateArtwork(self.artwork, for: shownToastKey)
                 }
             } else {
                 self.state = .notRunning
@@ -456,5 +471,23 @@ final class NowPlayingModel: ObservableObject {
             }
             self?.refresh()
         }
+    }
+
+    func setMockStateForTutorial() {
+        let mockInfo = NowPlayingInfo(
+            track: "Midnight City",
+            artist: "M83",
+            album: "Hurry Up, We're Dreaming",
+            isPlaying: true,
+            volume: 78,
+            artworkURL: nil,
+            artworkData: nil,
+            position: 140,
+            duration: 243,
+            isShuffleEnabled: false,
+            repeatMode: .off
+        )
+        self.state = .loaded(mockInfo, source: "Spotify")
+        self.dominantColor = SongletonTheme.cyan
     }
 }

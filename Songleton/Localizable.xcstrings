@@ -1,3168 +1,3219 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "ambient.exit": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Exit"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "ambient.exit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Çık"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çık"
           }
         }
       }
     },
-    "ambient.hide_lyrics": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide lyrics"
+    "ambient.hide_lyrics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide lyrics"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sözleri gizle"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözleri gizle"
           }
         }
       }
     },
-    "ambient.live_lyrics": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "LIVE LYRICS"
+    "ambient.live_lyrics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LIVE LYRICS"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CANLI SÖZLER"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CANLI SÖZLER"
           }
         }
       }
     },
-    "ambient.lyrics": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lyrics"
+    "ambient.lyrics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Şarkı sözleri"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şarkı sözleri"
           }
         }
       }
     },
-    "ambient.lyrics_instrumental": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No lyrics for this track"
+    "ambient.lyrics_instrumental" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No lyrics for this track"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bu parça için söz yok"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu parça için söz yok"
           }
         }
       }
     },
-    "ambient.lyrics_loading": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Loading synced lyrics…"
+    "ambient.lyrics_loading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading synced lyrics…"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Senkronize sözler yükleniyor…"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senkronize sözler yükleniyor…"
           }
         }
       }
     },
-    "ambient.lyrics_not_found": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't find synced lyrics"
+    "ambient.lyrics_not_found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't find synced lyrics"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Senkronize söz bulunamadı"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senkronize söz bulunamadı"
           }
         }
       }
     },
-    "ambient.short_label": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambient"
+    "ambient.short_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambient"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambient"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambient"
           }
         }
       }
     },
-    "ambient.sleep_timer": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep timer"
+    "ambient.sleep_timer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep timer"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uyku zamanlayıcısı"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uyku zamanlayıcısı"
           }
         }
       }
     },
-    "ambient.theme.cassette": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cassette"
+    "ambient.theme.cassette" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cassette"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kaset"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaset"
           }
         }
       }
     },
-    "ambient.theme.glass": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glass"
+    "ambient.theme.glass" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glass"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cam"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cam"
           }
         }
       }
     },
-    "ambient.theme.vinyl": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vinyl"
+    "ambient.theme.vinyl" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vinyl"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plak"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plak"
           }
         }
       }
     },
-    "ambient.timer_15": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "15 minutes"
+    "ambient.timer_15" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 minutes"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "15 dakika"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 dakika"
           }
         }
       }
     },
-    "ambient.timer_30": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 minutes"
+    "ambient.timer_30" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 minutes"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 dakika"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 dakika"
           }
         }
       }
     },
-    "ambient.timer_45": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "45 minutes"
+    "ambient.timer_45" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "45 minutes"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "45 dakika"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "45 dakika"
           }
         }
       }
     },
-    "ambient.timer_60": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "60 minutes"
+    "ambient.timer_60" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "60 minutes"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "60 dakika"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "60 dakika"
           }
         }
       }
     },
-    "ambient.timer_off": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turn off timer"
+    "ambient.timer_off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off timer"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zamanlayıcıyı kapat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zamanlayıcıyı kapat"
           }
         }
       }
     },
-    "ambient.timer_remaining_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%dm %02ds"
+    "ambient.timer_remaining_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%dm %02ds"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d dk %02d sn"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dk %02d sn"
           }
         }
       }
     },
-    "app.name": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton"
+    "app.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton"
           }
         }
       }
     },
-    "app.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your music, one move away."
+    "app.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your music, one move away."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Müziğin bir hareket uzağında."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Müziğin bir hareket uzağında."
           }
         }
       }
     },
-    "common.check": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check again"
+    "common.check" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check again"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tekrar kontrol et"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar kontrol et"
           }
         }
       }
     },
-    "common.continue": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue"
+    "common.continue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Devam"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devam"
           }
         }
       }
     },
-    "common.selected": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Selected"
+    "common.selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Seçili"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili"
           }
         }
-      },
-      "extractionState": "manual"
+      }
+    },
+    "common.start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başla"
+          }
+        }
+      }
+    },
+    "common.try_again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar dene"
+          }
+        }
+      }
     },
-    "common.start": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start"
+    "control.mute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Başla"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesi kapat"
           }
         }
       }
     },
-    "common.try_again": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Try again"
+    "control.pause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tekrar dene"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duraklat"
           }
         }
       }
     },
-    "control.mute": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mute"
+    "control.play" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sesi kapat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynat"
           }
         }
       }
     },
-    "control.pause": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pause"
+    "control.playback_position" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback position"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Duraklat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatma konumu"
           }
         }
       }
     },
-    "control.playback_position": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Playback position"
+    "control.repeat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change repeat mode"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatma konumu"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar modunu değiştir"
           }
         }
       }
     },
-    "control.play": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play"
+    "control.shuffle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle shuffle"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karışık çalmayı aç veya kapat"
           }
         }
       }
     },
-    "control.repeat": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change repeat mode"
+    "control.unmute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmute"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tekrar modunu değiştir"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesi aç"
           }
         }
       }
     },
-    "control.shuffle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toggle shuffle"
+    "control.volume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Karışık çalmayı aç veya kapat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses düzeyi"
           }
         }
       }
     },
-    "control.unmute": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unmute"
+    "gesture.left_action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left edge"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sesi aç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol kenar"
           }
         }
       }
     },
-    "control.volume": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Volume"
+    "gesture.left_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold for %@ seconds to play the previous track"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ses düzeyi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki parçaya dönmek için %@ saniye beklet"
           }
         }
       }
     },
-    "gesture.left_action": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Left edge"
+    "gesture.right_action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right edge"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sol kenar"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağ kenar"
           }
         }
       }
     },
-    "gesture.left_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold for %@ seconds to play the previous track"
+    "gesture.right_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold for %@ seconds to play the next track"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Önceki parçaya dönmek için %@ saniye beklet"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonraki parçaya geçmek için %@ saniye beklet"
           }
         }
       }
     },
-    "gesture.right_action": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Right edge"
+    "gesture.top_action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top edge"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sağ kenar"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üst kenar"
           }
         }
       }
     },
-    "gesture.right_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold for %@ seconds to play the next track"
+    "gesture.top_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold for %@ seconds to play or pause"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sonraki parçaya geçmek için %@ saniye beklet"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatmak veya duraklatmak için %@ saniye beklet"
           }
         }
       }
     },
-    "gesture.top_action": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Top edge"
+    "gesture.volume_action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Both mouse buttons or ⌘ + ⌥"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Üst kenar"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İki fare tuşu veya ⌘ + ⌥"
           }
         }
       }
     },
-    "gesture.top_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold for %@ seconds to play or pause"
+    "gesture.volume_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold, then drag up or down to change the volume"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatmak veya duraklatmak için %@ saniye beklet"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basılı tutup sesi değiştirmek için yukarı veya aşağı sürükle"
           }
         }
       }
     },
-    "gesture.volume_action": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Both mouse buttons or ⌘ + ⌥"
+    "key.command" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Command"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İki fare tuşu veya ⌘ + ⌥"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komut"
           }
         }
       }
     },
-    "gesture.volume_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold, then drag up or down to change the volume"
+    "key.option" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Basılı tutup sesi değiştirmek için yukarı veya aşağı sürükle"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option"
           }
         }
       }
     },
-    "key.command": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Command"
+    "key.space" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Space"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Komut"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Boşluk"
           }
         }
-      },
-      "extractionState": "manual"
+      }
+    },
+    "language.english" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İngilizce"
+          }
+        }
+      }
     },
-    "key.option": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Option"
+    "language.system" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Option"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem"
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "key.space": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Space"
+    "language.turkish" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turkish"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Boşluk"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Türkçe"
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "language.english": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "English"
+    "lyrics.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İngilizce"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şarkı sözleri"
           }
         }
       }
     },
-    "language.system": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "System"
+    "media.unknown_error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something went wrong"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sistem"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir şeyler ters gitti"
           }
         }
       }
     },
-    "language.turkish": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turkish"
+    "menu.main_item_tooltip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to play or pause. Hover for controls."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Türkçe"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatmak veya duraklatmak için tıkla. Kontroller için üzerine gel."
           }
         }
       }
     },
-    "lyrics.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lyrics"
+    "menu.next_track" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next track"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Şarkı sözleri"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonraki parça"
           }
         }
       }
     },
-    "media.unknown_error": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Something went wrong"
+    "menu.onboarding" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setup guide…"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bir şeyler ters gitti"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurulum rehberi…"
           }
         }
       }
     },
-    "menu.main_item_tooltip": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Click to play or pause. Hover for controls."
+    "menu.previous_track" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous track"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatmak veya duraklatmak için tıkla. Kontroller için üzerine gel."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki parça"
           }
         }
       }
     },
-    "menu.next_track": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next track"
+    "menu.quit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit Songleton"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sonraki parça"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton'dan çık"
           }
         }
       }
     },
-    "menu.onboarding": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Setup guide…"
+    "menu.settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings…"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kurulum rehberi…"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlar…"
           }
         }
       }
     },
-    "menu.previous_track": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Previous track"
+    "notification.preview_artist" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification preview"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Önceki parça"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildirim önizlemesi"
           }
         }
       }
     },
-    "menu.quit": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quit Songleton"
+    "notification.preview_track" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now playing in Songleton"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton'dan çık"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton'da şimdi çalıyor"
           }
         }
       }
     },
-    "menu.settings": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings…"
+    "onboarding.connect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ayarlar…"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bağla"
           }
         }
       }
     },
-    "notification.preview_artist": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notification preview"
+    "onboarding.feature_ambient_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Ambient Mode when you want the current track to take over the screen."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bildirim önizlemesi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Müziğe odaklanmak istediğinde Ambient Mode'u aç, çalan parça ekrana yerleşsin."
           }
         }
       }
     },
-    "notification.preview_track": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Now playing in Songleton"
+    "onboarding.feature_ambient_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The music takes the screen"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton'da şimdi çalıyor"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalan müzik tam ekranda"
           }
         }
       }
     },
-    "onboarding.connect": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connect"
+    "onboarding.feature_gestures_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rest the pointer at the left, right, or top edge to control playback without finding the player."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bağla"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatıcıyı aramadan önceki, sonraki, oynat ve duraklat için imleci ekranın kenarında kısa süre beklet."
           }
         }
       }
     },
-    "onboarding.feature_ambient_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Ambient Mode when you want the current track to take over the screen."
+    "onboarding.feature_gestures_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let the edges do the work"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Müziğe odaklanmak istediğinde Ambient Mode'u aç, çalan parça ekrana yerleşsin."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kenarlar da kontrol olabilir"
           }
         }
       }
     },
-    "onboarding.feature_ambient_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The music takes the screen"
+    "onboarding.feature_menubar_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See what is playing and reach the controls from the menu bar, without opening another window."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Çalan müzik tam ekranda"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne çaldığını gör ve kontrollerine başka pencere açmadan menü çubuğundan ulaş."
           }
         }
       }
     },
-    "onboarding.feature_gestures_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rest the pointer at the left, right, or top edge to control playback without finding the player."
+    "onboarding.feature_menubar_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls in the menu bar"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatıcıyı aramadan önceki, sonraki, oynat ve duraklat için imleci ekranın kenarında kısa süre beklet."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontroller menü çubuğunda"
           }
         }
       }
     },
-    "onboarding.feature_gestures_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Let the edges do the work"
+    "onboarding.language_picker_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kenarlar da kontrol olabilir"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dil"
           }
         }
       }
     },
-    "onboarding.feature_menubar_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "See what is playing and reach the controls from the menu bar, without opening another window."
+    "onboarding.open_settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ne çaldığını gör ve kontrollerine başka pencere açmadan menü çubuğundan ulaş."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Ayarları'nı aç"
           }
         }
       }
     },
-    "onboarding.feature_menubar_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Controls in the menu bar"
+    "onboarding.permission_accessibility_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional. Enable it only for screen-edge and volume gestures."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kontroller menü çubuğunda"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İsteğe bağlıdır. Yalnızca ekran kenarı ve ses hareketlerini kullanacaksan aç."
           }
         }
       }
     },
-    "onboarding.language_picker_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Language"
+    "onboarding.permission_automation_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Songleton to see the current track and send playback commands to this player."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dil"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton'ın çalan parçayı görmesi ve oynatma komutları göndermesi için bu oynatıcıya izin ver."
           }
         }
       }
     },
-    "onboarding.open_settings": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open System Settings"
+    "onboarding.screen1_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control Spotify or Apple Music from the menu bar without breaking your flow."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sistem Ayarları'nı aç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotify veya Apple Music'i, yaptığın işi bölmeden menü çubuğundan kontrol et."
           }
         }
       }
     },
-    "onboarding.permission_accessibility_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional. Enable it only for screen-edge and volume gestures."
+    "onboarding.screen1_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your music, your control"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İsteğe bağlıdır. Yalnızca ekran kenarı ve ses hareketlerini kullanacaksan aç."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Müziğin kontrolü elinde"
           }
         }
       }
     },
-    "onboarding.permission_automation_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allow Songleton to see the current track and send playback commands to this player."
+    "onboarding.screen2_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Spotify or Apple Music. Accessibility is optional and only enables the screen-edge gestures."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton'ın çalan parçayı görmesi ve oynatma komutları göndermesi için bu oynatıcıya izin ver."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotify veya Apple Music'ten birini bağla. Erişilebilirlik izni isteğe bağlıdır, yalnızca ekran kenarı hareketlerini açar."
           }
         }
       }
     },
-    "onboarding.screen1_subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Control Spotify or Apple Music from the menu bar without breaking your flow."
+    "onboarding.screen2_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a player, then you are ready"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spotify veya Apple Music'i, yaptığın işi bölmeden menü çubuğundan kontrol et."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir oynatıcı seç, başlayalım"
           }
         }
       }
     },
-    "onboarding.screen1_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your music, your control"
+    "onboarding.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set it up later"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Müziğin kontrolü elinde"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha sonra kur"
           }
         }
       }
     },
-    "onboarding.screen2_subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose Spotify or Apple Music. Accessibility is optional and only enables the screen-edge gestures."
+    "permission.accessibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accessibility for mouse gestures"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spotify veya Apple Music'ten birini bağla. Erişilebilirlik izni isteğe bağlıdır, yalnızca ekran kenarı hareketlerini açar."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fare hareketleri için Erişilebilirlik"
           }
         }
       }
     },
-    "onboarding.screen2_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose a player, then you are ready"
+    "permission.automation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotify and Music access"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bir oynatıcı seç, başlayalım"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotify ve Müzik erişimi"
           }
         }
       }
     },
-    "onboarding.skip": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Set it up later"
+    "permission.denied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denied"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Daha sonra kur"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reddedildi"
           }
         }
       }
     },
-    "permission.accessibility": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accessibility for mouse gestures"
+    "permission.explanation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allows Songleton to read and control a supported player running on your Mac."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fare hareketleri için Erişilebilirlik"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton'ın Mac'inde açık olan desteklenen oynatıcıyı okuyup yönetmesini sağlar."
           }
         }
       }
     },
-    "permission.automation": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spotify and Music access"
+    "permission.granted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Granted"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spotify ve Müzik erişimi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İzin verildi"
           }
         }
       }
     },
-    "permission.denied": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Denied"
+    "permission.not_granted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not granted"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reddedildi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İzin verilmedi"
           }
         }
       }
     },
-    "permission.explanation": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allows Songleton to read and control a supported player running on your Mac."
+    "permission.open_accessibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open settings"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton'ın Mac'inde açık olan desteklenen oynatıcıyı okuyup yönetmesini sağlar."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarları aç"
           }
         }
       }
     },
-    "permission.granted": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Granted"
+    "permission.open_settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Privacy Settings"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İzin verildi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gizlilik ayarlarını aç"
           }
         }
       }
     },
-    "permission.not_granted": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not granted"
+    "permission.required" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Player access required"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İzin verilmedi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatıcı erişimi gerekli"
           }
         }
       }
     },
-    "permission.open_accessibility": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open settings"
+    "player.launch_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Spotify or Apple Music"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ayarları aç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotify veya Apple Music'i aç"
           }
         }
       }
     },
-    "permission.open_settings": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Privacy Settings"
+    "player.not_playing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing is playing"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gizlilik ayarlarını aç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şu anda çalan bir şey yok"
           }
         }
       }
     },
-    "permission.required": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Player access required"
+    "settings.audiowide_font" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audiowide"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatıcı erişimi gerekli"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audiowide"
           }
         }
       }
     },
-    "player.launch_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Spotify or Apple Music"
+    "settings.edge_gesture_duration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edge hold duration"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spotify veya Apple Music'i aç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kenarda bekleme süresi"
           }
         }
       }
     },
-    "player.not_playing": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing is playing"
+    "settings.edge_gesture_duration_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How long the pointer waits before a screen-edge gesture runs"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Şu anda çalan bir şey yok"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran kenarı hareketi çalışmadan önce imlecin ne kadar bekleyeceği"
           }
         }
       }
     },
-    "settings.audiowide_font": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audiowide"
+    "settings.font" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Font"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audiowide"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yazı tipi"
           }
         }
       }
     },
-    "settings.edge_gesture_duration": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edge hold duration"
+    "settings.font_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Font used for the track title in the menu bar"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kenarda bekleme süresi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü çubuğundaki parça adında kullanılacak yazı tipi"
           }
         }
       }
     },
-    "settings.edge_gesture_duration_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How long the pointer waits before a screen-edge gesture runs"
+    "settings.general" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ekran kenarı hareketi çalışmadan önce imlecin ne kadar bekleyeceği"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genel"
           }
         }
       }
     },
-    "settings.font": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Font"
+    "settings.gestures_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SCREEN AND MOUSE GESTURES"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yazı tipi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKRAN VE FARE HAREKETLERİ"
           }
         }
       }
     },
-    "settings.font_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Font used for the track title in the menu bar"
+    "settings.grant_permissions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grant access"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Menü çubuğundaki parça adında kullanılacak yazı tipi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erişim izni ver"
           }
         }
       }
     },
-    "settings.general": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "General"
+    "settings.guide_demo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show guide"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Genel"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rehberi göster"
           }
         }
       }
     },
-    "settings.gestures_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SCREEN AND MOUSE GESTURES"
+    "settings.horizontal_gestures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous and next from the screen edges"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "EKRAN VE FARE HAREKETLERİ"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran kenarlarından önceki ve sonraki parça"
           }
         }
       }
     },
-    "settings.grant_permissions": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grant access"
+    "settings.horizontal_gestures_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold the pointer at the left edge for the previous track or the right edge for the next."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erişim izni ver"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki parça için imleci sol, sonraki parça için sağ kenarda beklet."
           }
         }
       }
     },
-    "settings.guide_demo": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show guide"
+    "settings.keyboard_shortcuts_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEYBOARD SHORTCUTS IN AMBIENT MODE"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rehberi göster"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AMBIENT MODE KLAVYE KISAYOLLARI"
           }
         }
       }
     },
-    "settings.horizontal_gestures": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Previous and next from the screen edges"
+    "settings.language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ekran kenarlarından önceki ve sonraki parça"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dil"
           }
         }
       }
     },
-    "settings.horizontal_gestures_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold the pointer at the left edge for the previous track or the right edge for the next."
+    "settings.language_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the language Songleton uses"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Önceki parça için imleci sol, sonraki parça için sağ kenarda beklet."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton'ın kullanacağı dili seç"
           }
         }
       }
     },
-    "settings.keyboard_shortcuts_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "KEYBOARD SHORTCUTS IN AMBIENT MODE"
+    "settings.launch_at_login" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Launch at login"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AMBIENT MODE KLAVYE KISAYOLLARI"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Girişte başlat"
           }
         }
       }
     },
-    "settings.language": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Language"
+    "settings.launch_at_login_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts Songleton when you sign in to your Mac"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dil"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac'inde oturum açtığında Songleton'ı başlatır"
           }
         }
       }
     },
-    "settings.language_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose the language Songleton uses"
+    "settings.lyrics_offset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyrics timing"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton'ın kullanacağı dili seç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Söz zamanlaması"
           }
         }
       }
     },
-    "settings.launch_at_login": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Launch at login"
+    "settings.lyrics_offset_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increase if the lyrics are late, decrease if they appear too early"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Girişte başlat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözler geç kalıyorsa artır, erken görünüyorsa azalt"
           }
         }
       }
     },
-    "settings.launch_at_login_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starts Songleton when you sign in to your Mac"
+    "settings.menu_bar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu bar"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mac'inde oturum açtığında Songleton'ı başlatır"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü çubuğu"
           }
         }
       }
     },
-    "settings.lyrics_offset": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lyrics timing"
+    "settings.menu_bar_nav_buttons" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous and next buttons"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Söz zamanlaması"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki ve sonraki düğmeleri"
           }
         }
       }
     },
-    "settings.lyrics_offset_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Increase if the lyrics are late, decrease if they appear too early"
+    "settings.menu_bar_nav_buttons_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show track navigation buttons in the menu bar"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sözler geç kalıyorsa artır, erken görünüyorsa azalt"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parça değiştirme düğmelerini menü çubuğunda göster"
           }
         }
       }
     },
-    "settings.menu_bar": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Menu bar"
+    "settings.notification_position" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification position"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Menü çubuğu"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildirim konumu"
           }
         }
       }
     },
-    "settings.menu_bar_nav_buttons": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Previous and next buttons"
+    "settings.notification_position_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose where new-track notifications appear"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Önceki ve sonraki düğmeleri"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni parça bildirimlerinin nerede görüneceğini seç"
           }
         }
       }
     },
-    "settings.menu_bar_nav_buttons_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show track navigation buttons in the menu bar"
+    "settings.notification_position.bottom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bottom center"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Parça değiştirme düğmelerini menü çubuğunda göster"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alt orta"
           }
         }
       }
     },
-    "settings.notification_position": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notification position"
+    "settings.notification_position.bottomLeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bottom left"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bildirim konumu"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol alt"
           }
         }
       }
     },
-    "settings.notification_position_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose where new-track notifications appear"
+    "settings.notification_position.bottomTrailing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bottom right"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeni parça bildirimlerinin nerede görüneceğini seç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağ alt"
           }
         }
       }
     },
-    "settings.notification_position.bottom": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bottom center"
+    "settings.notification_position.leading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left center"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alt orta"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol orta"
           }
         }
       }
     },
-    "settings.notification_position.bottomLeading": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bottom left"
+    "settings.notification_position.top" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top center"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sol alt"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üst orta"
           }
         }
       }
     },
-    "settings.notification_position.bottomTrailing": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bottom right"
+    "settings.notification_position.topLeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top left"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sağ alt"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol üst"
           }
         }
       }
     },
-    "settings.notification_position.leading": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Left center"
+    "settings.notification_position.topTrailing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top right"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sol orta"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağ üst"
           }
         }
       }
     },
-    "settings.notification_position.top": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Top center"
+    "settings.notification_position.trailing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right center"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Üst orta"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağ orta"
           }
         }
       }
     },
-    "settings.notification_position.topLeading": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Top left"
+    "settings.open_setup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open setup"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sol üst"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurulumu aç"
           }
         }
       }
     },
-    "settings.notification_position.topTrailing": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Top right"
+    "settings.permissions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sağ üst"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erişim"
           }
         }
       }
     },
-    "settings.notification_position.trailing": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Right center"
+    "settings.permissions_missing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Player access is missing"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sağ orta"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatıcı erişimi eksik"
           }
         }
       }
     },
-    "settings.open_setup": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open setup"
+    "settings.permissions_missing_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect Spotify or Apple Music to control playback."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kurulumu aç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatmayı yönetmek için Spotify veya Apple Music'i bağla."
           }
         }
       }
     },
-    "settings.permissions": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Access"
+    "settings.preview_notification" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show preview"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erişim"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önizlemeyi göster"
           }
         }
       }
     },
-    "settings.permissions_missing": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Player access is missing"
+    "settings.preview_notification_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows a sample at the selected position on the display under the pointer"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatıcı erişimi eksik"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İmlecin bulunduğu ekranda, seçilen konumda örnek bir bildirim gösterir"
           }
         }
       }
     },
-    "settings.permissions_missing_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connect Spotify or Apple Music to control playback."
+    "settings.seconds_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%.1f s"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatmayı yönetmek için Spotify veya Apple Music'i bağla."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%.1f sn"
           }
         }
       }
     },
-    "settings.preview_notification": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show preview"
+    "settings.shortcuts_guide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortcuts and gestures"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Önizlemeyi göster"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayollar ve hareketler"
           }
         }
       }
     },
-    "settings.preview_notification_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shows a sample at the selected position on the display under the pointer"
+    "settings.show_artist" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show artist name"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İmlecin bulunduğu ekranda, seçilen konumda örnek bir bildirim gösterir"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sanatçı adını göster"
           }
         }
       }
     },
-    "settings.seconds_format": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%.1f s"
+    "settings.show_artist_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include the artist beside the track title in the menu bar"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%.1f sn"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü çubuğunda parça adının yanında sanatçıyı da göster"
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "settings.shortcuts_guide": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shortcuts and gestures"
+    "settings.signed_seconds_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%+.1f s"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kısayollar ve hareketler"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%+.1f sn"
           }
         }
       }
     },
-    "settings.show_artist": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show artist name"
+    "settings.system_font" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sanatçı adını göster"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem"
           }
         }
       }
     },
-    "settings.show_artist_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Include the artist beside the track title in the menu bar"
+    "settings.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Menü çubuğunda parça adının yanında sanatçıyı da göster"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlar"
           }
         }
       }
     },
-    "settings.signed_seconds_format": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%+.1f s"
+    "settings.track_notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New-track notifications"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%+.1f sn"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni parça bildirimleri"
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "settings.system_font": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "System"
+    "settings.track_notifications_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show a notification when the track changes"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sistem"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parça değiştiğinde ekranda bildirim göster"
           }
         }
       }
     },
-    "settings.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
+    "settings.version_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton v%@"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ayarlar"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton v%@"
           }
         }
       }
     },
-    "settings.track_notifications": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New-track notifications"
+    "settings.vertical_gestures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play, pause, and volume gestures"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeni parça bildirimleri"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatma, duraklatma ve ses hareketleri"
           }
         }
       }
     },
-    "settings.track_notifications_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show a notification when the track changes"
+    "settings.vertical_gestures_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold at the top edge to play or pause. For volume, hold both mouse buttons or ⌘ + ⌥, then drag vertically."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Parça değiştiğinde ekranda bildirim göster"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatmak veya duraklatmak için üst kenarda beklet. Ses için iki fare tuşunu ya da ⌘ + ⌥ tuşlarını basılı tutup dikey sürükle."
           }
         }
       }
     },
-    "settings.version_format": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton v%@"
+    "settings.watch_demo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch the guide"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton v%@"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanıtımı izle"
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "settings.vertical_gestures": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play, pause, and volume gestures"
+    "settings.width" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Width"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatma, duraklatma ve ses hareketleri"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genişlik"
           }
         }
       }
     },
-    "settings.vertical_gestures_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold at the top edge to play or pause. For volume, hold both mouse buttons or ⌘ + ⌥, then drag vertically."
+    "settings.width_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Width of the track title in the menu bar"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatmak veya duraklatmak için üst kenarda beklet. Ses için iki fare tuşunu ya da ⌘ + ⌥ tuşlarını basılı tutup dikey sürükle."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü çubuğundaki parça adının genişliği"
           }
         }
       }
     },
-    "settings.watch_demo": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Watch the guide"
+    "setup_recovery.continue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue setup"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tanıtımı izle"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kuruluma devam et"
           }
         }
       }
     },
-    "settings.width": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Width"
+    "setup_recovery.quit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit Songleton"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Genişlik"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton'dan çık"
           }
         }
       }
     },
-    "settings.width_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Width of the track title in the menu bar"
+    "setup_recovery.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect Spotify or Apple Music when you're ready. Songleton will stay out of the way until then."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Menü çubuğundaki parça adının genişliği"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hazır olduğunda Spotify veya Apple Music'i bağla. Songleton o zamana kadar seni rahatsız etmez."
           }
         }
       }
     },
-    "setup_recovery.continue": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue setup"
+    "setup_recovery.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton needs one quick setup step"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kuruluma devam et"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton için kısa bir kurulum gerekiyor"
           }
         }
       }
     },
-    "setup_recovery.quit": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quit Songleton"
+    "shortcut.cycle_themes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch theme: Vinyl, Cassette, or Glass"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton'dan çık"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temayı değiştir: Plak, Kaset veya Cam"
           }
         }
       }
     },
-    "setup_recovery.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connect Spotify or Apple Music when you're ready. Songleton will stay out of the way until then."
+    "shortcut.exit_ambient" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit Ambient Mode"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hazır olduğunda Spotify veya Apple Music'i bağla. Songleton o zamana kadar seni rahatsız etmez."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambient Mode'dan çık"
           }
         }
       }
     },
-    "setup_recovery.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton needs one quick setup step"
+    "shortcut.play_pause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play or pause"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton için kısa bir kurulum gerekiyor"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynat veya duraklat"
           }
         }
       }
     },
-    "shortcut.cycle_themes": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch theme: Vinyl, Cassette, or Glass"
+    "shortcut.prev_next_track" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous or next track"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Temayı değiştir: Plak, Kaset veya Cam"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki veya sonraki parça"
           }
         }
       }
     },
-    "shortcut.exit_ambient": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Exit Ambient Mode"
+    "shortcut.toggle_lyrics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show or hide synced lyrics"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambient Mode'dan çık"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senkronize sözleri göster veya gizle"
           }
         }
       }
     },
-    "shortcut.play_pause": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play or pause"
+    "shortcut.volume_control" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume up or down by 10%"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynat veya duraklat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesi %10 artır veya azalt"
           }
         }
       }
     },
-    "shortcut.prev_next_track": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Previous or next track"
+    "tutorial.ambient_mode_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right-click the track title in the menu bar to open the current song in a full-screen scene."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Önceki veya sonraki parça"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalan parçayı tam ekran bir sahnede açmak için menü çubuğundaki parça adına sağ tıkla."
           }
         }
       }
     },
-    "shortcut.toggle_lyrics": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show or hide synced lyrics"
+    "tutorial.ambient_mode_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Ambient Mode"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Senkronize sözleri göster veya gizle"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambient Mode'u aç"
           }
         }
       }
     },
-    "shortcut.volume_control": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Volume up or down by 10%"
+    "tutorial.cancel_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holding at the left edge plays the previous track. Move away before the ring fills to cancel."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sesi %10 artır veya azalt"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol kenarda beklemek önceki parçayı açar. İptal etmek için halka dolmadan kenardan uzaklaş."
           }
         }
       }
     },
-    "tutorial.ambient_mode_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Right-click the track title in the menu bar to open the current song in a full-screen scene."
+    "tutorial.cancel_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left edge and cancel"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Çalan parçayı tam ekran bir sahnede açmak için menü çubuğundaki parça adına sağ tıkla."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol kenar ve iptal"
           }
         }
       }
     },
-    "tutorial.ambient_mode_header": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Ambient Mode"
+    "tutorial.close_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closes the guide and enables Songleton controls"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambient Mode'u aç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rehberi kapatır ve Songleton kontrollerini etkinleştirir"
           }
         }
       }
     },
-    "tutorial.cancel_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Holding at the left edge plays the previous track. Move away before the ring fills to cancel."
+    "tutorial.continue_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When the preview ends, move on to the next control."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sol kenarda beklemek önceki parçayı açar. İptal etmek için halka dolmadan kenardan uzaklaş."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ön izleme bitince sıradaki kontrole geçebilirsin."
           }
         }
       }
     },
-    "tutorial.cancel_header": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Left edge and cancel"
+    "tutorial.demo_artist" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton Demo"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sol kenar ve iptal"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton Tanıtım"
           }
         }
       }
     },
-    "tutorial.close_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Closes the guide and enables Songleton controls"
+    "tutorial.demo_running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview is playing…"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rehberi kapatır ve Songleton kontrollerini etkinleştirir"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ön izleme oynuyor…"
           }
         }
       }
     },
-    "tutorial.continue_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "When the preview ends, move on to the next control."
+    "tutorial.demo_track" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Midnight Signal"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ön izleme bitince sıradaki kontrole geçebilirsin."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gece Sinyali"
           }
         }
       }
     },
-    "tutorial.demo_artist": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton Demo"
+    "tutorial.edge_gesture_live" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SCREEN-EDGE GESTURE"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton Tanıtım"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKRAN KENARI HAREKETİ"
           }
         }
       }
     },
-    "tutorial.demo_running": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preview is playing…"
+    "tutorial.edge_status_cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move away before the ring fills to cancel."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ön izleme oynuyor…"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İptal etmek için halka dolmadan kenardan uzaklaş."
           }
         }
       }
     },
-    "tutorial.demo_track": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Midnight Signal"
+    "tutorial.edge_status_next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold at the right edge for the next track."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gece Sinyali"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonraki parça için sağ kenarda bekle."
           }
         }
       }
     },
-    "tutorial.edge_gesture_live": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SCREEN-EDGE GESTURE"
+    "tutorial.edge_status_playpause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold at the top edge to play or pause."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "EKRAN KENARI HAREKETİ"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatmak veya duraklatmak için üst kenarda bekle."
           }
         }
       }
     },
-    "tutorial.edge_status_cancel": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Move away before the ring fills to cancel."
+    "tutorial.hover_menu_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hover your mouse over Songleton in the menu bar for 0.4 seconds to automatically open the Hover Panel."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İptal etmek için halka dolmadan kenardan uzaklaş."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fareyi menü çubuğundaki Songleton öğesinin üzerinde 0.4 saniye tuttuğunda bu Hover Menü otomatik açılır."
           }
         }
       }
     },
-    "tutorial.edge_status_next": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold at the right edge for the next track."
+    "tutorial.hover_menu_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu Bar: Hover (0.4s)"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sonraki parça için sağ kenarda bekle."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü Çubuğu: Üzerine Gel (Hover)"
           }
         }
       }
     },
-    "tutorial.edge_status_playpause": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold at the top edge to play or pause."
+    "tutorial.left_click_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Single-click the track title in the menu bar to play or pause current track."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatmak veya duraklatmak için üst kenarda bekle."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalan parçayı duraklatmak veya oynatmak için menü çubuğundaki parça adına tek tıkla."
           }
         }
       }
     },
-    "tutorial.hover_menu_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use the left and right buttons for tracks, click the title to play or pause, and hover for the full panel."
+    "tutorial.left_click_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Single Click: Play / Pause"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sol ve sağ düğmelerle şarkı değiştir, başlığa tıklayarak oynat veya duraklat. Tüm kontroller için üzerine gel."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol Tık: Oynat / Duraklat"
           }
         }
       }
     },
-    "tutorial.hover_menu_header": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Menu bar controls"
+    "tutorial.next_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold the pointer at the right edge until the ring fills to play the next track."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Menü çubuğundaki kontroller"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonraki parçaya geçmek için halka dolana kadar imleci sağ kenarda beklet."
           }
         }
       }
     },
-    "tutorial.next_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold the pointer at the right edge until the ring fills to play the next track."
+    "tutorial.next_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play the next track"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sonraki parçaya geçmek için halka dolana kadar imleci sağ kenarda beklet."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonraki parçaya geç"
           }
         }
       }
     },
-    "tutorial.next_header": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play the next track"
+    "tutorial.playback_paused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback paused"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sonraki parçaya geç"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Müzik duraklatıldı"
           }
         }
       }
     },
-    "tutorial.playback_paused": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Playback paused"
+    "tutorial.playback_resuming" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback resumed"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Müzik duraklatıldı"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Müzik devam ediyor"
           }
         }
       }
     },
-    "tutorial.playback_resuming": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Playback resumed"
+    "tutorial.playpause_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold the pointer at the top edge to play or pause."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Müzik devam ediyor"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatmak veya duraklatmak için imleci üst kenarda beklet."
           }
         }
       }
     },
-    "tutorial.playpause_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold the pointer at the top edge to play or pause."
+    "tutorial.playpause_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play or pause"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynatmak veya duraklatmak için imleci üst kenarda beklet."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynat veya duraklat"
           }
         }
       }
     },
-    "tutorial.playpause_header": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play or pause"
+    "tutorial.prompt_bullet_1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the screen edges for previous, next, play, and pause"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynat veya duraklat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki, sonraki, oynat ve duraklat için ekran kenarlarını kullan"
           }
         }
       }
     },
-    "tutorial.prompt_bullet_1": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use the screen edges for previous, next, play, and pause"
+    "tutorial.prompt_bullet_2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume with ⌘ + ⌥ or both mouse buttons"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Önceki, sonraki, oynat ve duraklat için ekran kenarlarını kullan"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘ + ⌥ ya da iki fare tuşuyla ses kontrolü"
           }
         }
       }
     },
-    "tutorial.prompt_bullet_2": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Volume with ⌘ + ⌥ or both mouse buttons"
+    "tutorial.prompt_bullet_3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every gesture has a short, visible window to cancel it"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⌘ + ⌥ ya da iki fare tuşuyla ses kontrolü"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her hareketi çalıştırmadan önce kısa bir iptal süresi görürsün"
           }
         }
       }
     },
-    "tutorial.prompt_bullet_3": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Every gesture has a short, visible window to cancel it"
+    "tutorial.prompt_skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not now"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Her hareketi çalıştırmadan önce kısa bir iptal süresi görürsün"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi değil"
           }
         }
       }
     },
-    "tutorial.prompt_skip": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not now"
+    "tutorial.prompt_start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show me"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Şimdi değil"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Göster"
           }
         }
       }
     },
-    "tutorial.prompt_start": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show me"
+    "tutorial.prompt_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A short visual guide to the screen-edge gestures and menu bar controls."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Göster"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran kenarı hareketleri ve menü çubuğu kontrolleri için kısa bir görsel tur."
           }
         }
       }
     },
-    "tutorial.prompt_subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A short visual guide to the screen-edge gestures and menu bar controls."
+    "tutorial.prompt_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get to know the controls"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ekran kenarı hareketleri ve menü çubuğu kontrolleri için kısa bir görsel tur."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrolleri birlikte görelim"
           }
         }
       }
     },
-    "tutorial.prompt_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Get to know the controls"
+    "tutorial.stage_ambient_mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambient Mode"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kontrolleri birlikte görelim"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambient Mode"
           }
         }
       }
     },
-    "tutorial.stage_ambient_mode": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambient Mode"
+    "tutorial.stage_cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous track and cancel"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ambient Mode"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki parça ve iptal"
           }
         }
       }
     },
-    "tutorial.stage_cancel": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Previous track and cancel"
+    "tutorial.stage_hover_menu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control panel"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Önceki parça ve iptal"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrol paneli"
           }
         }
       }
     },
-    "tutorial.stage_hover_menu": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Control panel"
+    "tutorial.stage_left_click" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Single Click Play/Pause"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kontrol paneli"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol Tık Oynat/Duraklat"
           }
         }
       }
     },
-    "tutorial.stage_playpause": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play or pause"
+    "tutorial.stage_playpause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play or pause"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oynat veya duraklat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynat veya duraklat"
           }
         }
       }
     },
-    "tutorial.stage_title_format": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld. %2$@"
+    "tutorial.stage_title_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld. %2$@"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld. %2$@"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld. %2$@"
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "tutorial.stage_volume_control": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Volume control"
+    "tutorial.stage_volume_control" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume control"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ses kontrolü"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses kontrolü"
           }
         }
       }
     },
-    "tutorial.step_progress_format": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Step %1$lld of %2$lld"
+    "tutorial.step_progress_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Step %1$lld of %2$lld"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adım %1$lld / %2$lld"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adım %1$lld / %2$lld"
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "tutorial.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton controls"
+    "tutorial.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton controls"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Songleton kontrolleri"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Songleton kontrolleri"
           }
         }
       }
     },
-    "tutorial.volume_control_desc": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold Command and Option, then drag up or down. The volume HUD follows the movement."
+    "tutorial.volume_control_desc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold Command and Option, then drag up or down. The volume HUD follows the movement."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Command ve Option'a basılı tutup yukarı veya aşağı sürükle. Ses göstergesi hareketi takip eder."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Command ve Option'a basılı tutup yukarı veya aşağı sürükle. Ses göstergesi hareketi takip eder."
           }
         }
       }
     },
-    "tutorial.volume_control_header": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adjust volume from anywhere"
+    "tutorial.volume_control_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust volume from anywhere"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sesi bulunduğun yerden ayarla"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesi bulunduğun yerden ayarla"
           }
         }
       }
     },
-    "tutorial.volume_drag_short": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drag vertically"
+    "tutorial.volume_drag_short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag vertically"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dikey sürükle"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dikey sürükle"
           }
         }
       }
     },
-    "tutorial.volume_mouse_alternative": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Or hold both mouse buttons and drag."
+    "tutorial.volume_mouse_alternative" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Or hold both mouse buttons and drag."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ya da iki fare tuşunu basılı tutup sürükle."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya da iki fare tuşunu basılı tutup sürükle."
           }
         }
       }
     }
   },
-  "version": "1.1"
+  "version" : "1.1"
 }

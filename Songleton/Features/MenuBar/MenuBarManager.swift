@@ -25,39 +25,27 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
 
     func setup() {
         guard mainStatusItem == nil else { return }
-        MouseGestureManager.shared.updateMonitoring()
 
-        // Unified detail and volume panel opened on hover.
-        let volPopover = NSPopover()
-        volPopover.behavior = .transient
-        volPopover.animates = true
-        let hostingController = NSHostingController(rootView: UnifiedHoverPanelView())
-        hostingController.sizingOptions = [.preferredContentSize]
-        volPopover.contentViewController = hostingController
-        self.volumePopover = volPopover
-
-        // IMPORTANT: Keep the status-item initialization and visibility order
-        // below unchanged. NSStatusBar's insertion behavior is not intuitive
-        // on macOS, and this ordering is intentionally tuned for the visual
-        // order of these items in the menu bar.
-        // 1. Next track item.
-        let fwdItem = NSStatusBar.system.statusItem(withLength: 22)
+        let popover = NSPopover()
+        popover.contentSize = NSSize(width: 320, height: 420)
+        popover.behavior = .transient
+        popover.animates = true
+        popover.contentViewController = NSHostingController(
+            rootView: UnifiedHoverPanelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
+        )
+        self.volumePopover = popover
+        let fwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = fwdItem.button {
-            button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: nil)
+            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: LocalizationManager.shared.string("menu.next_track"))
             button.target = self
-            button.action = #selector(bwdTapped)
-            button.toolTip = LocalizationManager.shared.string("menu.previous_track")
-            button.setAccessibilityLabel(LocalizationManager.shared.string("menu.previous_track"))
+            button.action = #selector(fwdTapped)
         }
         self.fwdStatusItem = fwdItem
 
-        // 2. Track label item.
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        let mainLabel = MenuBarMainLabelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
-        let hosting = NSHostingView(rootView: mainLabel)
-        let fittingWidth = min(max(50, hosting.fittingSize.width + 4), SettingsModel.shared.menuBarWidth + 16)
-        hosting.frame = NSRect(x: 0, y: 0, width: fittingWidth, height: 22)
-        hosting.autoresizingMask = [.width, .height]
+        let mainLabelView = MenuBarMainLabelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
+        let hosting = NSHostingView(rootView: mainLabelView)
+        hosting.frame = NSRect(x: 0, y: 0, width: SettingsModel.shared.menuBarWidth, height: 22)
 
         if let button = mainItem.button {
             button.addSubview(hosting)
@@ -65,36 +53,24 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
             button.target = self
             button.action = #selector(mainItemClicked)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-            button.toolTip = LocalizationManager.shared.string("menu.main_item_tooltip")
-            button.setAccessibilityLabel(LocalizationManager.shared.string("menu.main_item_tooltip"))
 
             let trackingView = MenuBarTrackingAreaView(frame: button.bounds)
             trackingView.autoresizingMask = [.width, .height]
-            trackingView.onMouseEntered = { [weak self] in
-                self?.showVolumePopover()
-            }
-            trackingView.onMouseExited = { [weak self] in
-                self?.scheduleCloseVolumePopover()
-            }
+            trackingView.onMouseEntered = { [weak self] in self?.showVolumePopover() }
+            trackingView.onMouseExited = { [weak self] in self?.scheduleCloseVolumePopover() }
             button.addSubview(trackingView)
         }
-        mainItem.length = fittingWidth
         self.mainStatusItem = mainItem
 
-        // 3. Previous track item.
-        let bwdItem = NSStatusBar.system.statusItem(withLength: 22)
+        let bwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = bwdItem.button {
-            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
+            button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: LocalizationManager.shared.string("menu.previous_track"))
             button.target = self
-            button.action = #selector(fwdTapped)
-            button.toolTip = LocalizationManager.shared.string("menu.next_track")
-            button.setAccessibilityLabel(LocalizationManager.shared.string("menu.next_track"))
+            button.action = #selector(bwdTapped)
         }
         self.bwdStatusItem = bwdItem
 
-        // Keep the main item available as a recovery affordance even while the
-        // player or setup state is unavailable. Transport controls remain
-        // locked until setup is resolved and a player is loaded.
+        MouseGestureManager.shared.updateMonitoring()
         setStatusItemsVisible(false)
 
         NowPlayingModel.shared.$state
@@ -168,12 +144,9 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
         }
         let transportControlsVisible = isVisible && tutorialResolved && playerIsAvailable
         let navVisible = transportControlsVisible && SettingsModel.shared.showMenuBarNavButtons
-        // NSStatusBar inserts newly visible items toward the leading side.
-        // Reveal in reverse visual order so the track label stays between the
-        // previous and next buttons on the menu bar.
-        bwdStatusItem?.isVisible = navVisible
-        mainStatusItem?.isVisible = true
         fwdStatusItem?.isVisible = navVisible
+        mainStatusItem?.isVisible = true
+        bwdStatusItem?.isVisible = navVisible
         updateWidth()
     }
 

@@ -367,3 +367,244 @@ nonisolated final class AppleMusicController: @unchecked Sendable, MediaControll
         try runCommand("set song repeat to \(modeStr)")
     }
 }
+
+// MARK: - TIDAL Controller
+
+nonisolated final class TidalController: MediaController {
+    let bundleID = "com.tidal.desktop"
+    let displayName = "TIDAL"
+    var scriptAppName: String { "TIDAL" }
+
+    nonisolated var isRunning: Bool {
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.tidal.desktop").isEmpty ||
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.tidal.TIDAL").isEmpty
+    }
+
+    nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
+        let result = try runInfoScript("""
+        try
+            tell application "System Events"
+                tell process "TIDAL"
+                    set winTitle to name of window 1
+                    return winTitle
+                end tell
+            end tell
+        on error
+            return "TIDAL"
+        end try
+        """)
+        let rawTitle = result.stringValue ?? "TIDAL"
+        let parts = rawTitle.components(separatedBy: " - ")
+        let track = MediaValue.metadata(parts.first ?? "TIDAL")
+        let artist = MediaValue.metadata(parts.count > 1 ? parts[1] : "TIDAL")
+        let album = MediaValue.metadata(parts.count > 2 ? parts[2] : "")
+
+        return NowPlayingInfo(
+            track: track, artist: artist, album: album,
+            isPlaying: true, volume: 80, artworkURL: nil, artworkData: nil,
+            position: 0, duration: 0, isShuffleEnabled: false, repeatMode: .off
+        )
+    }
+
+    nonisolated func toggleShuffle() throws {}
+    nonisolated func setRepeatMode(_ mode: RepeatMode) throws {}
+}
+
+// MARK: - Deezer Controller
+
+nonisolated final class DeezerController: MediaController {
+    let bundleID = "com.deezer.deezer-desktop"
+    let displayName = "Deezer"
+    var scriptAppName: String { "Deezer" }
+
+    nonisolated var isRunning: Bool {
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.deezer.deezer-desktop").isEmpty ||
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.deezer.Deezer").isEmpty
+    }
+
+    nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
+        let result = try runInfoScript("""
+        try
+            tell application "System Events"
+                tell process "Deezer"
+                    set winTitle to name of window 1
+                    return winTitle
+                end tell
+            end tell
+        on error
+            return "Deezer"
+        end try
+        """)
+        let rawTitle = result.stringValue ?? "Deezer"
+        let parts = rawTitle.components(separatedBy: " - ")
+        let track = MediaValue.metadata(parts.first ?? "Deezer")
+        let artist = MediaValue.metadata(parts.count > 1 ? parts[1] : "Deezer")
+
+        return NowPlayingInfo(
+            track: track, artist: artist, album: "",
+            isPlaying: true, volume: 80, artworkURL: nil, artworkData: nil,
+            position: 0, duration: 0, isShuffleEnabled: false, repeatMode: .off
+        )
+    }
+
+    nonisolated func toggleShuffle() throws {}
+    nonisolated func setRepeatMode(_ mode: RepeatMode) throws {}
+}
+
+// MARK: - Amazon Music Controller
+
+nonisolated final class AmazonMusicController: MediaController {
+    let bundleID = "com.amazon.music"
+    let displayName = "Amazon Music"
+    var scriptAppName: String { "Amazon Music" }
+
+    nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
+        let result = try runInfoScript("""
+        try
+            tell application "System Events"
+                tell process "Amazon Music"
+                    set winTitle to name of window 1
+                    return winTitle
+                end tell
+            end tell
+        on error
+            return "Amazon Music"
+        end try
+        """)
+        let rawTitle = result.stringValue ?? "Amazon Music"
+        let parts = rawTitle.components(separatedBy: " - ")
+        let track = MediaValue.metadata(parts.first ?? "Amazon Music")
+        let artist = MediaValue.metadata(parts.count > 1 ? parts[1] : "")
+
+        return NowPlayingInfo(
+            track: track, artist: artist, album: "",
+            isPlaying: true, volume: 80, artworkURL: nil, artworkData: nil,
+            position: 0, duration: 0, isShuffleEnabled: false, repeatMode: .off
+        )
+    }
+
+    nonisolated func toggleShuffle() throws {}
+    nonisolated func setRepeatMode(_ mode: RepeatMode) throws {}
+}
+
+// MARK: - YouTube Music Controller
+
+nonisolated final class YouTubeMusicController: MediaController {
+    let bundleID = "com.github.th-ch.youtube-music"
+    let displayName = "YouTube Music"
+    var scriptAppName: String { "YouTube Music" }
+
+    nonisolated var isRunning: Bool {
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.github.th-ch.youtube-music").isEmpty ||
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "app.ytmdesktop.ytmdesktop").isEmpty ||
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.google.Chrome.app.YouTube-Music").isEmpty
+    }
+
+    nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
+        let result = try runInfoScript("""
+        try
+            tell application "System Events"
+                set winTitle to name of window 1 of (first process whose name contains "YouTube Music")
+                return winTitle
+            end tell
+        on error
+            return "YouTube Music"
+        end try
+        """)
+        let rawTitle = result.stringValue ?? "YouTube Music"
+        let cleaned = rawTitle.replacingOccurrences(of: " - YouTube Music", with: "")
+        let parts = cleaned.components(separatedBy: " - ")
+        let track = MediaValue.metadata(parts.first ?? "YouTube Music")
+        let artist = MediaValue.metadata(parts.count > 1 ? parts[1] : "")
+
+        return NowPlayingInfo(
+            track: track, artist: artist, album: "",
+            isPlaying: true, volume: 80, artworkURL: nil, artworkData: nil,
+            position: 0, duration: 0, isShuffleEnabled: false, repeatMode: .off
+        )
+    }
+
+    nonisolated func toggleShuffle() throws {}
+    nonisolated func setRepeatMode(_ mode: RepeatMode) throws {}
+}
+
+// MARK: - SoundCloud Controller
+
+nonisolated final class SoundCloudController: MediaController {
+    let bundleID = "com.soundcloud.desktop"
+    let displayName = "SoundCloud"
+    var scriptAppName: String { "SoundCloud" }
+
+    nonisolated var isRunning: Bool {
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.soundcloud.desktop").isEmpty ||
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.google.Chrome.app.SoundCloud").isEmpty
+    }
+
+    nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
+        let result = try runInfoScript("""
+        try
+            tell application "System Events"
+                set winTitle to name of window 1 of (first process whose name contains "SoundCloud")
+                return winTitle
+            end tell
+        on error
+            return "SoundCloud"
+        end try
+        """)
+        let rawTitle = result.stringValue ?? "SoundCloud"
+        let cleaned = rawTitle.replacingOccurrences(of: " | SoundCloud", with: "").replacingOccurrences(of: " - SoundCloud", with: "")
+        let parts = cleaned.components(separatedBy: " - ")
+        let track = MediaValue.metadata(parts.count > 1 ? parts[1] : parts.first ?? "SoundCloud")
+        let artist = MediaValue.metadata(parts.count > 1 ? parts[0] : "")
+
+        return NowPlayingInfo(
+            track: track, artist: artist, album: "",
+            isPlaying: true, volume: 80, artworkURL: nil, artworkData: nil,
+            position: 0, duration: 0, isShuffleEnabled: false, repeatMode: .off
+        )
+    }
+
+    nonisolated func toggleShuffle() throws {}
+    nonisolated func setRepeatMode(_ mode: RepeatMode) throws {}
+}
+
+// MARK: - Qobuz Controller
+
+nonisolated final class QobuzController: MediaController {
+    let bundleID = "com.qobuz.QobuzDesktop"
+    let displayName = "Qobuz"
+    var scriptAppName: String { "Qobuz" }
+
+    nonisolated var isRunning: Bool {
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.qobuz.QobuzDesktop").isEmpty ||
+        !NSRunningApplication.runningApplications(withBundleIdentifier: "com.qobuz.qobuzdesktop-app").isEmpty
+    }
+
+    nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
+        let result = try runInfoScript("""
+        try
+            tell application "System Events"
+                tell process "Qobuz"
+                    set winTitle to name of window 1
+                    return winTitle
+                end tell
+            end tell
+        on error
+            return "Qobuz"
+        end try
+        """)
+        let rawTitle = result.stringValue ?? "Qobuz"
+        let parts = rawTitle.components(separatedBy: " - ")
+        let track = MediaValue.metadata(parts.first ?? "Qobuz")
+        let artist = MediaValue.metadata(parts.count > 1 ? parts[1] : "")
+
+        return NowPlayingInfo(
+            track: track, artist: artist, album: "",
+            isPlaying: true, volume: 80, artworkURL: nil, artworkData: nil,
+            position: 0, duration: 0, isShuffleEnabled: false, repeatMode: .off
+        )
+    }
+
+    nonisolated func toggleShuffle() throws {}
+    nonisolated func setRepeatMode(_ mode: RepeatMode) throws {}
+}
