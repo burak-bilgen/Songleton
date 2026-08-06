@@ -39,6 +39,10 @@ final class GestureTutorialManager: ObservableObject {
         resolution.unlocksControls
     }
 
+    /// Whether the launch-time tutorial prompt should stop appearing.
+    /// Note: this no longer gates gestures or menu bar controls — those are
+    /// only suppressed while the tutorial is actively presented (see
+    /// MouseGestureManager.updateMonitoring / MenuBarManager.setStatusItemsVisible).
     var hasCompletedTutorial: Bool {
         hasResolvedTutorial
     }

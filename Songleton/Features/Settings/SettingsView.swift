@@ -651,23 +651,6 @@ struct SettingsView: View {
         VStack(spacing: 14) {
             HStack(spacing: 12) {
                 Button {
-                    NotificationCenter.default.post(name: .songletonShowGestureTutorial, object: nil)
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "play.circle.fill")
-                            .font(.system(size: 12, weight: .bold))
-                        Text(localization.string("settings.watch_demo"))
-                            .font(.system(size: 11.5, weight: .bold, design: .rounded))
-                    }
-                    .foregroundStyle(SongletonTheme.cyan)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .background(SongletonTheme.cyan.opacity(0.12), in: Capsule())
-                    .overlay(Capsule().stroke(SongletonTheme.cyan.opacity(0.35), lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-
-                Button {
                     NotificationCenter.default.post(name: .songletonShowOnboarding, object: nil)
                 } label: {
                     HStack(spacing: 6) {

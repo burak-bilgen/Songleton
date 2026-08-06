@@ -135,14 +135,13 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
     }
 
     func setStatusItemsVisible(_ isVisible: Bool) {
-        let tutorialResolved = GestureTutorialManager.shared.hasCompletedTutorial
         let playerIsAvailable: Bool
         if case .loaded = NowPlayingModel.shared.state {
             playerIsAvailable = true
         } else {
             playerIsAvailable = false
         }
-        let transportControlsVisible = isVisible && tutorialResolved && playerIsAvailable
+        let transportControlsVisible = isVisible && playerIsAvailable
         let navVisible = transportControlsVisible && SettingsModel.shared.showMenuBarNavButtons
         fwdStatusItem?.isVisible = navVisible
         mainStatusItem?.isVisible = true

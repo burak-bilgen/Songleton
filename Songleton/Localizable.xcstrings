@@ -132,7 +132,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ambient"
+            "value" : "Ambient Modu"
           }
         }
       }
@@ -2309,23 +2309,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oynatmak veya duraklatmak için üst kenarda beklet. Ses için iki fare tuşunu ya da ⌘ + ⌥ tuşlarını basılı tutup dikey sürükle."
-          }
-        }
-      }
-    },
-    "settings.watch_demo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Watch the guide"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tanıtımı izle"
           }
         }
       }

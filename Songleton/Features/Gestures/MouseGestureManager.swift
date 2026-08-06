@@ -126,8 +126,8 @@ final class MouseGestureManager: ObservableObject {
         }
         let isOnboardingOpen = NSApp.windows.contains(where: { $0.identifier?.rawValue == "onboardingWindow" && $0.isVisible })
         let isSetupRecoveryOpen = NSApp.windows.contains(where: { $0.identifier?.rawValue == "setupRecoveryWindow" && $0.isVisible })
-        if isOnboardingOpen || isSetupRecoveryOpen || GestureTutorialManager.shared.isPresented || !GestureTutorialManager.shared.hasCompletedTutorial {
-            logger.info("Gesture monitoring suppressed until the gesture tutorial is resolved")
+        if isOnboardingOpen || isSetupRecoveryOpen || GestureTutorialManager.shared.isPresented {
+            logger.info("Gesture monitoring suppressed while onboarding, setup recovery, or the gesture tutorial is open")
             stop()
             return
         }
