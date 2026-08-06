@@ -90,6 +90,8 @@ fi
 PROJECT_NAME="$(find "${ROOT_DIR}" -maxdepth 1 -name '*.xcodeproj' -print -quit 2>/dev/null | xargs -n1 basename 2>/dev/null)"
 [[ -n "$PROJECT_NAME" ]] || die "No .xcodeproj found."
 PROJECT_PATH="${ROOT_DIR}/${PROJECT_NAME}"
+PROJECT_FORMAT="$(sed -nE 's/^[[:space:]]*objectVersion = ([0-9]+);/\1/p' "${PROJECT_PATH}/project.pbxproj" | head -n1)"
+[[ -n "$PROJECT_FORMAT" && "$PROJECT_FORMAT" -le 77 ]] || die "Project format ${PROJECT_FORMAT:-?} is newer than this machine's Xcode supports (77). Downgrade objectVersion in project.pbxproj (e.g. after opening the project in a newer Xcode) and commit."
 SCHEME="$(xcodebuild -list -project "${PROJECT_PATH}" 2>/dev/null | sed -nE 's/^[[:space:]]*([A-Za-z0-9_.-]+)[[:space:]]*$/\1/p' | head -n1)"
 [[ -n "$SCHEME" ]] || die "Could not detect the Xcode scheme."
 
