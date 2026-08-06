@@ -453,6 +453,80 @@ a { text-decoration: none; }
 .gallery-badge { display: inline-block; color: var(--cyan); font-size: 11px; font-weight: 900; letter-spacing: .12em; margin-bottom: 8px; }
 .gallery-caption h3 { margin: 0 0 10px; font-size: 21px; font-weight: 780; letter-spacing: -.03em; color: var(--ink); }
 .gallery-caption p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+
+/* Full-Screen Image Lightbox Modal */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 12, 22, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.lightbox-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+.lightbox-content {
+  position: relative;
+  max-width: min(1280px, 92vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: scale(0.92);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.lightbox-overlay.active .lightbox-content {
+  transform: scale(1);
+}
+.lightbox-img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.lightbox-close {
+  position: absolute;
+  top: -18px;
+  right: -18px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(26, 36, 64, 0.92);
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, background 0.2s ease;
+  z-index: 2;
+}
+.lightbox-close:hover {
+  transform: scale(1.1);
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+.lightbox-caption {
+  margin-top: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  max-width: 720px;
+}
 .final-cta { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 100px 30px; border: 1px solid rgba(255,255,255,.1); border-radius: 34px; background: linear-gradient(145deg,#1c2b66,#111b45 55%,#0d1330); text-align: center; box-shadow: 0 34px 90px rgba(13,22,41,.28), inset 0 1px rgba(255,255,255,.08); }
 .final-cta img { position: relative; margin-bottom: 26px; border-radius: 24px; filter: drop-shadow(0 20px 35px rgba(0,0,0,.4)); }.final-cta h2 { position: relative; color: #fff; }.final-cta .section-kicker { color: #9fd4ff; }.final-cta > p:not(.section-kicker) { position: relative; color: #aab5d8; }.final-cta .hero-actions { position: relative; }.final-cta .button.primary { color: #16224e; background: linear-gradient(135deg, #ffffff, #e3ecff); box-shadow: 0 15px 40px rgba(0,0,0,.35), inset 0 1px rgba(255,255,255,.9); }.final-cta .button.ghost { border-color: rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; }.final-cta .button.ghost:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.14); }.cta-aura { position:absolute;width:650px;height:650px;border-radius:50%;background:radial-gradient(circle,rgba(59,188,255,.22),rgba(122,75,255,.12) 38%,transparent 68%);filter:blur(20px);top:-360px; }
 .site-footer { display:flex;align-items:center;justify-content:space-between;gap:24px;padding-top:44px;padding-bottom:44px;color:var(--dim);font-size:11px; }.site-footer > div:last-child { display:flex;gap:20px; }.site-footer .footer-brand { display:grid;gap:8px; }.site-footer .footer-brand p { margin:0; }.site-footer .footer-contact { display:grid;gap:6px;justify-items:start; }.site-footer .footer-contact b { color:var(--ink);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase; }.site-footer .footer-contact a { display:inline-flex;align-items:center;gap:6px;color:var(--dim);text-decoration:none; }.site-footer .footer-contact a:hover { color:var(--cyan); }

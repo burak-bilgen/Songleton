@@ -157,3 +157,57 @@ reducedMotion.addEventListener?.("change", () => {
   if (!reducedMotion.matches || !revealElements.length) return;
   revealElements.forEach((element) => element.classList.add("in"));
 });
+
+// Image Lightbox Zoom Functionality
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightbox-img");
+const lightboxCaption = document.getElementById("lightbox-caption");
+const lightboxClose = document.getElementById("lightbox-close");
+
+function openLightbox(src, alt, captionText) {
+  if (!lightbox || !lightboxImg) return;
+  lightboxImg.src = src;
+  lightboxImg.alt = alt || "Screenshot";
+  if (lightboxCaption) lightboxCaption.textContent = captionText || alt || "";
+  lightbox.classList.add("active");
+  lightbox.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+  if (!lightbox) return;
+  lightbox.classList.remove("active");
+  lightbox.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+document.querySelectorAll(".gallery-card").forEach((card) => {
+  const img = card.querySelector("img");
+  const title = card.querySelector("h3")?.textContent || "";
+  if (img) {
+    card.addEventListener("click", () => {
+      openLightbox(img.src, img.alt, title);
+    });
+  }
+});
+
+if (lightboxClose) {
+  lightboxClose.addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeLightbox();
+  });
+}
+
+if (lightbox) {
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox || e.target.classList.contains("lightbox-content")) {
+      closeLightbox();
+    }
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && lightbox && lightbox.classList.contains("active")) {
+    closeLightbox();
+  }
+});
