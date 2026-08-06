@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class SettingsModelTests {
     private var userDefaults: UserDefaults!
     private var settings: SettingsModel!

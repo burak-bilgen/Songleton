@@ -204,9 +204,7 @@ final class AmbientModeManager: ObservableObject {
     private func removeKeyMonitor() {
         if let monitor = keyMonitor {
             keyMonitor = nil
-            DispatchQueue.main.async {
-                NSEvent.removeMonitor(monitor)
-            }
+            NSEvent.removeMonitor(monitor)
         }
     }
 }

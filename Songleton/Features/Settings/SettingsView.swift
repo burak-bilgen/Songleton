@@ -48,7 +48,12 @@ struct SettingsView: View {
             }
         }
         .onDisappear {
-            NSApp.setActivationPolicy(.accessory)
+            let hasVisibleWindow = NSApp.windows.contains { win in
+                win.isVisible && win.identifier?.rawValue != "settings" && (win.identifier?.rawValue == "onboardingWindow" || win.identifier?.rawValue == "setupRecoveryWindow")
+            }
+            if !hasVisibleWindow {
+                NSApp.setActivationPolicy(.accessory)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             refreshAccessibilityStatus()

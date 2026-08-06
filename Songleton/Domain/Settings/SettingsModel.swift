@@ -31,8 +31,9 @@ enum TrackNotificationPosition: String, CaseIterable, Identifiable {
 
 }
 
+@MainActor
 final class SettingsModel: ObservableObject {
-    static let shared = AppContainer.shared.settings
+    static var shared: SettingsModel { AppContainer.shared.settings }
 
     enum MenuBarFont: String, CaseIterable {
         case system

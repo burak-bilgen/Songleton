@@ -1,7 +1,7 @@
 import Foundation
 
 final class LyricsService {
-    static let shared = AppContainer.shared.lyricsService
+    @MainActor static var shared: LyricsService { AppContainer.shared.lyricsService }
 
     init() {}
 
@@ -108,7 +108,7 @@ final class LyricsService {
     private func performLyricsRequest(url: URL) async -> [LyricLine]? {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Songleton macOS/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("Songleton/1.0 (https://github.com/bilgenworks/Songleton)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 6.0
 

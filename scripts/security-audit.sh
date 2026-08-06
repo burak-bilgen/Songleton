@@ -12,6 +12,8 @@ plutil -lint Songleton/Songleton.entitlements Songleton/Debug.entitlements >/dev
 
 grep -q 'ENABLE_HARDENED_RUNTIME = YES;' Songleton.xcodeproj/project.pbxproj \
   || fail "Hardened Runtime must remain enabled"
+grep -q 'ENABLE_APP_SANDBOX = NO;' Songleton.xcodeproj/project.pbxproj \
+  || fail "App Sandbox must remain disabled"
 grep -q 'DEAD_CODE_STRIPPING = YES;' Songleton.xcodeproj/project.pbxproj \
   || fail "Release dead-code stripping must remain enabled"
 grep -q 'SWIFT_STRICT_CONCURRENCY = complete;' Songleton.xcodeproj/project.pbxproj \
@@ -32,6 +34,7 @@ cask_checksum="$(sed -nE 's/^[[:space:]]*sha256 "([0-9a-f]{64})"/\1/p' homebrew-
 
 release_entitlements="$(plutil -convert json -o - Songleton/Songleton.entitlements)"
 for forbidden in \
+  com.apple.security.app-sandbox \
   com.apple.security.get-task-allow \
   com.apple.security.cs.allow-dyld-environment-variables \
   com.apple.security.cs.disable-library-validation \
