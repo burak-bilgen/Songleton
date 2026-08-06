@@ -34,13 +34,14 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
             rootView: UnifiedHoverPanelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
         )
         self.volumePopover = popover
-        let fwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        if let button = fwdItem.button {
-            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: LocalizationManager.shared.string("menu.next_track"))
+        // Previous track button is created first so it sits LEFT of the track.
+        let bwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = bwdItem.button {
+            button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: LocalizationManager.shared.string("menu.previous_track"))
             button.target = self
-            button.action = #selector(fwdTapped)
+            button.action = #selector(bwdTapped)
         }
-        self.fwdStatusItem = fwdItem
+        self.bwdStatusItem = bwdItem
 
         let mainItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let mainLabelView = MenuBarMainLabelView(model: NowPlayingModel.shared, settings: SettingsModel.shared)
@@ -62,13 +63,14 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
         }
         self.mainStatusItem = mainItem
 
-        let bwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        if let button = bwdItem.button {
-            button.image = NSImage(systemSymbolName: "backward.fill", accessibilityDescription: LocalizationManager.shared.string("menu.previous_track"))
+        // Next track button is created last so it sits RIGHT of the track.
+        let fwdItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = fwdItem.button {
+            button.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: LocalizationManager.shared.string("menu.next_track"))
             button.target = self
-            button.action = #selector(bwdTapped)
+            button.action = #selector(fwdTapped)
         }
-        self.bwdStatusItem = bwdItem
+        self.fwdStatusItem = fwdItem
 
         MouseGestureManager.shared.updateMonitoring()
         setStatusItemsVisible(false)
@@ -143,9 +145,12 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
         }
         let transportControlsVisible = isVisible && playerIsAvailable
         let navVisible = transportControlsVisible && SettingsModel.shared.showMenuBarNavButtons
-        fwdStatusItem?.isVisible = navVisible
-        mainStatusItem?.isVisible = true
+        // NSStatusBar inserts newly visible items toward the leading side, so
+        // reveal in reverse visual order: previous (leftmost) first, next
+        // (rightmost) last — the track label stays between them.
         bwdStatusItem?.isVisible = navVisible
+        mainStatusItem?.isVisible = true
+        fwdStatusItem?.isVisible = navVisible
         updateWidth()
     }
 
