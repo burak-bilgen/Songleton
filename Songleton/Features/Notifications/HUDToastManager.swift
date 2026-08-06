@@ -146,6 +146,8 @@ final class HUDToastManager: NSObject {
             .store(in: &cancellables)
     }
 
+    private(set) var isNativeDragging: Bool = false
+
     func show(
         track: String,
         artist: String,
@@ -153,6 +155,8 @@ final class HUDToastManager: NSObject {
         accentColor: Color? = nil,
         isPreview: Bool = false
     ) {
+        if isNativeDragging { return }
+
         dismissTask?.cancel()
 
         // Hide mini player in Ambient Mode (unless this is a settings/tutorial preview)
@@ -323,6 +327,7 @@ final class HUDToastManager: NSObject {
     }
 
     func updatePermanentMode() {
+        if isNativeDragging { return }
         if SettingsModel.shared.permanentHUDMode &&
            SettingsModel.shared.showTrackNotifications &&
            !AmbientModeManager.shared.isPresented {
@@ -385,6 +390,7 @@ final class HUDToastManager: NSObject {
     }
 
     func handleNativeDragStart(window: NSWindow) {
+        isNativeDragging = true
         let pointerLocation = NSEvent.mouseLocation
         let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
             ?? window.screen
@@ -460,6 +466,7 @@ final class HUDToastManager: NSObject {
 
     func handleNativeDragEnded(window: NSWindow) {
         defer {
+            isNativeDragging = false
             overlayWindow?.orderOut(nil)
             overlayWindow = nil
             currentNearestSnapPosition = nil
