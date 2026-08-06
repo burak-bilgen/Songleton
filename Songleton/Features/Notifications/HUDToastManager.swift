@@ -222,7 +222,7 @@ final class HUDToastManager: NSObject {
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = false
-        panel.ignoresMouseEvents = true
+        panel.ignoresMouseEvents = !isPermanent && !isPreview
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
         panel.contentView = NSHostingView(
             rootView: HUDToastView(
@@ -318,6 +318,78 @@ final class HUDToastManager: NSObject {
             accentColor: SongletonTheme.cyan,
             isPreview: true
         )
+    }
+
+    // MARK: - Interactive Drag & Magnetic Snap
+
+    private var dragStartPanelOrigin: NSPoint?
+
+    func handleCardDragStart() {
+        guard let panel = toastWindow else { return }
+        dragStartPanelOrigin = panel.frame.origin
+    }
+
+    func handleCardDragChanged(translation: CGSize) {
+        guard let panel = toastWindow, let startOrigin = dragStartPanelOrigin else { return }
+        let currentOrigin = NSPoint(
+            x: startOrigin.x + translation.width,
+            y: startOrigin.y - translation.height
+        )
+        panel.setFrameOrigin(currentOrigin)
+    }
+
+    func handleCardDragEnded(translation: CGSize) {
+        guard let panel = toastWindow, let startOrigin = dragStartPanelOrigin else { return }
+        dragStartPanelOrigin = nil
+
+        let currentOrigin = NSPoint(
+            x: startOrigin.x + translation.width,
+            y: startOrigin.y - translation.height
+        )
+
+        let pointerLocation = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
+            ?? NSScreen.main
+            ?? NSScreen.screens.first
+        guard let screen else { return }
+
+        let visibleFrame = screen.visibleFrame
+        let panelSize = panel.frame.size
+        let shadowInset = TrackNotificationLayout.shadowInset
+        let cardSize = NSSize(width: panelSize.width - shadowInset * 2, height: panelSize.height - shadowInset * 2)
+
+        var nearestPosition: TrackNotificationPosition = SettingsModel.shared.trackNotificationPosition
+        var minDistance: CGFloat = .greatestFiniteMagnitude
+
+        for pos in TrackNotificationPosition.allCases {
+            let cardPosOrigin = toastOrigin(in: visibleFrame, toastSize: cardSize, position: pos)
+            let posPanelOrigin = NSPoint(x: cardPosOrigin.x - shadowInset, y: cardPosOrigin.y - shadowInset)
+
+            let dist = hypot(currentOrigin.x - posPanelOrigin.x, currentOrigin.y - posPanelOrigin.y)
+            if dist < minDistance {
+                minDistance = dist
+                nearestPosition = pos
+            }
+        }
+
+        let finalCardOrigin = toastOrigin(in: visibleFrame, toastSize: cardSize, position: nearestPosition)
+        let finalPanelFrame = NSRect(
+            origin: NSPoint(x: finalCardOrigin.x - shadowInset, y: finalCardOrigin.y - shadowInset),
+            size: panelSize
+        )
+
+        // Haptic snap feedback
+        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
+
+        // Smooth magnetic snap animation
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.28
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().setFrame(finalPanelFrame, display: true)
+        }
+
+        // Save position to settings
+        SettingsModel.shared.trackNotificationPosition = nearestPosition
     }
 
     private func toastOrigin(

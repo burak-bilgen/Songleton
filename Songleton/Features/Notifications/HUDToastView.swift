@@ -24,6 +24,8 @@ struct HUDToastView: View {
     @ObservedObject private var model = NowPlayingModel.shared
     @ObservedObject private var localization = LocalizationManager.shared
 
+    @State private var isDragging: Bool = false
+
     private let cornerRadius: CGFloat = 18
 
     private var isPermanentMode: Bool {
@@ -83,18 +85,21 @@ struct HUDToastView: View {
 
     var body: some View {
         ZStack {
-            ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(white: 0.12),
-                        Color(white: 0.055),
-                        Color.black.opacity(0.96)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+            artworkAura
 
-                artworkAura
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(white: 0.12),
+                                Color(white: 0.055),
+                                Color.black.opacity(0.96)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
 
                 LinearGradient(
                     colors: [.white.opacity(0.08), .clear, .black.opacity(0.18)],
@@ -109,17 +114,35 @@ struct HUDToastView: View {
             .overlay(
                 cardShape.stroke(
                     LinearGradient(
-                        colors: [.white.opacity(0.34), themeColor.opacity(0.46), .white.opacity(0.08)],
+                        colors: [
+                            .white.opacity(isDragging ? 0.60 : 0.34),
+                            themeColor.opacity(isDragging ? 0.80 : 0.46),
+                            .white.opacity(0.08)
+                        ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
-                    lineWidth: 1
+                    lineWidth: isDragging ? 1.5 : 1.0
                 )
             )
             .shadow(color: .black.opacity(0.68), radius: 11, x: 0, y: 7)
-            .shadow(color: themeColor.opacity(0.30), radius: 20, x: 0, y: 8)
-            .shadow(color: themeColor.opacity(0.13), radius: 30, x: 0, y: 9)
-            .shadow(color: themeColor.opacity(0.08), radius: 46, x: 0, y: 10)
+            .shadow(color: themeColor.opacity(isDragging ? 0.65 : 0.30), radius: isDragging ? 26 : 20, x: 0, y: 8)
+            .scaleEffect(isDragging ? 1.03 : 1.0)
+            .animation(.spring(response: 0.22, dampingFraction: 0.65), value: isDragging)
+            .gesture(
+                DragGesture(minimumDistance: 2)
+                    .onChanged { value in
+                        if !isDragging {
+                            isDragging = true
+                            HUDToastManager.shared.handleCardDragStart()
+                        }
+                        HUDToastManager.shared.handleCardDragChanged(translation: value.translation)
+                    }
+                    .onEnded { value in
+                        isDragging = false
+                        HUDToastManager.shared.handleCardDragEnded(translation: value.translation)
+                    }
+            )
         }
         .frame(width: layout.panelSize.width, height: layout.panelSize.height)
         .accessibilityElement(children: .combine)
