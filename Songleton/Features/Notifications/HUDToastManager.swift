@@ -377,11 +377,11 @@ final class HUDToastManager: NSObject {
         let rawX = startOrigin.x + dx
         let rawY = startOrigin.y + dy
 
-        // Clamp card origin to stay strictly within screen.visibleFrame
-        let minCardX = visibleFrame.minX + 12
-        let maxCardX = visibleFrame.maxX - cardSize.width - 12
-        let minCardY = visibleFrame.minY + 12
-        let maxCardY = visibleFrame.maxY - cardSize.height - 12
+        // Clamp card origin to stay strictly within screen.visibleFrame with 52px padding
+        let minCardX = visibleFrame.minX + 52
+        let maxCardX = visibleFrame.maxX - cardSize.width - 52
+        let minCardY = visibleFrame.minY + 52
+        let maxCardY = visibleFrame.maxY - cardSize.height - 52
 
         let clampedCardX = min(max(rawX + shadowInset, minCardX), maxCardX)
         let clampedCardY = min(max(rawY + shadowInset, minCardY), maxCardY)
@@ -477,8 +477,8 @@ final class HUDToastManager: NSObject {
         toastSize: NSSize,
         position: TrackNotificationPosition
     ) -> NSPoint {
-        let horizontalPadding = min(22, max(12, (frame.width - toastSize.width) / 2))
-        let verticalPadding = min(22, max(12, (frame.height - toastSize.height) / 2))
+        let horizontalPadding = min(68, max(52, (frame.width - toastSize.width) / 2))
+        let verticalPadding = min(68, max(52, (frame.height - toastSize.height) / 2))
 
         let x: CGFloat
         switch position {
