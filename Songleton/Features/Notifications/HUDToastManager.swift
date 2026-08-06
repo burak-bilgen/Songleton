@@ -173,6 +173,7 @@ final class HUDToastManager: NSObject {
             panel.isOpaque = false
             panel.hasShadow = false
             panel.ignoresMouseEvents = false
+            panel.isMovableByWindowBackground = true
             panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
             panel.contentView = NSHostingView(
                 rootView: HUDToastView(
@@ -223,6 +224,7 @@ final class HUDToastManager: NSObject {
         panel.isOpaque = false
         panel.hasShadow = false
         panel.ignoresMouseEvents = !isPermanent && !isPreview
+        panel.isMovableByWindowBackground = isPermanent || isPreview
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
         panel.contentView = NSHostingView(
             rootView: HUDToastView(
@@ -320,43 +322,113 @@ final class HUDToastManager: NSObject {
         )
     }
 
-    // MARK: - Interactive Drag & Magnetic Snap
+    // MARK: - Native Drag & Translucent Snap Overlay
 
-    private var dragStartPanelOrigin: NSPoint?
+    private var overlayWindow: SnapGuideOverlayWindow?
+    private var currentNearestSnapPosition: TrackNotificationPosition?
 
-    func handleCardDragStart() {
-        guard let panel = toastWindow else { return }
-        dragStartPanelOrigin = panel.frame.origin
-    }
-
-    func handleCardDragChanged(translation: CGSize) {
-        guard let panel = toastWindow, let startOrigin = dragStartPanelOrigin else { return }
-        let currentOrigin = NSPoint(
-            x: startOrigin.x + translation.width,
-            y: startOrigin.y - translation.height
-        )
-        panel.setFrameOrigin(currentOrigin)
-    }
-
-    func handleCardDragEnded(translation: CGSize) {
-        guard let panel = toastWindow, let startOrigin = dragStartPanelOrigin else { return }
-        dragStartPanelOrigin = nil
-
-        let currentOrigin = NSPoint(
-            x: startOrigin.x + translation.width,
-            y: startOrigin.y - translation.height
-        )
-
+    func handleNativeDragStart(window: NSWindow) {
         let pointerLocation = NSEvent.mouseLocation
         let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
+            ?? window.screen
             ?? NSScreen.main
             ?? NSScreen.screens.first
         guard let screen else { return }
 
+        let isPermanent = SettingsModel.shared.permanentHUDMode
+        let layout = TrackNotificationLayout.make(
+            track: "Songleton",
+            artist: "",
+            in: screen.visibleFrame,
+            isPermanent: isPermanent
+        )
+
+        let initialNearest = findNearestPosition(forWindowOrigin: window.frame.origin, windowSize: window.frame.size, on: screen)
+        currentNearestSnapPosition = initialNearest
+
+        let overlay = SnapGuideOverlayWindow(
+            screen: screen,
+            cardSize: layout.size,
+            activePosition: initialNearest
+        )
+        overlay.orderFrontRegardless()
+        self.overlayWindow = overlay
+    }
+
+    func handleNativeDragMoved(window: NSWindow) {
+        let pointerLocation = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
+            ?? window.screen
+            ?? NSScreen.main
+            ?? NSScreen.screens.first
+        guard let screen else { return }
+
+        let isPermanent = SettingsModel.shared.permanentHUDMode
+        let layout = TrackNotificationLayout.make(
+            track: "Songleton",
+            artist: "",
+            in: screen.visibleFrame,
+            isPermanent: isPermanent
+        )
+
+        let nearest = findNearestPosition(forWindowOrigin: window.frame.origin, windowSize: window.frame.size, on: screen)
+
+        if nearest != currentNearestSnapPosition {
+            currentNearestSnapPosition = nearest
+            NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
+            overlayWindow?.updateActivePosition(nearest, cardSize: layout.size)
+        }
+    }
+
+    func handleNativeDragEnded(window: NSWindow) {
+        defer {
+            overlayWindow?.orderOut(nil)
+            overlayWindow = nil
+            currentNearestSnapPosition = nil
+        }
+
+        let pointerLocation = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
+            ?? window.screen
+            ?? NSScreen.main
+            ?? NSScreen.screens.first
+        guard let screen else { return }
+
+        let isPermanent = SettingsModel.shared.permanentHUDMode
+        let layout = TrackNotificationLayout.make(
+            track: "Songleton",
+            artist: "",
+            in: screen.visibleFrame,
+            isPermanent: isPermanent
+        )
+
+        let nearestPosition = findNearestPosition(forWindowOrigin: window.frame.origin, windowSize: window.frame.size, on: screen)
+
         let visibleFrame = screen.visibleFrame
-        let panelSize = panel.frame.size
+        let cardOrigin = toastOrigin(in: visibleFrame, toastSize: layout.size, position: nearestPosition)
+        let finalPanelFrame = NSRect(
+            origin: NSPoint(x: cardOrigin.x - TrackNotificationLayout.shadowInset, y: cardOrigin.y - TrackNotificationLayout.shadowInset),
+            size: layout.panelSize
+        )
+
+        // Haptic snap feedback
+        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
+
+        // Smooth spring magnetic snap animation
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.26
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().setFrame(finalPanelFrame, display: true)
+        }
+
+        // Save position to settings
+        SettingsModel.shared.trackNotificationPosition = nearestPosition
+    }
+
+    private func findNearestPosition(forWindowOrigin currentOrigin: NSPoint, windowSize: NSSize, on screen: NSScreen) -> TrackNotificationPosition {
+        let visibleFrame = screen.visibleFrame
         let shadowInset = TrackNotificationLayout.shadowInset
-        let cardSize = NSSize(width: panelSize.width - shadowInset * 2, height: panelSize.height - shadowInset * 2)
+        let cardSize = NSSize(width: windowSize.width - shadowInset * 2, height: windowSize.height - shadowInset * 2)
 
         var nearestPosition: TrackNotificationPosition = SettingsModel.shared.trackNotificationPosition
         var minDistance: CGFloat = .greatestFiniteMagnitude
@@ -371,25 +443,7 @@ final class HUDToastManager: NSObject {
                 nearestPosition = pos
             }
         }
-
-        let finalCardOrigin = toastOrigin(in: visibleFrame, toastSize: cardSize, position: nearestPosition)
-        let finalPanelFrame = NSRect(
-            origin: NSPoint(x: finalCardOrigin.x - shadowInset, y: finalCardOrigin.y - shadowInset),
-            size: panelSize
-        )
-
-        // Haptic snap feedback
-        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
-
-        // Smooth magnetic snap animation
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.28
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            panel.animator().setFrame(finalPanelFrame, display: true)
-        }
-
-        // Save position to settings
-        SettingsModel.shared.trackNotificationPosition = nearestPosition
+        return nearestPosition
     }
 
     private func toastOrigin(
@@ -397,9 +451,6 @@ final class HUDToastManager: NSObject {
         toastSize: NSSize,
         position: TrackNotificationPosition
     ) -> NSPoint {
-        // The panel still owns a large transparent runway for the glow, while
-        // the visible card itself stays close enough to the display edge to
-        // feel anchored to the selected placement.
         let horizontalPadding = min(22, max(12, (frame.width - toastSize.width) / 2))
         let verticalPadding = min(22, max(12, (frame.height - toastSize.height) / 2))
 
@@ -427,8 +478,145 @@ final class HUDToastManager: NSObject {
     }
 }
 
-// Custom NSPanel subclass that NEVER steals key focus or main window status
+// MARK: - Custom Panel Subclass with Native Mouse Dragging
+
 final class NonActivatingToastPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
+
+    override func sendEvent(_ event: NSEvent) {
+        switch event.type {
+        case .leftMouseDown:
+            if self.isMovableByWindowBackground {
+                HUDToastManager.shared.handleNativeDragStart(window: self)
+            }
+        case .leftMouseDragged:
+            if self.isMovableByWindowBackground {
+                HUDToastManager.shared.handleNativeDragMoved(window: self)
+            }
+        case .leftMouseUp:
+            if self.isMovableByWindowBackground {
+                HUDToastManager.shared.handleNativeDragEnded(window: self)
+            }
+        default:
+            break
+        }
+        super.sendEvent(event)
+    }
+}
+
+// MARK: - Translucent Ghost Snap Placeholders Window & View
+
+final class SnapGuideOverlayWindow: NSPanel {
+    private var hostingView: NSHostingView<SnapGuideOverlayView>?
+
+    init(screen: NSScreen, cardSize: NSSize, activePosition: TrackNotificationPosition) {
+        let frame = screen.frame
+        super.init(
+            contentRect: frame,
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        self.level = .statusBar
+        self.backgroundColor = .clear
+        self.isOpaque = false
+        self.hasShadow = false
+        self.ignoresMouseEvents = true
+        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+
+        let view = SnapGuideOverlayView(screenFrame: screen.visibleFrame, cardSize: cardSize, activePosition: activePosition)
+        let hosting = NSHostingView(rootView: view)
+        self.contentView = hosting
+        self.hostingView = hosting
+    }
+
+    func updateActivePosition(_ position: TrackNotificationPosition, cardSize: NSSize) {
+        guard let hostingView else { return }
+        let currentFrame = hostingView.rootView.screenFrame
+        hostingView.rootView = SnapGuideOverlayView(
+            screenFrame: currentFrame,
+            cardSize: cardSize,
+            activePosition: position
+        )
+    }
+}
+
+struct SnapGuideOverlayView: View {
+    let screenFrame: NSRect
+    let cardSize: NSSize
+    let activePosition: TrackNotificationPosition
+
+    @ObservedObject private var model = NowPlayingModel.shared
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            Color.black.opacity(0.12)
+                .ignoresSafeArea()
+
+            ForEach(TrackNotificationPosition.allCases) { pos in
+                let origin = ghostCardOrigin(for: pos)
+                let isActive = (pos == activePosition)
+
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(isActive ? model.platformAccentColor.opacity(0.22) : Color.white.opacity(0.04))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(
+                                    isActive ? model.platformAccentColor : Color.white.opacity(0.28),
+                                    style: StrokeStyle(
+                                        lineWidth: isActive ? 2.5 : 1.5,
+                                        dash: isActive ? [] : [6, 4]
+                                    )
+                                )
+                        )
+                        .shadow(color: isActive ? model.platformAccentColor.opacity(0.60) : .clear, radius: 14)
+
+                    HStack(spacing: 8) {
+                        Image(systemName: pos.iconName)
+                            .font(.system(size: 14, weight: .bold))
+                        Text(LocalizationManager.shared.string(pos.localizationKey))
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(isActive ? .white : .white.opacity(0.55))
+                }
+                .frame(width: cardSize.width, height: cardSize.height)
+                .position(
+                    x: origin.x + cardSize.width / 2,
+                    y: screenFrame.height - (origin.y + cardSize.height / 2)
+                )
+                .scaleEffect(isActive ? 1.04 : 1.0)
+                .animation(.spring(response: 0.22, dampingFraction: 0.7), value: isActive)
+            }
+        }
+        .frame(width: screenFrame.width, height: screenFrame.height)
+    }
+
+    private func ghostCardOrigin(for pos: TrackNotificationPosition) -> NSPoint {
+        let horizontalPadding = min(22, max(12, (screenFrame.width - cardSize.width) / 2))
+        let verticalPadding = min(22, max(12, (screenFrame.height - cardSize.height) / 2))
+
+        let x: CGFloat
+        switch pos {
+        case .topLeading, .leading, .bottomLeading:
+            x = horizontalPadding
+        case .top, .bottom:
+            x = (screenFrame.width - cardSize.width) / 2
+        case .topTrailing, .trailing, .bottomTrailing:
+            x = screenFrame.width - cardSize.width - horizontalPadding
+        }
+
+        let y: CGFloat
+        switch pos {
+        case .topLeading, .top, .topTrailing:
+            y = screenFrame.height - cardSize.height - verticalPadding
+        case .leading, .trailing:
+            y = (screenFrame.height - cardSize.height) / 2
+        case .bottomLeading, .bottom, .bottomTrailing:
+            y = verticalPadding
+        }
+
+        return NSPoint(x: x, y: y)
+    }
 }
