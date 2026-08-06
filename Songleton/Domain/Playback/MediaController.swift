@@ -193,6 +193,12 @@ protocol MediaController: Sendable {
     nonisolated var isInstalled: Bool { get }
 
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo
+    /// Optional artwork fetch used when artwork is not available through the
+    /// synchronous `fetchNowPlaying` (Apple Music's `data of artwork` call is
+    /// too slow to run inside every poll). `trackKey` is the sanitized
+    /// "track|artist|album" composite of the displayed track, so the
+    /// controller can verify the returned cover matches it. Default: none.
+    nonisolated func fetchArtworkData(for trackKey: String) throws -> Data?
     nonisolated func togglePlayPause() throws
     nonisolated func nextTrack() throws
     nonisolated func previousTrack() throws
@@ -233,6 +239,8 @@ extension MediaController {
             throw MediaControllerError.permissionDenied
         }
     }
+
+    nonisolated func fetchArtworkData(for trackKey: String) throws -> Data? { nil }
 
     nonisolated func runInfoScript(_ body: String) throws -> NSAppleEventDescriptor {
         guard isRunning else { throw MediaControllerError.appNotRunning }
@@ -346,15 +354,21 @@ nonisolated final class AppleMusicController: @unchecked Sendable, MediaControll
             mode = .off
         }
 
-        let artworkData = loadArtworkIfNeeded(for: "\(safeTrack)|\(safeArtist)|\(album)")
-
+        // Artwork is intentionally NOT fetched here: `data of artwork 1` over
+        // AppleScript can take seconds, which would stall every metadata poll.
+        // The track info is published immediately and the cover arrives via the
+        // separate async fetchArtworkData(for:) call.
         return NowPlayingInfo(
             track: safeTrack, artist: safeArtist, album: album,
             isPlaying: playerState == "playing",
-            volume: volume, artworkURL: nil, artworkData: artworkData,
+            volume: volume, artworkURL: nil, artworkData: nil,
             position: position, duration: duration,
             isShuffleEnabled: isShuffle, repeatMode: mode
         )
+    }
+
+    nonisolated func fetchArtworkData(for trackKey: String) throws -> Data? {
+        loadArtworkIfNeeded(for: trackKey)
     }
 
     private nonisolated func loadArtworkIfNeeded(for trackKey: String) -> Data? {
@@ -366,14 +380,36 @@ nonisolated final class AppleMusicController: @unchecked Sendable, MediaControll
         }
         artworkLock.unlock()
 
-        let data = (try? runInfoScript("""
+        // Fetch the current track's identity together with its artwork in one
+        // script so the cover can be verified against the requested key. The
+        // track may change mid-script; without this check a stale cover would
+        // be cached under the wrong key and later shown under the wrong title.
+        let result = try? runInfoScript("""
         try
-            return data of artwork 1 of current track
+            set t to name of current track
+            set a to artist of current track
+            set al to album of current track
+            set d to data of artwork 1 of current track
+            return {t, a, al, d}
         on error
             return missing value
         end try
-        """).data).flatMap { data in
-            RemoteResourceSecurity.safeImage(from: data) == nil ? nil : data
+        """)
+        let fetchedKey: String?
+        if let t = result?.atIndex(1)?.stringValue,
+           let a = result?.atIndex(2)?.stringValue,
+           let al = result?.atIndex(3)?.stringValue {
+            fetchedKey = "\(MediaValue.metadata(t))|\(MediaValue.metadata(a))|\(MediaValue.metadata(al))"
+        } else {
+            fetchedKey = nil
+        }
+        let data: Data?
+        if fetchedKey == trackKey,
+           let rawData = result?.atIndex(4)?.data,
+           RemoteResourceSecurity.safeImage(from: rawData) != nil {
+            data = rawData
+        } else {
+            data = nil
         }
 
         artworkLock.lock()

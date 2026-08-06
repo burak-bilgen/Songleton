@@ -17,6 +17,31 @@ private actor AutomationPermissionQueue {
     }
 }
 
+/// Small in-memory cache for downloaded artwork so revisiting a track (or
+/// polling the same track) never re-downloads its cover over the network.
+nonisolated private final class ArtworkCache: @unchecked Sendable {
+    static let shared = ArtworkCache()
+    private static let maximumEntries = 50
+    private let lock = NSLock()
+    private var images: [String: NSImage] = [:]
+
+    func image(for url: URL) -> NSImage? {
+        lock.lock()
+        defer { lock.unlock() }
+        return images[url.absoluteString]
+    }
+
+    func store(_ image: NSImage, for url: URL) {
+        lock.lock()
+        defer { lock.unlock() }
+        // Bound memory: evict an arbitrary entry once the cache is full.
+        if images.count >= Self.maximumEntries, images[url.absoluteString] == nil {
+            images.removeValue(forKey: images.keys.first ?? "")
+        }
+        images[url.absoluteString] = image
+    }
+}
+
 @MainActor
 final class NowPlayingModel: ObservableObject {
     static let shared = AppContainer.shared.nowPlaying
@@ -351,6 +376,10 @@ final class NowPlayingModel: ObservableObject {
                     self.checkAutomationPermission()
                 }
 
+                // Unlock the poll loop immediately — a slow artwork download
+                // must never stall the next metadata refresh.
+                self.isFetching = false
+
                 await self.syncArtwork(with: result.state)
 
                 if let shownToastKey {
@@ -359,9 +388,9 @@ final class NowPlayingModel: ObservableObject {
             } else {
                 self.state = .notRunning
                 self.activeController = nil
+                self.isFetching = false
                 await self.syncArtwork(with: .notRunning)
             }
-            self.isFetching = false
         }
     }
 
@@ -399,19 +428,19 @@ final class NowPlayingModel: ObservableObject {
         let key = "\(source)|\(info.artworkURL?.absoluteString ?? "\(info.track)|\(info.artist)|\(info.album)")"
         guard key != currentArtworkKey else { return }
         currentArtworkKey = key
+        // Never leave the previous track's cover under the new title while the
+        // artwork loads — fall back to the placeholder immediately.
+        artwork = nil
+        dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
 
         if let data = info.artworkData, let image = RemoteResourceSecurity.safeImage(from: data) {
             artwork = image
             dominantColor = extractColor(from: image)
             return
         }
-        guard let url = info.artworkURL, url.scheme?.lowercased() == "https" else {
-            artwork = nil
-            dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
-            return
-        }
-        let (image, color) = await Self.downloadArtworkAndColor(from: url)
-        if currentArtworkKey == key {
+        if let url = info.artworkURL, url.scheme?.lowercased() == "https" {
+            let (image, color) = await Self.downloadArtworkAndColor(from: url)
+            guard currentArtworkKey == key else { return }
             artwork = image
             if let color {
                 dominantColor = color
@@ -420,7 +449,21 @@ final class NowPlayingModel: ObservableObject {
             } else {
                 dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
             }
+            return
         }
+        // No artwork URL (e.g. Apple Music): the controller can expose the
+        // cover through a separate, slower call. Run it off the main actor so
+        // the metadata poll is never blocked by it.
+        guard let controller = activeController else { return }
+        let controllerKey = "\(info.track)|\(info.artist)|\(info.album)"
+        let data = await Task.detached(priority: .utility) { () -> Data? in
+            try? controller.fetchArtworkData(for: controllerKey)
+        }.value
+        guard currentArtworkKey == key,
+              let data,
+              let image = RemoteResourceSecurity.safeImage(from: data) else { return }
+        artwork = image
+        dominantColor = extractColor(from: image)
     }
 
     private func extractColor(from image: NSImage) -> Color {
@@ -488,11 +531,15 @@ final class NowPlayingModel: ObservableObject {
     }
 
     nonisolated private static func downloadArtworkAndColor(from url: URL) async -> (NSImage?, Color?) {
+        if let cached = ArtworkCache.shared.image(for: url) {
+            return (cached, nil)
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("image/*", forHTTPHeaderField: "Accept")
         guard let data = try? await SecureRemoteResource.data(for: request, kind: .artwork),
               let image = RemoteResourceSecurity.safeImage(from: data) else { return (nil, nil) }
+        ArtworkCache.shared.store(image, for: url)
         return (image, nil)
     }
 
