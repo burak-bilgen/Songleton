@@ -1010,13 +1010,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Give the music some room"
+            "value": "The music takes the screen"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Müziğe biraz alan aç"
+            "value": "Çalan müzik tam ekranda"
           }
         }
       }
@@ -1078,13 +1078,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Controls where you expect them"
+            "value": "Controls in the menu bar"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kontroller hep aynı yerde"
+            "value": "Kontroller menü çubuğunda"
           }
         }
       }
@@ -1180,13 +1180,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep the music close"
+            "value": "Your music, your control"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Müzik yanında kalsın"
+            "value": "Müziğin kontrolü elinde"
           }
         }
       }
