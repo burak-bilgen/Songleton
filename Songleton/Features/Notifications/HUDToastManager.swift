@@ -445,7 +445,13 @@ final class HUDToastManager: NSObject {
         let clampedCardY = min(max(rawY + shadowInset, minCardY), maxCardY)
 
         let clampedPanelOrigin = NSPoint(x: clampedCardX - shadowInset, y: clampedCardY - shadowInset)
-        window.setFrameOrigin(clampedPanelOrigin)
+        
+        // Zero duration & disable implicit animation during drag so frame placement is 100% instant & responsive
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.0
+            context.allowsImplicitAnimation = false
+            window.setFrameOrigin(clampedPanelOrigin)
+        }
 
         let isPermanent = SettingsModel.shared.permanentHUDMode
         let layout = TrackNotificationLayout.make(
@@ -499,10 +505,10 @@ final class HUDToastManager: NSObject {
         // Haptic snap feedback
         NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
 
-        // Smooth spring magnetic snap animation
+        // Smooth fluid Apple spring magnetic snap animation on release
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.24
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            context.duration = 0.28
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.16, 1, 0.3, 1)
             window.animator().setFrame(finalPanelFrame, display: true)
         }
 
