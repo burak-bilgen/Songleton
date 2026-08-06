@@ -95,6 +95,16 @@ nonisolated enum RemoteResourceSecurity {
               width * height <= maximumImagePixels else {
             return nil
         }
+        if max(width, height) > 512 {
+            let options: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: 512
+            ]
+            if let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) {
+                return NSImage(cgImage: cgImage, size: NSSize(width: width, height: height))
+            }
+        }
         return NSImage(data: data)
     }
 
@@ -176,20 +186,13 @@ nonisolated enum SecureRemoteResource {
         safeRequest.setValue(kind == .lyrics ? "application/json" : "image/jpeg, image/png, image/webp, image/heic, image/heif", forHTTPHeaderField: "Accept")
 
         let session = kind == .lyrics ? lyricsSession : artworkSession
-        let (bytes, response) = try await session.bytes(for: safeRequest)
+        let (data, response) = try await session.data(for: safeRequest)
         guard let httpResponse = response as? HTTPURLResponse,
               RemoteResourceSecurity.accepts(httpResponse, for: kind) else {
             throw SecureNetworkError.invalidResponse
         }
-
-        var data = Data()
-        let expectedLength = max(0, min(Int(response.expectedContentLength), kind.maximumBytes))
-        data.reserveCapacity(expectedLength)
-        for try await byte in bytes {
-            guard data.count < kind.maximumBytes else {
-                throw SecureNetworkError.responseTooLarge
-            }
-            data.append(byte)
+        guard data.count <= kind.maximumBytes else {
+            throw SecureNetworkError.responseTooLarge
         }
         return data
     }

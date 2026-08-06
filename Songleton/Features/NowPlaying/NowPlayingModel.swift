@@ -271,6 +271,17 @@ nonisolated enum ArtworkPipeline {
     static func shouldPublish(resultKey: String, currentKey: String?) -> Bool {
         resultKey == currentKey
     }
+
+    /// Optimizes artwork URL to fetch appropriate resolution (e.g. 300x300 for Spotify)
+    /// which reduces network payload by ~80% and dramatically speeds up cover loading.
+    static func optimizeArtworkURL(_ url: URL) -> URL {
+        let str = url.absoluteString
+        if str.contains("i.scdn.co/image/ab67616d0000b273") {
+            let optimized = str.replacingOccurrences(of: "ab67616d0000b273", with: "ab67616d00001e02")
+            return URL(string: optimized) ?? url
+        }
+        return url
+    }
 }
 
 @MainActor
@@ -316,6 +327,7 @@ final class NowPlayingModel: ObservableObject {
     private var lastArtworkFailureAt: Date?
     private var cancellables = Set<AnyCancellable>()
     private var lastLoadedKey: String?
+    private var pendingToast: (track: String, artist: String)?
     private var timerCancellable: AnyCancellable?
     private let commandQueue = MediaCommandQueue()
     private let automationPermissionQueue = AutomationPermissionQueue()
@@ -594,7 +606,7 @@ final class NowPlayingModel: ObservableObject {
                 self.state = result.state
                 self.activeController = result.active
 
-                var pendingToast: (key: String, track: String, artist: String)?
+                var pendingToast: (track: String, artist: String)?
                 if case .loaded(let info, let src) = result.state {
                     let key = "\(src)|\(info.track)|\(info.artist)"
                     let previousKey = self.lastLoadedKey
@@ -605,7 +617,7 @@ final class NowPlayingModel: ObservableObject {
                         if previousKey != nil,
                            settings.showTrackNotifications,
                            isDesktopMusicApp {
-                            pendingToast = (key: key, track: info.track, artist: info.artist)
+                            pendingToast = (track: info.track, artist: info.artist)
                         }
                     }
                 } else if case .permissionDenied = result.state {
@@ -616,26 +628,13 @@ final class NowPlayingModel: ObservableObject {
                 // must never stall the next metadata refresh.
                 self.isFetching = false
 
-                // Announce the track right away: the toast pops immediately
-                // and adopts the cover live (via HUDToastView's NowPlayingModel
-                // observation) as soon as it lands — no more waiting for the
-                // download before the notification appears. Drop the previous
-                // cover first so neither the menu bar nor the toast can flash
-                // stale artwork under the new title. If the track changes again
-                // while the artwork loads, lastLoadedKey no longer matches and
-                // the stale toast is dropped.
-                if let pendingToast,
-                   self.lastLoadedKey == pendingToast.key,
-                   settings.showTrackNotifications,
-                   !MenuBarManager.shared.isHoverPopoverShown,
-                   !AmbientModeManager.shared.isPresented {
+                // Save pending toast if a new track was loaded; it will pop up
+                // as soon as artwork loading finishes (or fails), ensuring the
+                // notification opens with the cover photo viewable right away.
+                if let pendingToast {
+                    self.pendingToast = pendingToast
                     self.artwork = nil
                     self.dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
-                    HUDToastManager.shared.show(
-                        track: pendingToast.track,
-                        artist: pendingToast.artist,
-                        artwork: nil
-                    )
                 }
 
                 // Artwork loading runs in its own cancellable task: when the
@@ -687,7 +686,10 @@ final class NowPlayingModel: ObservableObject {
         } else {
             desiredKey = nil
         }
-        guard desiredKey != currentArtworkKey else { return }
+        if desiredKey == currentArtworkKey {
+            triggerPendingToastIfMatching()
+            return
+        }
 
         // Bounded retry: don't re-hit the network for a key that failed
         // recently. The poll loop keeps running; only the download backs off.
@@ -697,6 +699,7 @@ final class NowPlayingModel: ObservableObject {
                lastFailureKey: lastArtworkFailureKey,
                lastFailureAt: lastArtworkFailureAt
            ) {
+            triggerPendingToastIfMatching()
             return
         }
 
@@ -710,6 +713,7 @@ final class NowPlayingModel: ObservableObject {
             artworkTask = nil
             artwork = nil
             dominantColor = .accentColor
+            triggerPendingToastIfMatching()
             return
         }
         // Drop the previous cover in this same MainActor turn, so the new title
@@ -725,7 +729,10 @@ final class NowPlayingModel: ObservableObject {
     }
 
     private func syncArtwork(with state: State, key: String) async {
-        guard case .loaded(let info, _) = state else { return }
+        guard case .loaded(let info, _) = state else {
+            triggerPendingToastIfMatching()
+            return
+        }
         // `startArtworkSync` already claimed this key synchronously. If this
         // task was superseded before its body ran (track changed again), drop
         // out without touching the current artwork.
@@ -746,6 +753,7 @@ final class NowPlayingModel: ObservableObject {
             guard ArtworkPipeline.shouldPublish(resultKey: key, currentKey: currentArtworkKey) else { return }
             guard let image else {
                 recordFailure(for: key)
+                triggerPendingToastIfMatching()
                 return
             }
             publishArtwork(image, color: color, loadStart: loadStart, key: key)
@@ -758,6 +766,7 @@ final class NowPlayingModel: ObservableObject {
                 // Transient failure (timeout, offline): remember it so the next
                 // poll backs off instead of hammering the CDN every 0.5s.
                 recordFailure(for: key)
+                triggerPendingToastIfMatching()
                 return
             }
             publishArtwork(image, color: color, loadStart: loadStart, key: key)
@@ -769,7 +778,10 @@ final class NowPlayingModel: ObservableObject {
         // hung AppleScript can't stall the track-change toast indefinitely
         // (the fetch itself keeps running off-thread; its result is discarded
         // once the cap wins).
-        guard let controller = activeController else { return }
+        guard let controller = activeController else {
+            triggerPendingToastIfMatching()
+            return
+        }
         let controllerKey = "\(info.track)|\(info.artist)|\(info.album)"
         let fetchTask = Task.detached(priority: .utility) { () throws -> Data? in
             try controller.fetchArtworkData(for: controllerKey)
@@ -789,12 +801,14 @@ final class NowPlayingModel: ObservableObject {
         guard ArtworkPipeline.shouldPublish(resultKey: key, currentKey: currentArtworkKey) else { return }
         guard let data else {
             recordFailure(for: key)
+            triggerPendingToastIfMatching()
             return
         }
         let (image, color) = await Self.decodeArtwork(data: data)
         guard ArtworkPipeline.shouldPublish(resultKey: key, currentKey: currentArtworkKey) else { return }
         guard let image else {
             recordFailure(for: key)
+            triggerPendingToastIfMatching()
             return
         }
         publishArtwork(image, color: color, loadStart: loadStart, key: key)
@@ -808,12 +822,28 @@ final class NowPlayingModel: ObservableObject {
         artworkLogger.debug("artwork published in \(ms, format: .fixed(precision: 1))ms")
         artwork = image
         dominantColor = color ?? ArtworkCache.extractDominantColor(from: image)
+        triggerPendingToastIfMatching()
     }
 
     private func recordFailure(for key: String) {
         lastArtworkFailureKey = key
         lastArtworkFailureAt = Date()
         currentArtworkKey = nil
+    }
+
+    private func triggerPendingToastIfMatching() {
+        guard let toast = self.pendingToast else { return }
+        self.pendingToast = nil
+
+        if settings.showTrackNotifications,
+           !MenuBarManager.shared.isHoverPopoverShown,
+           !AmbientModeManager.shared.isPresented {
+            HUDToastManager.shared.show(
+                track: toast.track,
+                artist: toast.artist,
+                artwork: self.artwork
+            )
+        }
     }
 
     /// Decodes raw image bytes and extracts the dominant color, entirely off
@@ -829,7 +859,8 @@ final class NowPlayingModel: ObservableObject {
         return (image, color)
     }
 
-    nonisolated private static func downloadArtworkAndColor(from url: URL) async -> (NSImage?, Color?) {
+    nonisolated private static func downloadArtworkAndColor(from rawURL: URL) async -> (NSImage?, Color?) {
+        let url = ArtworkPipeline.optimizeArtworkURL(rawURL)
         let lookupStart = Date()
         if let cached = ArtworkCache.shared.entry(for: url) {
             let ms = Date().timeIntervalSince(lookupStart) * 1000

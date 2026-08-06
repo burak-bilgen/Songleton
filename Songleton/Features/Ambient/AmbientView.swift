@@ -718,6 +718,9 @@ struct AmbientView: View {
                 }
             }
         }
+        .id(currentTrackId)
+        .transition(.offScreenSlide(screenWidth: screenWidth, direction: slideDirection))
+        .animation(.spring(response: 0.55, dampingFraction: 0.82), value: currentTrackId)
     }
 
     // 3. Pure Glassmorphic Theme View
@@ -752,6 +755,17 @@ struct AmbientView: View {
                             )
                     )
                     .shadow(color: .black.opacity(0.8), radius: 36, x: -8, y: 16)
+                    .transition(.asymmetric(
+                        insertion: .modifier(
+                            active: ScreenOffsetModifier(offset: slideDirection == .next ? 350 : -350),
+                            identity: ScreenOffsetModifier(offset: 0)
+                        ).combined(with: .opacity).combined(with: .scale(scale: 0.92)),
+                        removal: .modifier(
+                            active: ScreenOffsetModifier(offset: slideDirection == .next ? -350 : 350),
+                            identity: ScreenOffsetModifier(offset: 0)
+                        ).combined(with: .opacity)
+                    ))
+                    .animation(.spring(response: 0.55, dampingFraction: 0.82), value: model.artwork)
             } else {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
                     .fill(Color.white.opacity(0.06))
