@@ -330,13 +330,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your music, one move away."
+            "value" : "Control your music easily."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Müziğin bir hareket uzağında."
+            "value" : "Müziğini kolayca kontrol et."
           }
         }
       }
@@ -687,13 +687,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold, then drag up or down to change the volume"
+            "value" : "Hold and drag up or down to change the volume"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Basılı tutup sesi değiştirmek için yukarı veya aşağı sürükle"
+            "value" : "Sesi değiştirmek için basılı tutup yukarı veya aşağı sürükle"
           }
         }
       }
@@ -993,13 +993,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Ambient Mode when you want the current track to take over the screen."
+            "value" : "Turn on Ambient Mode and the current track takes the whole screen."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Müziğe odaklanmak istediğinde Ambient Mode'u aç, çalan parça ekrana yerleşsin."
+            "value" : "Ambient Mode'u aç, çalan parça tam ekrana geçsin."
           }
         }
       }
@@ -1180,13 +1180,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow Songleton to see the current track and send playback commands to your players."
+            "value" : "Let Songleton read the current track and control playback."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Songleton'ın çalan parçayı görmesi ve oynatma komutları gönderebilmesi için erişim izni ver."
+            "value" : "Songleton'ın şarkıyı görebilmesi ve oynatmayı yönetebilmesi için erişim izni ver."
           }
         }
       }
@@ -1350,13 +1350,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allows Songleton to read and control a supported player running on your Mac."
+            "value" : "Lets Songleton read and control a music app that is open on your Mac."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Songleton'ın Mac'inde açık olan desteklenen oynatıcıyı okuyup yönetmesini sağlar."
+            "value" : "Songleton'ın Mac'inde açık olan müzik uygulamasını okumasını ve yönetmesini sağlar."
           }
         }
       }
@@ -2761,13 +2761,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hover your mouse over Songleton in the menu bar for 0.4 seconds to automatically open the Hover Panel."
+            "value" : "Hover over Songleton in the menu bar for 0.4 seconds and the control panel opens."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fareyi menü çubuğundaki Songleton öğesinin üzerinde 0.4 saniye tuttuğunda bu Hover Menü otomatik açılır."
+            "value" : "Menü çubuğundaki Songleton'un üzerinde 0.4 saniye bekle, kontrol paneli açılır."
           }
         }
       }

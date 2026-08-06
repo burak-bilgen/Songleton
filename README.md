@@ -1,6 +1,6 @@
 # Songleton
 
-## Your music, one move away.
+## Control your music easily.
 
 Songleton is the native macOS companion for Spotify and Apple Music. It keeps the track you are listening to in the menu bar, turns the edges of your screen into deliberate controls, and gives music a focused home when you want one.
 
