@@ -3,7 +3,7 @@ cask "songleton" do
   # SHA-256 of the notarized Songleton.dmg published for this version.
   # Pinned automatically by ./scripts/release.sh or
   # ./scripts/update-homebrew-cask.sh; never use sha256 :no_check.
-  sha256 "47fb9b817edba4cef159353294e7f6be1741fd7df86ee0ea0565b2357f8b2866"
+  sha256 "99b6e0828a77ba89372973b901a92bc49604d8f09d5bec122dfd7c4ef1f68167"
 
   url "https://github.com/burak-bilgen/Songleton/releases/download/v#{version}/Songleton.dmg",
       verified: "github.com/burak-bilgen/Songleton/"
