@@ -20,6 +20,7 @@ struct HUDToastView: View {
     let layout: TrackNotificationLayout
     let accentColor: Color?
     let isPreview: Bool
+    let forcePermanent: Bool
 
     @ObservedObject private var model = NowPlayingModel.shared
     @ObservedObject private var localization = LocalizationManager.shared
@@ -29,7 +30,7 @@ struct HUDToastView: View {
     private let cornerRadius: CGFloat = 18
 
     private var isPermanentMode: Bool {
-        SettingsModel.shared.permanentHUDMode && !isPreview
+        forcePermanent || (SettingsModel.shared.permanentHUDMode && !isPreview)
     }
 
     private var isPlaying: Bool {
@@ -68,7 +69,8 @@ struct HUDToastView: View {
         artwork: NSImage?,
         layout: TrackNotificationLayout,
         accentColor: Color? = nil,
-        isPreview: Bool = false
+        isPreview: Bool = false,
+        forcePermanent: Bool = false
     ) {
         self.track = track
         self.artist = artist
@@ -76,6 +78,7 @@ struct HUDToastView: View {
         self.layout = layout
         self.accentColor = accentColor
         self.isPreview = isPreview
+        self.forcePermanent = forcePermanent
     }
 
     private var themeColor: Color {

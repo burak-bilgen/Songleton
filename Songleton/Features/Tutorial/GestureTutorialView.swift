@@ -8,8 +8,8 @@ enum TutorialStage: Int, CaseIterable, Identifiable {
     case volumeControl = 3
     case leftClickToggle = 4
     case hoverMenu = 5
-    case ambientMode = 6
-    case permanentMiniPlayer = 7
+    case permanentMiniPlayer = 6
+    case ambientMode = 7
 
     var id: Int { rawValue }
 }
@@ -74,6 +74,68 @@ enum TutorialPointerMotion {
     }
 }
 
+enum TutorialArtwork {
+    /// Renders a Songleton-styled placeholder album cover used by the
+    /// permanent mini player stage when no real artwork is available.
+    @MainActor
+    static func makeDemoArtwork() -> NSImage? {
+        let view = ZStack {
+            LinearGradient(
+                colors: [
+                    Color(red: 0.13, green: 0.48, blue: 0.72),
+                    Color(red: 0.05, green: 0.12, blue: 0.30)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.20), Color.white.opacity(0.04)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 330, height: 330)
+                .offset(x: 90, y: -80)
+                .blur(radius: 2)
+
+            Circle()
+                .stroke(Color.black.opacity(0.45), lineWidth: 26)
+                .frame(width: 210, height: 210)
+
+            Circle()
+                .stroke(Color.black.opacity(0.30), lineWidth: 4)
+                .frame(width: 210, height: 210)
+
+            Circle()
+                .fill(SongletonTheme.cyan.opacity(0.92))
+                .frame(width: 58, height: 58)
+                .overlay(
+                    Circle()
+                        .stroke(Color.black.opacity(0.55), lineWidth: 3)
+                        .frame(width: 58, height: 58)
+                )
+                .overlay(
+                    Circle()
+                        .fill(Color.black.opacity(0.55))
+                        .frame(width: 16, height: 16)
+                )
+
+            Image(systemName: "music.note")
+                .font(.system(size: 150, weight: .light))
+                .foregroundStyle(.white.opacity(0.16))
+                .offset(x: -120, y: 110)
+        }
+        .frame(width: 512, height: 512)
+
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2
+        return renderer.nsImage
+    }
+}
+
 struct GestureTutorialView: View {
     @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -101,6 +163,7 @@ struct GestureTutorialView: View {
     @State private var tutorialActiveSnapPosition: TrackNotificationPosition = .topTrailing
     @State private var isTutorialDraggingMiniPlayer = false
     @State private var tutorialMiniPlayerPosition: CGPoint = .zero
+    @State private var tutorialSnapFlash = false
 
     // Mock MouseGestureManager for real overlay component
     @StateObject private var mockManager = MouseGestureManager()
@@ -178,12 +241,13 @@ struct GestureTutorialView: View {
 
                         let (cardTrack, cardArtist, cardArtwork): (String, String, NSImage?) = {
                             if case .loaded(let info, _) = NowPlayingModel.shared.state {
-                                return (info.track, info.artist, NowPlayingModel.shared.artwork)
+                                let artwork = NowPlayingModel.shared.artwork
+                                return (info.track, info.artist, artwork ?? TutorialArtwork.makeDemoArtwork())
                             } else {
                                 return (
                                     localization.string("notification.preview_track"),
                                     localization.string("notification.preview_artist"),
-                                    nil
+                                    TutorialArtwork.makeDemoArtwork()
                                 )
                             }
                         }()
@@ -216,10 +280,29 @@ struct GestureTutorialView: View {
                             artwork: cardArtwork,
                             layout: layout,
                             accentColor: SongletonTheme.cyan,
-                            isPreview: true
+                            isPreview: true,
+                            forcePermanent: true
                         )
                         .position(targetPos)
                         .zIndex(20)
+
+                        if tutorialSnapFlash {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [SongletonTheme.cyan, SongletonTheme.violet.opacity(0.7)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 3
+                                )
+                                .frame(width: layout.size.width + 16, height: layout.size.height + 16)
+                                .position(targetPos)
+                                .opacity(tutorialSnapFlash ? 1 : 0)
+                                .scaleEffect(tutorialSnapFlash ? 1 : 0.88)
+                                .allowsHitTesting(false)
+                                .zIndex(21)
+                        }
                     }
 
                     animatedMouseCursor(size: geo.size)
@@ -669,8 +752,8 @@ struct GestureTutorialView: View {
                 .frame(width: 42, height: 42)
                 .blur(radius: 4)
 
-            Image(systemName: "cursorarrow")
-                .font(.system(size: 31, weight: .semibold))
+            Image(systemName: isTutorialDraggingMiniPlayer ? "hand.point.up.left.fill" : "cursorarrow")
+                .font(.system(size: isTutorialDraggingMiniPlayer ? 27 : 31, weight: .semibold))
                 .foregroundStyle(LinearGradient(colors: [.white, Color(white: 0.82)], startPoint: .top, endPoint: .bottom))
                 .shadow(color: .black.opacity(0.78), radius: 7, x: 2, y: 4)
                 .shadow(
@@ -955,6 +1038,42 @@ struct GestureTutorialView: View {
         try? await Task.sleep(for: .milliseconds(pressed ? 120 : 90))
     }
 
+    /// Moves the cursor and the mini player card together along a cubic
+    /// bezier, so the card is carried by the pointer on every frame.
+    private func dragCard(
+        from start: CGPoint,
+        to end: CGPoint,
+        firstControl: CGPoint,
+        secondControl: CGPoint,
+        duration: Double,
+        onPositionUpdate: ((CGPoint) -> Void)? = nil
+    ) async {
+        let steps = reduceMotion ? 8 : max(24, Int(duration * 60))
+        for step in 1...steps {
+            guard !Task.isCancelled else { return }
+            let linearT = CGFloat(step) / CGFloat(steps)
+            let t = TutorialPointerMotion.minimumJerk(linearT)
+            let inverse = 1 - t
+            let point = CGPoint(
+                x: inverse * inverse * inverse * start.x
+                    + 3 * inverse * inverse * t * firstControl.x
+                    + 3 * inverse * t * t * secondControl.x
+                    + t * t * t * end.x,
+                y: inverse * inverse * inverse * start.y
+                    + 3 * inverse * inverse * t * firstControl.y
+                    + 3 * inverse * t * t * secondControl.y
+                    + t * t * t * end.y
+            )
+            cursorPosition = point
+            tutorialMiniPlayerPosition = point
+            onPositionUpdate?(point)
+            try? await Task.sleep(for: .milliseconds(16))
+        }
+        cursorPosition = end
+        tutorialMiniPlayerPosition = end
+        onPositionUpdate?(end)
+    }
+
     private func animateVolume(
         from start: Int,
         to end: Int,
@@ -1003,6 +1122,8 @@ struct GestureTutorialView: View {
         isAmbientPreviewVisible = false
         isTutorialComplete = false
         completionPop = false
+        isTutorialDraggingMiniPlayer = false
+        tutorialSnapFlash = false
         mockManager.simulateEdgeGestureProgress(0)
         mockManager.simulateGestureVolume(8)
         TutorialAudioService.shared.setDemoVolume(8)
@@ -1297,13 +1418,19 @@ struct GestureTutorialView: View {
                 }
 
                 // Let Ambient breathe on screen for a moment, then crossfade
-                // into the Permanent Mini Player stage.
-                try? await Task.sleep(for: .seconds(2.4))
+                // back and wrap the whole tour up.
+                try? await Task.sleep(for: .seconds(2.6))
                 guard !Task.isCancelled else { return }
                 withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.45)) {
                     isAmbientPreviewVisible = false
                 }
-                switchStage(to: .permanentMiniPlayer, size: size)
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return }
+
+                isStageAnimationRunning = false
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) {
+                    isTutorialComplete = true
+                }
 
             case .permanentMiniPlayer:
                 let pointerLocation = NSEvent.mouseLocation
@@ -1330,60 +1457,104 @@ struct GestureTutorialView: View {
                     isPermanent: true
                 )
 
-                let startPos: TrackNotificationPosition = .topTrailing
-                let targetPos: TrackNotificationPosition = .bottomTrailing
+                let snapPoints: [TrackNotificationPosition: CGPoint] = Dictionary(
+                    uniqueKeysWithValues: TrackNotificationPosition.allCases.map {
+                        ($0, swiftUIPoint(for: $0, cardSize: layout.size, in: screen, size: size))
+                    }
+                )
+                let nearestSnap: (CGPoint) -> TrackNotificationPosition = { point in
+                    snapPoints.min { lhs, rhs in
+                        hypot(lhs.value.x - point.x, lhs.value.y - point.y)
+                            < hypot(rhs.value.x - point.x, rhs.value.y - point.y)
+                    }?.key ?? .bottomTrailing
+                }
 
-                let startPoint = swiftUIPoint(for: startPos, cardSize: layout.size, in: screen, size: size)
-                let targetPoint = swiftUIPoint(for: targetPos, cardSize: layout.size, in: screen, size: size)
+                let startPoint = snapPoints[.topTrailing] ?? CGPoint(x: size.width * 0.8, y: size.height * 0.2)
+                let targetPoint = snapPoints[.bottomTrailing] ?? CGPoint(x: size.width * 0.8, y: size.height * 0.82)
 
-                tutorialActiveSnapPosition = startPos
+                // 1. Walk the cursor over to the card.
+                tutorialActiveSnapPosition = .topTrailing
                 tutorialMiniPlayerPosition = startPoint
-
                 await moveCursor(
                     to: startPoint,
-                    duration: 0.65,
+                    duration: 0.72,
                     rotation: -5,
                     scale: 0.96
                 )
-                try? await Task.sleep(for: .milliseconds(300))
+                try? await Task.sleep(for: .milliseconds(280))
                 guard !Task.isCancelled else { return }
 
+                // 2. Grab the card with a small nudge so the lift reads.
                 await setCursorPressed(true)
                 isTutorialDraggingMiniPlayer = true
+                let nudge = CGPoint(x: startPoint.x - 14, y: startPoint.y + 16)
+                await dragCard(
+                    from: startPoint,
+                    to: nudge,
+                    firstControl: startPoint,
+                    secondControl: nudge,
+                    duration: 0.30
+                )
+                try? await Task.sleep(for: .milliseconds(170))
+                guard !Task.isCancelled else { return }
 
-                let steps = reduceMotion ? 6 : 40
-                for step in 1...steps {
-                    guard !Task.isCancelled else { return }
-                    let t = CGFloat(step) / CGFloat(steps)
-                    let currentX = startPoint.x + (targetPoint.x - startPoint.x) * t
-                    let currentY = startPoint.y + (targetPoint.y - startPoint.y) * t
-                    let currentPt = CGPoint(x: currentX, y: currentY)
+                // 3. Drag down the right edge, ending a little past the
+                //    bottom-right snap point so the magnet pull reads.
+                let dropPoint = CGPoint(x: targetPoint.x + 16, y: targetPoint.y + 12)
+                let delta = CGPoint(x: dropPoint.x - nudge.x, y: dropPoint.y - nudge.y)
+                let distance = hypot(delta.x, delta.y)
+                let direction = CGPoint(x: delta.x / distance, y: delta.y / distance)
+                let normal = CGPoint(x: -direction.y, y: direction.x)
+                let bend = min(34, max(10, distance * 0.035))
+                let firstControl = CGPoint(
+                    x: nudge.x + delta.x * 0.32 + normal.x * bend,
+                    y: nudge.y + delta.y * 0.32 + normal.y * bend
+                )
+                let secondControl = CGPoint(
+                    x: dropPoint.x - delta.x * 0.30 + normal.x * bend * 0.6,
+                    y: dropPoint.y - delta.y * 0.30 + normal.y * bend * 0.6
+                )
 
-                    cursorPosition = currentPt
-                    tutorialMiniPlayerPosition = currentPt
+                let dragDuration = min(2.1, max(1.3, 0.35 + distance / 620))
+                await dragCard(
+                    from: nudge,
+                    to: dropPoint,
+                    firstControl: firstControl,
+                    secondControl: secondControl,
+                    duration: dragDuration,
+                    onPositionUpdate: { tutorialActiveSnapPosition = nearestSnap($0) }
+                )
 
-                    if t > 0.40 {
-                        tutorialActiveSnapPosition = targetPos
-                    }
-                    try? await Task.sleep(for: .milliseconds(16))
-                }
-
-                try? await Task.sleep(for: .milliseconds(200))
+                // 4. Release — the magnet snaps the card home.
+                try? await Task.sleep(for: .milliseconds(180))
                 guard !Task.isCancelled else { return }
 
                 await setCursorPressed(false)
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                isTutorialDraggingMiniPlayer = false
+                withAnimation(reduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.58, blendDuration: 0.08)) {
                     tutorialMiniPlayerPosition = targetPoint
                 }
-                isTutorialDraggingMiniPlayer = false
-
-                try? await Task.sleep(for: .seconds(2.0))
-                guard !Task.isCancelled else { return }
-
-                isStageAnimationRunning = false
-                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) {
-                    isTutorialComplete = true
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.45)) {
+                    tutorialSnapFlash = true
                 }
+
+                // The cursor lifts off while the card settles into place.
+                await moveCursor(
+                    to: CGPoint(x: targetPoint.x + 24, y: targetPoint.y - 20),
+                    duration: 0.36,
+                    rotation: 4,
+                    scale: 1.04
+                )
+
+                try? await Task.sleep(for: .milliseconds(440))
+                guard !Task.isCancelled else { return }
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.4)) {
+                    tutorialSnapFlash = false
+                }
+
+                try? await Task.sleep(for: .seconds(1.6))
+                guard !Task.isCancelled else { return }
+                isStageAnimationRunning = false
             }
         }
     }

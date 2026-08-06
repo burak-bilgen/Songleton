@@ -2316,7 +2316,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sürekli Mini Oyuncu Modu"
+            "value" : "Sürekli Mini Oynatıcı Modu"
           }
         }
       }
@@ -2605,7 +2605,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menü çubuğundaki şarkı adına sağ tıkla, şarkı tam ekrana geçer."
+            "value" : "Menü çubuğundaki şarkı adına sağ tıkla, şarkı tam ekranda açılır."
           }
         }
       }
@@ -2894,7 +2894,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menü Çubuğu: Üzerine Gel (Hover)"
+            "value" : "Menü Çubuğu: Üzerine Gel"
           }
         }
       }
@@ -3183,7 +3183,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kalıcı Mini Player"
+            "value" : "Kalıcı Mini Oynatıcı"
           }
         }
       }
@@ -3200,7 +3200,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Her An Masaüstünde & 8 Noktaya Mıknatıslı Snap"
+            "value" : "Her An Masaüstünde: 8 Noktaya Mıknatıslı Yapışma"
           }
         }
       }
@@ -3217,7 +3217,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Müzik kontrollerini masaüstünde kalıcı olarak açık tutun. Kartı ekran üzerinde sürükleyerek 8 farklı köşeye mıknatıs gibi yapıştırabilirsiniz."
+            "value" : "Müzik kontrollerini masaüstünde kalıcı tutabilirsin. Kartı sürükleyip 8 noktadan birine bırak, mıknatıs gibi yerine yapışsın."
           }
         }
       }

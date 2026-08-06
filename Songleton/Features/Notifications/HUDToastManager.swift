@@ -331,6 +331,9 @@ final class HUDToastManager: NSObject {
         if SettingsModel.shared.permanentHUDMode &&
            SettingsModel.shared.showTrackNotifications &&
            !AmbientModeManager.shared.isPresented {
+            // The mini player only exists while a supported music app is
+            // running. When none is open (state is .notRunning or
+            // .permissionDenied), the card must not linger on the desktop.
             if case .loaded(let info, _) = NowPlayingModel.shared.state {
                 show(
                     track: info.track,
@@ -338,12 +341,7 @@ final class HUDToastManager: NSObject {
                     artwork: NowPlayingModel.shared.artwork
                 )
             } else {
-                show(
-                    track: "Songleton",
-                    artist: LocalizationManager.shared.string("notification.preview_artist"),
-                    artwork: nil,
-                    accentColor: SongletonTheme.cyan
-                )
+                dismiss()
             }
         } else {
             dismiss()
