@@ -227,7 +227,7 @@ final class HUDToastManager: NSObject {
             panel.isOpaque = false
             panel.hasShadow = false
             panel.ignoresMouseEvents = false
-            panel.isMovableByWindowBackground = true
+            panel.isMovableByWindowBackground = false
             panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
             panel.contentView = NSHostingView(
                 rootView: HUDToastView(
@@ -278,7 +278,7 @@ final class HUDToastManager: NSObject {
         panel.isOpaque = false
         panel.hasShadow = false
         panel.ignoresMouseEvents = !isPermanent && !isPreview
-        panel.isMovableByWindowBackground = isPermanent || isPreview
+        panel.isMovableByWindowBackground = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
         panel.contentView = NSHostingView(
             rootView: HUDToastView(
@@ -588,7 +588,7 @@ final class NonActivatingToastPanel: NSPanel {
                     let dy = currentLoc.y - startLoc.y
                     let distance = hypot(dx, dy)
 
-                    if !isDraggingActive && distance >= 8.0 {
+                    if !isDraggingActive && distance >= 6.0 {
                         isDraggingActive = true
                         HUDToastManager.shared.handleNativeDragStart(window: self)
                     }
