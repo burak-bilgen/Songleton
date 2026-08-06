@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+# The whole site is a single-page landing; there is nothing to crawl deeper.

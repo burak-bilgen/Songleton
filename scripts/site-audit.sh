@@ -15,6 +15,7 @@ grep -q 'rel="canonical"' docs/index.html || fail "canonical URL is missing"
 grep -q 'name="twitter:card"' docs/index.html || fail "social card metadata is missing"
 [ -f docs/.nojekyll ] || fail ".nojekyll is missing; GitHub Pages would process the site with Jekyll"
 [ -f docs/404.html ] || fail "404.html is missing"
+[ -f docs/robots.txt ] || fail "robots.txt is missing"
 
 if rg -n '<(script|style)[^>]*>[[:space:]]*[^<[:space:]]|[[:space:]]on(click|load|error)=' docs/index.html; then
   fail "inline scripts, styles, and event handlers are not allowed"
