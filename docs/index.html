@@ -67,8 +67,13 @@
         <h1 data-i18n="heroTitle">Müziğini kolayca<br><span>kontrol et.</span></h1>
         <p data-i18n="heroText">Şarkın nerede çalarsa çalsın, Songleton onu menü çubuğuna taşır. İstersen ekran kenarlarını da hızlı kontrole çevirir.</p>
         <div class="hero-actions">
-          <a class="button primary" href="https://github.com/burak-bilgen/Songleton/releases/latest"><span data-i18n="downloadFree">Ücretsiz indir</span><span aria-hidden="true">↓</span></a>
+          <span class="button primary" role="img" aria-label="" tabindex="-1" aria-hidden="true"><span data-i18n="downloadFree">macOS için indir</span><span aria-hidden="true">↓</span></span>
           <a class="button ghost" href="#tour"><span data-i18n="watchTour">Turu izle</span><span aria-hidden="true">⌄</span></a>
+        </div>
+        <div class="hero-install" aria-hidden="true">
+          <span class="hero-install-label">Homebrew</span>
+          <code>brew install --cask songleton</code>
+          <span class="hero-install-copy">⧉</span>
         </div>
         <div class="hero-platforms" aria-hidden="true">
           <span class="hero-platforms-label" data-i18n="heroPlatformsLabel">Çalıştığı uygulamalar:</span>
@@ -202,44 +207,48 @@
         </div>
         <div class="tour-grid">
           <article class="tour-card reveal">
-            <div class="tour-visual tv-strip-wrap" aria-hidden="true">
-              <div class="tv-strip">
-                <span class="tv-apple"></span>
-                <span class="tv-track"><i class="tv-cover"></i><b>Midnight City</b><em>Ⅱ</em></span>
-                <span class="tv-strip-icons">⌁ ◉</span>
+            <div class="tour-visual" aria-hidden="true">
+              <div class="tv-menubar-badge">☰ <span>MENU BAR</span></div>
+              <div class="tv-panel">
+                <div class="tv-panel-top">
+                  <span class="tv-ambient-pill"><i>✦</i> Ambient</span>
+                  <span class="tv-panel-corners"><i>⚙</i><i>⏻</i></span>
+                </div>
+                <div class="tv-panel-art"></div>
+                <div class="tv-panel-copy"><b>Midnight City</b><span>M83</span></div>
+                <div class="tv-panel-controls">
+                  <span class="tv-side">⤨</span>
+                  <span class="tv-side">◀</span>
+                  <span class="play">Ⅱ</span>
+                  <span class="tv-side">▶</span>
+                  <span class="tv-side">↻</span>
+                </div>
+                <div class="tv-panel-vol"><span class="tv-mute">◖</span><i class="tv-pline"><b></b></i><em class="tv-vol-pill">37%</em></div>
               </div>
             </div>
             <span class="tour-index">01</span>
-            <h4 data-i18n="step1Title">Menü çubuğunda, olması gereken yerde.</h4>
-            <p data-i18n="step1Text">Şarkı adı ve temel oynatma kontrolleri ekranın sağında, her zaman aynı yerde.</p>
-          </article>
-
-          <article class="tour-card reveal">
-            <div class="tour-visual" aria-hidden="true">
-              <div class="tv-panel">
-                <div class="tv-panel-top"><span class="tv-ambient-pill"><i>✦</i> Ambient</span><span class="tv-circles"><i></i><i></i></span></div>
-                <div class="tv-panel-art"></div>
-                <div class="tv-panel-copy"><b>Midnight City</b><span>M83</span></div>
-                <div class="tv-panel-controls"><span>◀</span><span class="play">Ⅱ</span><span>▶</span></div>
-                <div class="tv-panel-vol"><span>◖</span><i class="tv-pline"><b></b></i><span>37%</span></div>
-              </div>
-            </div>
-            <span class="tour-index">02</span>
             <h4 data-i18n="step2Title">Üzerine gel, kontroller açılsın.</h4>
-            <p data-i18n="step2Text">Kapak, oynatma, ses ve Ambient Mode tek bir sakin panelde toplanır.</p>
+            <p data-i18n="step2Text">İmleci getirince kapak, oynatma, ses ve Ambient Mode tek panelde açılır.</p>
           </article>
 
           <article class="tour-card reveal">
             <div class="tour-visual tv-strip-wrap" aria-hidden="true">
+              <div class="tv-menubar-badge">☰ <span>MENU BAR</span></div>
               <div class="tv-strip">
                 <span class="tv-apple"></span>
+                <span class="tv-appname">Songleton</span>
+                <span class="tv-menus"><i></i><i></i><i></i></span>
+                <span class="tv-grow"></span>
+                <span class="tv-mb-btn">◀</span>
                 <span class="tv-track click"><i class="tv-cover"></i><b>Midnight City</b><em>Ⅱ</em><i class="tv-ripple"></i></span>
+                <span class="tv-mb-btn">▶</span>
                 <span class="tv-strip-icons">⌁ ◉</span>
+                <span class="tv-extras"><i>≋</i><i>▮</i><i>09:41</i></span>
               </div>
             </div>
-            <span class="tour-index">03</span>
+            <span class="tour-index">02</span>
             <h4 data-i18n="step3Title">Tek tıkla oynat veya duraklat.</h4>
-            <p data-i18n="step3Text">Parça adına tıklamak yeterli. Hızlı kontrol için başka pencere açılmaz.</p>
+            <p data-i18n="step3Text">Şarkı adına tıkla, oynatma başlasın ya da dursun. Başka pencere açılmaz.</p>
           </article>
         </div>
       </div>
@@ -342,8 +351,14 @@
             <div class="tour-visual tv-strip-wrap" aria-hidden="true">
               <div class="tv-strip">
                 <span class="tv-apple"></span>
+                <span class="tv-appname">Songleton</span>
+                <span class="tv-menus"><i></i><i></i><i></i></span>
+                <span class="tv-grow"></span>
+                <span class="tv-mb-btn">◀</span>
                 <span class="tv-track"><i class="tv-cover"></i><b>Midnight City</b><em>Ⅱ</em></span>
+                <span class="tv-mb-btn">▶</span>
                 <span class="tv-strip-icons">⌁ ◉</span>
+                <span class="tv-extras"><i>≋</i><i>▮</i><i>09:41</i></span>
               </div>
               <div class="tv-ambient-badge">✦ <span>AMBIENT</span></div>
             </div>
@@ -406,7 +421,7 @@
     </section>
 
     <section class="details shell" id="details">
-      <div class="section-heading reveal"><p class="section-kicker" data-i18n="detailsKicker">Diğer ayrıntılar</p><h2 data-i18n="detailsTitle">Küçük bir uygulama, düşünülmüş detaylar.</h2></div>
+      <div class="section-heading reveal"><p class="section-kicker" data-i18n="detailsKicker">Diğer ayrıntılar</p><h2 data-i18n="detailsTitle">Küçük ama dolu.</h2></div>
       <div class="feature-grid">
         <article class="feature-card wide notification-card reveal"><div class="mini-screen"><span class="mini-toast"><i></i><b>Midnight City</b><small>M83</small></span><div class="position-dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div><span class="feature-index">01</span><h3 data-i18n="featureHudTitle">Yeni şarkı bildirimi</h3><p data-i18n="featureHudText">İmlecin bulunduğu ekranda seçtiğin konumdan gelir. Klavye odağını almaz.</p></div></article>
         <article class="feature-card reveal"><div class="feature-visual theme-switcher"><div class="theme-disc"></div><div class="theme-cassette"></div><div class="theme-glass"></div></div><span class="feature-index">02</span><h3 data-i18n="featureAmbientTitle">Üç Ambient teması</h3><p data-i18n="featureAmbientText">Vinyl, Cassette ve Glass. Her biri gerçek oynatma durumunu gösterir.</p></article>
