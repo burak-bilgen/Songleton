@@ -1180,13 +1180,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow Songleton to see the current track and send playback commands to this player."
+            "value" : "Allow Songleton to see the current track and send playback commands to your players."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Songleton'ın çalan parçayı görmesi ve oynatma komutları göndermesi için bu oynatıcıya izin ver."
+            "value" : "Songleton'ın çalan parçayı görmesi ve oynatma komutları gönderebilmesi için erişim izni ver."
+          }
+        }
+      }
+    },
+    "onboarding.permission_system_events_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TIDAL, Deezer and similar players read the track via System Events — one shared prompt covers them all."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TIDAL, Deezer ve benzeri oynatıcılar parçayı System Events ile okur — tek bir izin hepsini kapsar."
           }
         }
       }

@@ -153,7 +153,7 @@ final class NowPlayingModel: ObservableObject {
     }
 
     var hasAnyPlayerPermission: Bool {
-        controllers.contains(where: { permissionStatus(for: $0.bundleID) == .granted })
+        controllers.contains(where: { permissionStatus(for: $0.permissionBundleID) == .granted })
     }
 
     /// Only the players that are actually installed on this Mac, in the
@@ -165,10 +165,10 @@ final class NowPlayingModel: ObservableObject {
     func checkAutomationPermission() {
         let statuses = controllers.map { controller in
             let cached = UserDefaults.standard.object(
-                forKey: "permission_\(controller.bundleID)"
+                forKey: "permission_\(controller.permissionBundleID)"
             ) as? Bool
             return (
-                controller.bundleID,
+                controller.permissionBundleID,
                 cached.map { $0 ? AutomationStatus.granted : .denied } ?? .notDetermined
             )
         }
@@ -205,14 +205,18 @@ final class NowPlayingModel: ObservableObject {
         return .notDetermined
     }
 
-    func requestPermissionFor(bundleID: String) {
-        guard controllers.contains(where: { $0.bundleID == bundleID }) else { return }
-        guard permissionRequestsInFlight.insert(bundleID).inserted else { return }
+    func permissionStatus(for controller: any MediaController) -> AutomationStatus {
+        permissionStatus(for: controller.permissionBundleID)
+    }
+
+    func requestPermissionFor(_ controller: any MediaController) {
+        guard controllers.contains(where: { $0.bundleID == controller.bundleID }) else { return }
+        guard permissionRequestsInFlight.insert(controller.bundleID).inserted else { return }
 
         Task { [weak self] in
             guard let self else { return }
-            defer { permissionRequestsInFlight.remove(bundleID) }
-            await performPermissionRequest(for: bundleID, openSettingsOnDeny: true)
+            defer { permissionRequestsInFlight.remove(controller.bundleID) }
+            await performPermissionRequest(for: controller, openSettingsOnDeny: true)
         }
     }
 
@@ -220,7 +224,7 @@ final class NowPlayingModel: ObservableObject {
     /// been granted yet, one at a time. macOS still shows one system prompt
     /// per target app (a TCC limitation), but the user only taps this once.
     func requestPermissionsForAllInstalled() {
-        let targets = installedControllers.filter { permissionStatus(for: $0.bundleID) != .granted }
+        let targets = installedControllers.filter { permissionStatus(for: $0) != .granted }
         guard !targets.isEmpty, !isGrantAllInProgress else { return }
         isGrantAllInProgress = true
         Task { [weak self] in
@@ -229,18 +233,21 @@ final class NowPlayingModel: ObservableObject {
             for controller in targets {
                 guard !Task.isCancelled else { return }
                 if permissionRequestsInFlight.contains(controller.bundleID) { continue }
-                await performPermissionRequest(for: controller.bundleID, openSettingsOnDeny: false)
+                await performPermissionRequest(for: controller, openSettingsOnDeny: false)
             }
         }
     }
 
-    private func performPermissionRequest(for bundleID: String, openSettingsOnDeny: Bool) async {
+    private func performPermissionRequest(
+        for controller: any MediaController,
+        openSettingsOnDeny: Bool
+    ) async {
         NSApp.activate(ignoringOtherApps: true)
-        logger.info("Requesting player access for \(bundleID, privacy: .public)")
-        let status = await requestAutomationPermission(for: bundleID)
-        applyAutomationStatuses([(bundleID, status)])
+        logger.info("Requesting player access for \(controller.bundleID, privacy: .public)")
+        let status = await requestAutomationPermission(for: controller)
+        applyAutomationStatuses([(controller.permissionBundleID, status)])
         logger.info(
-            "Player access request finished for \(bundleID, privacy: .public): \(String(describing: status), privacy: .public)"
+            "Player access request finished for \(controller.bundleID, privacy: .public): \(String(describing: status), privacy: .public)"
         )
         if status == .granted {
             refresh()
@@ -250,14 +257,20 @@ final class NowPlayingModel: ObservableObject {
     }
 
     private func requestAutomationPermission(
-        for bundleID: String
+        for controller: any MediaController
     ) async -> AutomationStatus {
-        guard await Self.launchPlayerIfNeeded(bundleID: bundleID) else {
-            return .notDetermined
+        // Window-title players are gated on System Events, which is always
+        // available — there is no need to launch the player just to ask.
+        // Only scriptable players (Spotify, Apple Music) need to be running
+        // for their probe to resolve.
+        if controller.permissionBundleID == controller.bundleID {
+            guard await Self.launchPlayerIfNeeded(bundleID: controller.bundleID) else {
+                return .notDetermined
+            }
         }
         NSApp.activate(ignoringOtherApps: true)
 
-        switch await automationPermissionQueue.request(bundleID: bundleID) {
+        switch await automationPermissionQueue.request(bundleID: controller.permissionBundleID) {
         case .granted:
             return .granted
         case .denied:
@@ -300,7 +313,7 @@ final class NowPlayingModel: ObservableObject {
     func refresh() {
         guard !isFetching else { return }
         let permittedControllers = controllers.filter {
-            permissionStatus(for: $0.bundleID) == .granted
+            permissionStatus(for: $0.permissionBundleID) == .granted
         }
         guard !permittedControllers.isEmpty else {
             state = .notRunning

@@ -115,6 +115,12 @@ enum AutomationPermission {
         category: "automation-permission"
     )
 
+    /// Bundle identifier of the System Events service. Window-title based
+    /// players (TIDAL, Deezer, ...) are read through `tell application "System
+    /// Events"`, so their Automation permission is keyed on this target rather
+    /// than on the player app itself (which has no AppleScript dictionary).
+    nonisolated static let systemEventsBundleID = "com.apple.systemevents"
+
     nonisolated enum Status: Equatable, Sendable {
         case notDetermined
         case granted
@@ -123,7 +129,10 @@ enum AutomationPermission {
     }
 
     nonisolated static func status(bundleID: String, askUser: Bool = false) -> Status {
-        guard !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty else {
+        let isSystemEvents = bundleID == systemEventsBundleID
+        // System Events is a system service that is always available; the
+        // regular running-app probe does not apply to it.
+        if !isSystemEvents, NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty {
             return .targetNotRunning
         }
         guard askUser else {
@@ -136,11 +145,21 @@ enum AutomationPermission {
         logger.info("Sending access request to \(bundleID, privacy: .public)")
         let status: Status
         do {
-            try AppleScriptRunner.run("""
-            with timeout of 120 seconds
-                tell application id "\(bundleID)" to get player state
-            end timeout
-            """)
+            if isSystemEvents {
+                // System Events has no "player state"; probe with a command it
+                // always understands so the TCC prompt resolves cleanly.
+                try AppleScriptRunner.run("""
+                with timeout of 120 seconds
+                    tell application "System Events" to count processes
+                end timeout
+                """)
+            } else {
+                try AppleScriptRunner.run("""
+                with timeout of 120 seconds
+                    tell application id "\(bundleID)" to get player state
+                end timeout
+                """)
+            }
             status = .granted
         } catch MediaControllerError.permissionDenied {
             status = .denied
@@ -164,6 +183,10 @@ enum AutomationPermission {
 
 protocol MediaController: Sendable {
     nonisolated var bundleID: String { get }
+    /// Bundle identifier whose Automation (Apple Events) permission gates this
+    /// controller. Defaults to `bundleID`; window-title based players use
+    /// `AutomationPermission.systemEventsBundleID` instead.
+    nonisolated var permissionBundleID: String { get }
     nonisolated var displayName: String { get }
     nonisolated var scriptAppName: String { get }
     nonisolated var isRunning: Bool { get }
@@ -188,6 +211,8 @@ extension MediaController {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) != nil
     }
 
+    nonisolated var permissionBundleID: String { bundleID }
+
     nonisolated func togglePlayPause() throws { try runCommand("playpause") }
     nonisolated func nextTrack() throws { try runCommand("next track") }
     nonisolated func previousTrack() throws { try runCommand("previous track") }
@@ -200,22 +225,22 @@ extension MediaController {
 
     nonisolated func runCommand(_ command: String) throws {
         guard isRunning else { throw MediaControllerError.appNotRunning }
-        guard AutomationPermission.isGranted(bundleID: bundleID) else { throw MediaControllerError.permissionDenied }
+        guard AutomationPermission.isGranted(bundleID: permissionBundleID) else { throw MediaControllerError.permissionDenied }
         do {
             try AppleScriptRunner.run("tell application \"\(scriptAppName)\" to \(command)")
         } catch MediaControllerError.permissionDenied {
-            UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
+            UserDefaults.standard.set(false, forKey: "permission_\(permissionBundleID)")
             throw MediaControllerError.permissionDenied
         }
     }
 
     nonisolated func runInfoScript(_ body: String) throws -> NSAppleEventDescriptor {
         guard isRunning else { throw MediaControllerError.appNotRunning }
-        guard AutomationPermission.isGranted(bundleID: bundleID) else { throw MediaControllerError.permissionDenied }
+        guard AutomationPermission.isGranted(bundleID: permissionBundleID) else { throw MediaControllerError.permissionDenied }
         do {
             return try AppleScriptRunner.run("tell application \"\(scriptAppName)\"\n\(body)\nend tell")
         } catch MediaControllerError.permissionDenied {
-            UserDefaults.standard.set(false, forKey: "permission_\(bundleID)")
+            UserDefaults.standard.set(false, forKey: "permission_\(permissionBundleID)")
             throw MediaControllerError.permissionDenied
         }
     }
@@ -390,6 +415,8 @@ nonisolated final class TidalController: MediaController {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.tidal.TIDAL") != nil
     }
 
+    nonisolated var permissionBundleID: String { AutomationPermission.systemEventsBundleID }
+
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""
         try
@@ -437,6 +464,8 @@ nonisolated final class DeezerController: MediaController {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.deezer.Deezer") != nil
     }
 
+    nonisolated var permissionBundleID: String { AutomationPermission.systemEventsBundleID }
+
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""
         try
@@ -472,6 +501,8 @@ nonisolated final class AmazonMusicController: MediaController {
     let bundleID = "com.amazon.music"
     let displayName = "Amazon Music"
     var scriptAppName: String { "Amazon Music" }
+
+    nonisolated var permissionBundleID: String { AutomationPermission.systemEventsBundleID }
 
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""
@@ -521,6 +552,8 @@ nonisolated final class YouTubeMusicController: MediaController {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.google.Chrome.app.YouTube-Music") != nil
     }
 
+    nonisolated var permissionBundleID: String { AutomationPermission.systemEventsBundleID }
+
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""
         try
@@ -566,6 +599,8 @@ nonisolated final class SoundCloudController: MediaController {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.google.Chrome.app.SoundCloud") != nil
     }
 
+    nonisolated var permissionBundleID: String { AutomationPermission.systemEventsBundleID }
+
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""
         try
@@ -610,6 +645,8 @@ nonisolated final class QobuzController: MediaController {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.qobuz.QobuzDesktop") != nil ||
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.qobuz.qobuzdesktop-app") != nil
     }
+
+    nonisolated var permissionBundleID: String { AutomationPermission.systemEventsBundleID }
 
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
         let result = try runInfoScript("""

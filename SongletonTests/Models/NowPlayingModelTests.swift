@@ -16,6 +16,8 @@ final class NowPlayingModelTests {
         await runTest(name: "testAutomationPermissionUsesCachedState", test: testAutomationPermissionUsesCachedState)
         await runTest(name: "testAutomationPermissionReportsMissingTarget", test: testAutomationPermissionReportsMissingTarget)
         await runTest(name: "testInstalledControllersOnlyReportsInstalledPlayers", test: testInstalledControllersOnlyReportsInstalledPlayers)
+        await runTest(name: "testWindowTitleControllersUseSystemEventsPermission", test: testWindowTitleControllersUseSystemEventsPermission)
+        await runTest(name: "testSystemEventsPermissionTargetIsAvailable", test: testSystemEventsPermissionTargetIsAvailable)
         await runTest(name: "testLyricsActiveLineBoundaries", test: testLyricsActiveLineBoundaries)
     }
 
@@ -165,6 +167,40 @@ final class NowPlayingModelTests {
         assertTrue(installed.contains { $0.bundleID == "com.apple.Music" }, "Apple Music should be detected as installed")
         // Apps that are not installed must never appear in the list.
         assertFalse(installed.contains { $0.bundleID == "bilgenworks.app.Songleton.tests.missing-player" })
+    }
+
+    func testWindowTitleControllersUseSystemEventsPermission() async {
+        let windowTitlePlayers: Set<String> = [
+            "com.tidal.desktop",
+            "com.deezer.deezer-desktop",
+            "com.amazon.music",
+            "com.github.th-ch.youtube-music",
+            "com.soundcloud.desktop",
+            "com.qobuz.QobuzDesktop"
+        ]
+        for controller in NowPlayingModel.shared.controllers {
+            if windowTitlePlayers.contains(controller.bundleID) {
+                assertEqual(
+                    controller.permissionBundleID,
+                    AutomationPermission.systemEventsBundleID,
+                    "\(controller.displayName) should be gated by the System Events permission"
+                )
+            } else {
+                assertEqual(
+                    controller.permissionBundleID,
+                    controller.bundleID,
+                    "\(controller.displayName) should be gated by its own permission"
+                )
+            }
+        }
+    }
+
+    func testSystemEventsPermissionTargetIsAvailable() async {
+        let status = AutomationPermission.status(bundleID: AutomationPermission.systemEventsBundleID)
+        assertTrue(
+            status != .targetNotRunning,
+            "System Events is always running, so the permission probe must never report targetNotRunning"
+        )
     }
 
     func testLyricsActiveLineBoundaries() async {

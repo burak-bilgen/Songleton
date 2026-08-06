@@ -317,7 +317,11 @@ struct OnboardingView: View {
         // Compute the installed set once per render instead of re-running
         // LaunchServices lookups for every subview.
         let installed = model.installedControllers
-        let ungrantedCount = installed.filter { model.permissionStatus(for: $0.bundleID) != .granted }.count
+        let ungrantedCount = installed.filter { model.permissionStatus(for: $0) != .granted }.count
+        let needsSystemEventsPermission = installed.contains {
+            $0.permissionBundleID == AutomationPermission.systemEventsBundleID &&
+            model.permissionStatus(for: $0) != .granted
+        }
         return VStack(spacing: 20) {
             badgeIcon(automationStatusIcon, color: automationStatusColor)
                 .entrance(0, appeared: appeared)
@@ -344,8 +348,7 @@ struct OnboardingView: View {
                         } else {
                             ForEach(installed, id: \.bundleID) { controller in
                                 playerPermissionCard(
-                                    appName: controller.displayName,
-                                    bundleID: controller.bundleID,
+                                    controller: controller,
                                     color: playerColor(for: controller.bundleID)
                                 )
                             }
@@ -375,6 +378,15 @@ struct OnboardingView: View {
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
+
+                    if needsSystemEventsPermission {
+                        Text(localization.string("onboarding.permission_system_events_hint"))
+                            .font(.system(size: 9.5, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.4))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
 
                     grantAllButton(ungrantedCount: ungrantedCount)
                 }
@@ -510,13 +522,13 @@ struct OnboardingView: View {
         }
     }
 
-    private func playerPermissionCard(appName: String, bundleID: String, color: Color) -> some View {
-        let status = model.permissionStatus(for: bundleID)
+    private func playerPermissionCard(controller: any MediaController, color: Color) -> some View {
+        let status = model.permissionStatus(for: controller)
         return HStack(spacing: 12) {
-            PlatformLogoView(bundleID: bundleID, size: 36)
+            PlatformLogoView(bundleID: controller.bundleID, size: 36)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(appName)
+                Text(controller.displayName)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
                 Text(statusText(for: status))
@@ -534,9 +546,9 @@ struct OnboardingView: View {
                     .opacity(checkmarkPop ? 1 : 0)
                     .shadow(color: .green.opacity(0.45), radius: checkmarkPop ? 6 : 0)
             } else {
-                let isRequesting = model.permissionRequestsInFlight.contains(bundleID)
+                let isRequesting = model.permissionRequestsInFlight.contains(controller.bundleID)
                 Button(action: {
-                    model.requestPermissionFor(bundleID: bundleID)
+                    model.requestPermissionFor(controller)
                 }) {
                     Group {
                         if isRequesting {
