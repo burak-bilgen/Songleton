@@ -41,11 +41,11 @@ a { text-decoration: none; }
 .nav-download { padding: 10px 16px; border-radius: 11px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 800; transition: transform .2s, background .2s, box-shadow .2s; }
 .nav-download:hover { transform: translateY(-1px); background: #1c2740; box-shadow: 0 8px 22px rgba(13,22,41,.22); }
 
-.hero { position: relative; min-height: 100svh; display: grid; grid-template-columns: 1.02fr .98fr; align-items: center; gap: 60px; padding-top: 110px; padding-bottom: 80px; }
+.hero { position: relative; min-height: 100svh; display: grid; grid-template-columns: 1.06fr .94fr; align-items: center; gap: 48px; padding-top: 110px; padding-bottom: 80px; }
 .hero-copy { position: relative; z-index: 2; }
 .eyebrow { display: inline-flex; align-items: center; gap: 9px; padding: 7px 11px; border: 1px solid rgba(47,107,255,.22); border-radius: 999px; background: rgba(47,107,255,.07); color: var(--cyan); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 14px var(--cyan); animation: breathe 2.2s ease-in-out infinite; }
-.hero h1 { margin: 28px 0 24px; max-width: 760px; font-size: clamp(58px, 7.4vw, 106px); line-height: .88; letter-spacing: -.075em; font-weight: 820; }
+.hero h1 { margin: 28px 0 24px; max-width: 760px; font-size: clamp(56px, 6.8vw, 98px); line-height: .88; letter-spacing: -.075em; font-weight: 820; }
 .hero h1 span { display: inline-block; white-space: nowrap; color: transparent; background: linear-gradient(105deg, #0e1628 0%, #2f6bff 38%, #7c5cff 68%, #e256a8 100%); background-clip: text; -webkit-background-clip: text; }
 .hero-copy > p { max-width: 600px; margin: 0; color: var(--muted); font-size: clamp(17px, 1.5vw, 21px); line-height: 1.62; letter-spacing: -.015em; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
