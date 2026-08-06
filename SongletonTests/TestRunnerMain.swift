@@ -49,6 +49,10 @@ struct TestRunnerMain {
         print("▶ Running LocalizationModelTests...")
         localizationTests.runAllTests()
 
+        let artworkPipelineTests = ArtworkPipelineTests()
+        print("▶ Running ArtworkPipelineTests...")
+        artworkPipelineTests.runAllTests()
+
         print("==================================================")
         if TestObserver.shared.failedCount == 0 {
             print("✅ ALL \(TestObserver.shared.totalCount) TESTS PASSED SUCCESSFULLY!")

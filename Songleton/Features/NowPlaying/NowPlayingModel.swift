@@ -3,6 +3,13 @@ import Combine
 import OSLog
 import SwiftUI
 
+/// Debug timing for the artwork pipeline. Durations only — never track names
+/// or any other listening information.
+nonisolated private let artworkLogger = Logger(
+    subsystem: "bilgenworks.app.Songleton",
+    category: "artwork"
+)
+
 private actor MediaCommandQueue {
     func execute(_ action: @escaping @Sendable () throws -> Void) async throws {
         try Task.checkCancellation()
@@ -17,28 +24,252 @@ private actor AutomationPermissionQueue {
     }
 }
 
-/// Small in-memory cache for downloaded artwork so revisiting a track (or
-/// polling the same track) never re-downloads its cover over the network.
-nonisolated private final class ArtworkCache: @unchecked Sendable {
-    static let shared = ArtworkCache()
-    private static let maximumEntries = 50
-    private let lock = NSLock()
-    private var images: [String: NSImage] = [:]
-
-    func image(for url: URL) -> NSImage? {
-        lock.lock()
-        defer { lock.unlock() }
-        return images[url.absoluteString]
+/// Two-layer cache for downloaded artwork: an in-memory table for instant
+/// hits within a session, plus a bounded on-disk mirror keyed by URL so
+/// covers survive app restarts and revisits never re-download over the
+/// network. Spotify's CDN explicitly permits long caching
+/// (Cache-Control: max-age=15780000), so honoring it here is safe.
+nonisolated final class ArtworkCache: @unchecked Sendable {
+    struct Entry {
+        let image: NSImage
+        let color: Color
     }
 
-    func store(_ image: NSImage, for url: URL) {
+    static let shared = ArtworkCache()
+    static let maximumMemoryEntries = 100
+    static let maximumDiskEntries = 300
+    private let lock = NSLock()
+    private var entries: [String: Entry] = [:]
+    private let diskDirectory: URL
+
+    /// `diskDirectory` is injectable for tests; production uses the app
+    /// Caches directory.
+    init(diskDirectory: URL? = nil) {
+        if let diskDirectory {
+            self.diskDirectory = diskDirectory
+        } else {
+            let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            self.diskDirectory = caches.appendingPathComponent("SongletonArtwork", isDirectory: true)
+        }
+        try? FileManager.default.createDirectory(
+            at: self.diskDirectory,
+            withIntermediateDirectories: true
+        )
+    }
+
+    /// Memory-first lookup; a disk hit decodes once and is promoted to memory
+    /// (with its color) so every later poll for the same track is instant.
+    /// Disk I/O runs here, so callers must not be on the main actor. The
+    /// decode and color extraction also run off the calling thread's actor.
+    func entry(for url: URL) -> Entry? {
+        let key = url.absoluteString
+        lock.lock()
+        if let hit = entries[key] {
+            lock.unlock()
+            artworkLogger.debug("ArtworkCache memory hit")
+            return hit
+        }
+        let fileURL = self.fileURL(for: url)
+        let data = try? Data(contentsOf: fileURL)
+        lock.unlock()
+        guard let data else { return nil }
+
+        let start = Date()
+        guard let image = RemoteResourceSecurity.safeImage(from: data) else { return nil }
+        let color = Self.extractDominantColor(from: image)
+        let ms = Date().timeIntervalSince(start) * 1000
+        artworkLogger.debug("ArtworkCache disk hit, decode+color: \(ms, format: .fixed(precision: 1))ms")
+
+        lock.lock()
+        if entries[key] == nil {
+            storeEntryLocked(Entry(image: image, color: color), for: key)
+        }
+        lock.unlock()
+        return Entry(image: image, color: color)
+    }
+
+    /// Persists artwork that has already been decoded and validated: no
+    /// re-decode, no quality loss. Promotes the entry into memory and mirrors
+    /// the raw bytes to disk.
+    func store(image: NSImage, color: Color, data: Data, for url: URL) {
+        let key = url.absoluteString
         lock.lock()
         defer { lock.unlock() }
+        storeEntryLocked(Entry(image: image, color: color), for: key)
+        try? data.write(to: self.fileURL(for: url), options: .atomic)
+        trimDiskIfNeededLocked()
+    }
+
+    /// Callers must hold `lock`.
+    private func storeEntryLocked(_ entry: Entry, for key: String) {
         // Bound memory: evict an arbitrary entry once the cache is full.
-        if images.count >= Self.maximumEntries, images[url.absoluteString] == nil {
-            images.removeValue(forKey: images.keys.first ?? "")
+        if entries.count >= Self.maximumMemoryEntries, entries[key] == nil {
+            entries.removeValue(forKey: entries.keys.first ?? "")
         }
-        images[url.absoluteString] = image
+        entries[key] = entry
+    }
+
+    private func fileURL(for url: URL) -> URL {
+        diskDirectory.appendingPathComponent(Self.fileName(for: url))
+    }
+
+    /// Stable 64-bit FNV-1a of the absolute URL — deterministic across
+    /// launches, unlike String.hashValue, so the same track always maps to
+    /// the same file.
+    static func fileName(for url: URL) -> String {
+        var hash: UInt64 = 0xcbf29ce484222325
+        for byte in url.absoluteString.utf8 {
+            hash ^= UInt64(byte)
+            hash = hash &* 0x100000001b3
+        }
+        return String(format: "%016llx", hash) + ".img"
+    }
+
+    /// Keeps the disk mirror bounded: when it exceeds the cap, evict the
+    /// oldest files by modification date. Callers must hold `lock`.
+    private func trimDiskIfNeededLocked() {
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: diskDirectory,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: [.skipsHiddenFiles]
+        ), files.count > Self.maximumDiskEntries else { return }
+
+        let sorted = files.sorted { lhs, rhs in
+            let lhsDate = (try? lhs.resourceValues(forKeys: [.contentModificationDateKey])
+                .contentModificationDate) ?? .distantPast
+            let rhsDate = (try? rhs.resourceValues(forKeys: [.contentModificationDateKey])
+                .contentModificationDate) ?? .distantPast
+            return lhsDate < rhsDate
+        }
+        for file in sorted.prefix(files.count - Self.maximumDiskEntries) {
+            try? FileManager.default.removeItem(at: file)
+        }
+    }
+
+    /// Vibrant dominant color from the cover, boosted to stay vivid. Pure CPU
+    /// work — safe to call off the main actor.
+    static func extractDominantColor(from image: NSImage) -> Color {
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return Color(red: 0.38, green: 0.42, blue: 0.95)
+        }
+        let width = 32, height = 32
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(
+            data: &data, width: width, height: height,
+            bitsPerComponent: 8, bytesPerRow: width * 4,
+            space: colorSpace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return Color(red: 0.38, green: 0.42, blue: 0.95) }
+        ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var maxVibrancyScore: CGFloat = -1
+        var bestR: CGFloat = 0.38
+        var bestG: CGFloat = 0.42
+        var bestB: CGFloat = 0.95
+
+        for i in 0..<(width * height) {
+            let r = CGFloat(data[i * 4]) / 255.0
+            let g = CGFloat(data[i * 4 + 1]) / 255.0
+            let b = CGFloat(data[i * 4 + 2]) / 255.0
+            let a = CGFloat(data[i * 4 + 3]) / 255.0
+            if a < 0.5 { continue }
+
+            let maxC = max(r, max(g, b))
+            let minC = min(r, min(g, b))
+            let delta = maxC - minC
+            let lightness = (maxC + minC) / 2.0
+
+            guard maxC > 0 else { continue }
+            let saturation = delta / maxC
+
+            // Filter out dull muds, grays, near-blacks, and near-whites
+            if lightness > 0.15 && lightness < 0.88 && saturation > 0.18 {
+                // Score favors vibrant, saturated hues over muddy averages
+                let score = saturation * 3.5 + (1.0 - abs(lightness - 0.5)) * 1.5
+                if score > maxVibrancyScore {
+                    maxVibrancyScore = score
+                    bestR = r
+                    bestG = g
+                    bestB = b
+                }
+            }
+        }
+
+        // Convert best RGB to HSL and boost saturation and brightness so it's NEVER muddy!
+        let nsColor = NSColor(red: bestR, green: bestG, blue: bestB, alpha: 1.0)
+        var hue: CGFloat = 0
+        var sat: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        nsColor.getHue(&hue, saturation: &sat, brightness: &brightness, alpha: &alpha)
+
+        // Boost saturation to at least 0.70 and normalize brightness to 0.65-0.88
+        sat = max(sat, 0.70)
+        brightness = min(max(brightness, 0.65), 0.88)
+
+        let vibrantNSColor = NSColor(hue: hue, saturation: sat, brightness: brightness, alpha: 1.0)
+        return Color(nsColor: vibrantNSColor)
+    }
+
+    // MARK: - Test hooks
+
+    var memoryCount: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return entries.count
+    }
+
+    var diskFileCount: Int {
+        (try? FileManager.default.contentsOfDirectory(at: diskDirectory, includingPropertiesForKeys: nil))?.count ?? 0
+    }
+
+    func resetForTesting() {
+        lock.lock()
+        entries.removeAll()
+        lock.unlock()
+        try? FileManager.default.removeItem(at: diskDirectory)
+        try? FileManager.default.createDirectory(at: diskDirectory, withIntermediateDirectories: true)
+    }
+}
+
+/// Pure decision helpers for the artwork pipeline — extracted so retry,
+/// staleness, and cache-key rules are unit-testable without a live player.
+nonisolated enum ArtworkPipeline {
+    /// Minimum wait after a failed artwork download before retrying, so a dead
+    /// network doesn't re-hit the CDN on every 0.5s poll forever.
+    static let retryInterval: TimeInterval = 5.0
+
+    /// True when a download for `key` should be attempted at `now`.
+    static func shouldAttemptDownload(
+        key: String,
+        lastFailureKey: String?,
+        lastFailureAt: Date?,
+        now: Date = Date()
+    ) -> Bool {
+        guard lastFailureKey == key, let lastFailureAt else { return true }
+        return now.timeIntervalSince(lastFailureAt) >= retryInterval
+    }
+
+    /// Stable identity for a track's artwork: source + artwork URL when
+    /// present, otherwise a track/artist/album composite.
+    static func key(
+        source: String,
+        artworkURL: URL?,
+        track: String,
+        artist: String,
+        album: String
+    ) -> String {
+        if let artworkURL {
+            return "\(source)|\(artworkURL.absoluteString)"
+        }
+        return "\(source)|\(track)|\(artist)|\(album)"
+    }
+
+    /// Final guard: a result may only be published if it still belongs to the
+    /// currently loading key; anything older is dropped.
+    static func shouldPublish(resultKey: String, currentKey: String?) -> Bool {
+        resultKey == currentKey
     }
 }
 
@@ -78,6 +309,11 @@ final class NowPlayingModel: ObservableObject {
     private var activeController: (any MediaController)?
     private var isFetching = false
     private var currentArtworkKey: String?
+    private var artworkTask: Task<Void, Never>?
+    // Bounded-retry bookkeeping: the last artwork key whose download failed and
+    // when it failed, so a dead network doesn't re-hit the CDN every poll.
+    private var lastArtworkFailureKey: String?
+    private var lastArtworkFailureAt: Date?
     private var cancellables = Set<AnyCancellable>()
     private var lastLoadedKey: String?
     private var timerCancellable: AnyCancellable?
@@ -380,30 +616,38 @@ final class NowPlayingModel: ObservableObject {
                 // must never stall the next metadata refresh.
                 self.isFetching = false
 
-                // Wait for the cover before announcing the new track, so the
-                // notification pops complete with its artwork instead of an
-                // empty placeholder. The menu bar title updates immediately;
-                // only the toast is deferred. If the track changes again while
-                // the artwork loads, lastLoadedKey no longer matches and the
-                // stale toast is dropped.
-                await self.syncArtwork(with: result.state)
-
+                // Announce the track right away: the toast pops immediately
+                // and adopts the cover live (via HUDToastView's NowPlayingModel
+                // observation) as soon as it lands — no more waiting for the
+                // download before the notification appears. Drop the previous
+                // cover first so neither the menu bar nor the toast can flash
+                // stale artwork under the new title. If the track changes again
+                // while the artwork loads, lastLoadedKey no longer matches and
+                // the stale toast is dropped.
                 if let pendingToast,
                    self.lastLoadedKey == pendingToast.key,
                    settings.showTrackNotifications,
                    !MenuBarManager.shared.isHoverPopoverShown,
                    !AmbientModeManager.shared.isPresented {
+                    self.artwork = nil
+                    self.dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
                     HUDToastManager.shared.show(
                         track: pendingToast.track,
                         artist: pendingToast.artist,
-                        artwork: self.artwork
+                        artwork: nil
                     )
                 }
+
+                // Artwork loading runs in its own cancellable task: when the
+                // track changes, the previous task is cancelled (which aborts
+                // its in-flight URLSession request) so stale downloads never
+                // complete or overwrite the newer track's cover.
+                self.startArtworkSync(for: result.state)
             } else {
                 self.state = .notRunning
                 self.activeController = nil
                 self.isFetching = false
-                await self.syncArtwork(with: .notRunning)
+                self.startArtworkSync(for: .notRunning)
             }
         }
     }
@@ -426,43 +670,97 @@ final class NowPlayingModel: ObservableObject {
         }
     }
 
-    private func syncArtwork(with state: State) async {
-        guard case .loaded(let info, _) = state else {
-            if currentArtworkKey != nil {
-                currentArtworkKey = nil
-                artwork = nil
-                dominantColor = .accentColor
-            }
+    /// Starts (or reuses) the artwork load for `state`. Called from every poll:
+    /// if the artwork key is unchanged the in-flight task keeps running;
+    /// otherwise the old task is cancelled (aborting its URLSession request)
+    /// and a fresh one is started for the new track.
+    private func startArtworkSync(for state: State) {
+        let desiredKey: String?
+        if case .loaded(let info, let source) = state {
+            desiredKey = ArtworkPipeline.key(
+                source: source,
+                artworkURL: info.artworkURL,
+                track: info.track,
+                artist: info.artist,
+                album: info.album
+            )
+        } else {
+            desiredKey = nil
+        }
+        guard desiredKey != currentArtworkKey else { return }
+
+        // Bounded retry: don't re-hit the network for a key that failed
+        // recently. The poll loop keeps running; only the download backs off.
+        if let desiredKey,
+           !ArtworkPipeline.shouldAttemptDownload(
+               key: desiredKey,
+               lastFailureKey: lastArtworkFailureKey,
+               lastFailureAt: lastArtworkFailureAt
+           ) {
             return
         }
-        let source = switch state {
-        case .loaded(_, let source): source
-        case .notRunning, .permissionDenied: ""
+
+        // Claim the key synchronously — before the new task's body runs — so a
+        // stale continuation resumed in the meantime (e.g. the previous track's
+        // download finishing right as the track changed) sees the new key and
+        // drops instead of flashing the old cover under the new title.
+        currentArtworkKey = desiredKey
+        guard let desiredKey else {
+            artworkTask?.cancel()
+            artworkTask = nil
+            artwork = nil
+            dominantColor = .accentColor
+            return
         }
-        let key = "\(source)|\(info.artworkURL?.absoluteString ?? "\(info.track)|\(info.artist)|\(info.album)")"
-        guard key != currentArtworkKey else { return }
-        currentArtworkKey = key
+        // Drop the previous cover in this same MainActor turn, so the new title
+        // is never shown above stale artwork while the task body waits to run
+        // (matters when the track-change toast is suppressed). The task body
+        // clears again as defense in depth.
+        artwork = nil
+        dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
+        artworkTask?.cancel()
+        artworkTask = Task { [weak self] in
+            await self?.syncArtwork(with: state, key: desiredKey)
+        }
+    }
+
+    private func syncArtwork(with state: State, key: String) async {
+        guard case .loaded(let info, _) = state else { return }
+        // `startArtworkSync` already claimed this key synchronously. If this
+        // task was superseded before its body ran (track changed again), drop
+        // out without touching the current artwork.
+        guard ArtworkPipeline.shouldPublish(resultKey: key, currentKey: currentArtworkKey),
+              !Task.isCancelled else { return }
         // Never leave the previous track's cover under the new title while the
         // artwork loads — fall back to the placeholder immediately.
         artwork = nil
         dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
+        let loadStart = Date()
 
-        if let data = info.artworkData, let image = RemoteResourceSecurity.safeImage(from: data) {
-            artwork = image
-            dominantColor = extractColor(from: image)
+        if let data = info.artworkData {
+            // Decode and color extraction happen off the main actor; only the
+            // final published values touch the UI.
+            let (image, color) = await Self.decodeArtwork(data: data)
+            // Stale? Drop silently. Decode failed for the current track? Back
+            // off so later polls don't re-decode the same bad bytes forever.
+            guard ArtworkPipeline.shouldPublish(resultKey: key, currentKey: currentArtworkKey) else { return }
+            guard let image else {
+                recordFailure(for: key)
+                return
+            }
+            publishArtwork(image, color: color, loadStart: loadStart, key: key)
             return
         }
         if let url = info.artworkURL, url.scheme?.lowercased() == "https" {
             let (image, color) = await Self.downloadArtworkAndColor(from: url)
-            guard currentArtworkKey == key else { return }
-            artwork = image
-            if let color {
-                dominantColor = color
-            } else if let image {
-                dominantColor = extractColor(from: image)
-            } else {
-                dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
+            guard ArtworkPipeline.shouldPublish(resultKey: key, currentKey: currentArtworkKey) else { return }
+            guard let image else {
+                // Transient failure (timeout, offline): remember it so the next
+                // poll backs off instead of hammering the CDN every 0.5s.
+                recordFailure(for: key)
+                return
             }
+            publishArtwork(image, color: color, loadStart: loadStart, key: key)
             return
         }
         // No artwork URL (e.g. Apple Music): the controller can expose the
@@ -486,88 +784,73 @@ final class NowPlayingModel: ObservableObject {
             group.cancelAll()
             return first
         }
-        guard currentArtworkKey == key,
-              let data,
-              let image = RemoteResourceSecurity.safeImage(from: data) else { return }
-        artwork = image
-        dominantColor = extractColor(from: image)
+        // Stale? Drop silently. Fetch or decode failed for the current track?
+        // Back off so later polls don't re-run the same slow AppleScript.
+        guard ArtworkPipeline.shouldPublish(resultKey: key, currentKey: currentArtworkKey) else { return }
+        guard let data else {
+            recordFailure(for: key)
+            return
+        }
+        let (image, color) = await Self.decodeArtwork(data: data)
+        guard ArtworkPipeline.shouldPublish(resultKey: key, currentKey: currentArtworkKey) else { return }
+        guard let image else {
+            recordFailure(for: key)
+            return
+        }
+        publishArtwork(image, color: color, loadStart: loadStart, key: key)
     }
 
-    private func extractColor(from image: NSImage) -> Color {
-        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            return Color(red: 0.38, green: 0.42, blue: 0.95)
+    private func publishArtwork(_ image: NSImage, color: Color?, loadStart: Date, key: String) {
+        guard currentArtworkKey == key else { return }
+        lastArtworkFailureKey = nil
+        lastArtworkFailureAt = nil
+        let ms = Date().timeIntervalSince(loadStart) * 1000
+        artworkLogger.debug("artwork published in \(ms, format: .fixed(precision: 1))ms")
+        artwork = image
+        dominantColor = color ?? ArtworkCache.extractDominantColor(from: image)
+    }
+
+    private func recordFailure(for key: String) {
+        lastArtworkFailureKey = key
+        lastArtworkFailureAt = Date()
+        currentArtworkKey = nil
+    }
+
+    /// Decodes raw image bytes and extracts the dominant color, entirely off
+    /// the main actor. The artworkData path (Apple Music) uses this; the URL
+    /// path goes through `downloadArtworkAndColor`.
+    nonisolated private static func decodeArtwork(data: Data) async -> (NSImage?, Color?) {
+        let start = Date()
+        guard let image = RemoteResourceSecurity.safeImage(from: data) else {
+            return (nil, nil)
         }
-        let width = 32, height = 32
-        var data = [UInt8](repeating: 0, count: width * height * 4)
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        guard let ctx = CGContext(
-            data: &data, width: width, height: height,
-            bitsPerComponent: 8, bytesPerRow: width * 4,
-            space: colorSpace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return Color(red: 0.38, green: 0.42, blue: 0.95) }
-        ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
-
-        var maxVibrancyScore: CGFloat = -1
-        var bestR: CGFloat = 0.38
-        var bestG: CGFloat = 0.42
-        var bestB: CGFloat = 0.95
-
-        for i in 0..<(width * height) {
-            let r = CGFloat(data[i * 4]) / 255.0
-            let g = CGFloat(data[i * 4 + 1]) / 255.0
-            let b = CGFloat(data[i * 4 + 2]) / 255.0
-            let a = CGFloat(data[i * 4 + 3]) / 255.0
-            if a < 0.5 { continue }
-
-            let maxC = max(r, max(g, b))
-            let minC = min(r, min(g, b))
-            let delta = maxC - minC
-            let lightness = (maxC + minC) / 2.0
-
-            guard maxC > 0 else { continue }
-            let saturation = delta / maxC
-
-            // Filter out dull muds, grays, near-blacks, and near-whites
-            if lightness > 0.15 && lightness < 0.88 && saturation > 0.18 {
-                // Score favors vibrant, saturated hues over muddy averages
-                let score = saturation * 3.5 + (1.0 - abs(lightness - 0.5)) * 1.5
-                if score > maxVibrancyScore {
-                    maxVibrancyScore = score
-                    bestR = r
-                    bestG = g
-                    bestB = b
-                }
-            }
-        }
-
-        // Convert best RGB to HSL and boost saturation and brightness so it's NEVER muddy!
-        let nsColor = NSColor(red: bestR, green: bestG, blue: bestB, alpha: 1.0)
-        var hue: CGFloat = 0
-        var sat: CGFloat = 0
-        var brightness: CGFloat = 0
-        var alpha: CGFloat = 0
-
-        nsColor.getHue(&hue, saturation: &sat, brightness: &brightness, alpha: &alpha)
-
-        // Boost saturation to at least 0.70 and normalize brightness to 0.65-0.88
-        sat = max(sat, 0.70)
-        brightness = min(max(brightness, 0.65), 0.88)
-
-        let vibrantNSColor = NSColor(hue: hue, saturation: sat, brightness: brightness, alpha: 1.0)
-        return Color(nsColor: vibrantNSColor)
+        let color = ArtworkCache.extractDominantColor(from: image)
+        artworkLogger.debug("artwork decode+color \(Date().timeIntervalSince(start) * 1000, format: .fixed(precision: 1))ms")
+        return (image, color)
     }
 
     nonisolated private static func downloadArtworkAndColor(from url: URL) async -> (NSImage?, Color?) {
-        if let cached = ArtworkCache.shared.image(for: url) {
-            return (cached, nil)
+        let lookupStart = Date()
+        if let cached = ArtworkCache.shared.entry(for: url) {
+            let ms = Date().timeIntervalSince(lookupStart) * 1000
+            artworkLogger.debug("artwork cache hit: \(ms, format: .fixed(precision: 1))ms")
+            return (cached.image, cached.color)
         }
+        let downloadStart = Date()
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("image/*", forHTTPHeaderField: "Accept")
         guard let data = try? await SecureRemoteResource.data(for: request, kind: .artwork),
-              let image = RemoteResourceSecurity.safeImage(from: data) else { return (nil, nil) }
-        ArtworkCache.shared.store(image, for: url)
-        return (image, nil)
+              let image = RemoteResourceSecurity.safeImage(from: data) else {
+            artworkLogger.debug("artwork download failed after \(Date().timeIntervalSince(downloadStart) * 1000, format: .fixed(precision: 1))ms")
+            return (nil, nil)
+        }
+        let decodeStart = Date()
+        let color = ArtworkCache.extractDominantColor(from: image)
+        let totalMs = Date().timeIntervalSince(downloadStart) * 1000
+        artworkLogger.debug("artwork download+decode \(totalMs, format: .fixed(precision: 1))ms (decode/color \(Date().timeIntervalSince(decodeStart) * 1000, format: .fixed(precision: 1))ms)")
+        ArtworkCache.shared.store(image: image, color: color, data: data, for: url)
+        return (image, color)
     }
 
     private func send(_ action: @escaping @Sendable (any MediaController) throws -> Void) {

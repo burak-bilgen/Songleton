@@ -259,7 +259,13 @@ nonisolated final class SpotifyController: MediaController {
     let displayName = "Spotify"
     var scriptAppName: String { "Spotify" }
 
+    nonisolated private static let logger = Logger(
+        subsystem: "bilgenworks.app.Songleton",
+        category: "spotify-metadata"
+    )
+
     nonisolated func fetchNowPlaying() throws -> NowPlayingInfo {
+        let metadataStart = Date()
         let result = try runInfoScript("""
         set t to name of current track
         set a to artist of current track
@@ -284,6 +290,7 @@ nonisolated final class SpotifyController: MediaController {
         let volume = MediaValue.volume(Int(result.atIndex(5)?.int32Value ?? 50))
         let artworkURL = result.atIndex(6)?.stringValue.flatMap { URL(string: $0) }
         let position = MediaValue.position(result.atIndex(7)?.doubleValue ?? 0)
+        Self.logger.debug("Spotify metadata fetch took \(Date().timeIntervalSince(metadataStart) * 1000, format: .fixed(precision: 1))ms")
         let rawDuration = result.atIndex(8)?.doubleValue ?? 0
         // Spotify versions have returned both seconds and milliseconds.
         let duration = MediaValue.duration(rawDuration > 10_000 ? rawDuration / 1_000 : rawDuration)

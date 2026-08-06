@@ -12,6 +12,15 @@ struct HUDToastView: View {
 
     private let cornerRadius: CGFloat = 18
 
+    /// The cover shown in the toast. The caller may pass an explicit artwork
+    /// (previews) or nil; when nil, the live NowPlayingModel artwork is used
+    /// so a toast shown before the cover downloads simply fills in the moment
+    /// it arrives — no need to delay the notification. Previews keep their
+    /// placeholder and never adopt the currently playing track's cover.
+    private var resolvedArtwork: NSImage? {
+        isPreview ? artwork : (artwork ?? model.artwork)
+    }
+
     init(
         track: String,
         artist: String,
@@ -83,8 +92,8 @@ struct HUDToastView: View {
 
     @ViewBuilder
     private var artworkAura: some View {
-        if let artwork {
-            Image(nsImage: artwork)
+        if let resolvedArtwork {
+            Image(nsImage: resolvedArtwork)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: layout.size.width * 1.14, height: layout.size.height * 1.8)
@@ -126,8 +135,8 @@ struct HUDToastView: View {
 
     @ViewBuilder
     private var artworkTile: some View {
-        if let artwork {
-            Image(nsImage: artwork)
+        if let resolvedArtwork {
+            Image(nsImage: resolvedArtwork)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 44, height: 44)
