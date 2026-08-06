@@ -112,6 +112,10 @@ final class HUDToastManager: NSObject {
 
     override init() {
         super.init()
+    }
+
+    func setup() {
+        guard cancellables.isEmpty else { return }
         AmbientModeManager.shared.$isPresented
             .receive(on: RunLoop.main)
             .sink { [weak self] isAmbient in

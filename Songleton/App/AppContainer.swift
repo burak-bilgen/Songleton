@@ -45,6 +45,7 @@ final class AppContainer {
     /// Starts everything that must be alive right after launch.
     func bootstrap() {
         menuBar.setup()
+        hudToasts.setup()
         nowPlaying.checkAutomationPermission()
         settings.wireGestureDependencies()
         hudToasts.updatePermanentMode()
