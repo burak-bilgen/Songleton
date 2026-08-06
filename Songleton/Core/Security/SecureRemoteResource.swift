@@ -144,8 +144,11 @@ nonisolated enum SecureRemoteResource {
         configuration.httpCookieStorage = nil
         configuration.httpShouldSetCookies = false
         configuration.urlCredentialStorage = nil
-        configuration.timeoutIntervalForRequest = 8
-        configuration.timeoutIntervalForResource = 12
+        // Artwork is announced in the track-change toast as soon as it lands, so
+        // keep its download budget tight; lyrics keep the longer one.
+        let isArtwork = kind == .artwork
+        configuration.timeoutIntervalForRequest = isArtwork ? 4 : 8
+        configuration.timeoutIntervalForResource = isArtwork ? 6 : 12
         configuration.waitsForConnectivity = false
         return URLSession(
             configuration: configuration,

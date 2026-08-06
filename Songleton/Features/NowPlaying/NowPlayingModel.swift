@@ -358,7 +358,7 @@ final class NowPlayingModel: ObservableObject {
                 self.state = result.state
                 self.activeController = result.active
 
-                var shownToastKey: String?
+                var pendingToast: (key: String, track: String, artist: String)?
                 if case .loaded(let info, let src) = result.state {
                     let key = "\(src)|\(info.track)|\(info.artist)"
                     let previousKey = self.lastLoadedKey
@@ -368,11 +368,8 @@ final class NowPlayingModel: ObservableObject {
                         let isDesktopMusicApp = srcLower.contains("spotify") || srcLower.contains("music")
                         if previousKey != nil,
                            settings.showTrackNotifications,
-                           !MenuBarManager.shared.isHoverPopoverShown,
-                           !AmbientModeManager.shared.isPresented,
                            isDesktopMusicApp {
-                            HUDToastManager.shared.show(track: info.track, artist: info.artist, artwork: nil, trackKey: key)
-                            shownToastKey = key
+                            pendingToast = (key: key, track: info.track, artist: info.artist)
                         }
                     }
                 } else if case .permissionDenied = result.state {
@@ -383,10 +380,24 @@ final class NowPlayingModel: ObservableObject {
                 // must never stall the next metadata refresh.
                 self.isFetching = false
 
+                // Wait for the cover before announcing the new track, so the
+                // notification pops complete with its artwork instead of an
+                // empty placeholder. The menu bar title updates immediately;
+                // only the toast is deferred. If the track changes again while
+                // the artwork loads, lastLoadedKey no longer matches and the
+                // stale toast is dropped.
                 await self.syncArtwork(with: result.state)
 
-                if let shownToastKey {
-                    HUDToastManager.shared.updateArtwork(self.artwork, for: shownToastKey)
+                if let pendingToast,
+                   self.lastLoadedKey == pendingToast.key,
+                   settings.showTrackNotifications,
+                   !MenuBarManager.shared.isHoverPopoverShown,
+                   !AmbientModeManager.shared.isPresented {
+                    HUDToastManager.shared.show(
+                        track: pendingToast.track,
+                        artist: pendingToast.artist,
+                        artwork: self.artwork
+                    )
                 }
             } else {
                 self.state = .notRunning
@@ -456,12 +467,25 @@ final class NowPlayingModel: ObservableObject {
         }
         // No artwork URL (e.g. Apple Music): the controller can expose the
         // cover through a separate, slower call. Run it off the main actor so
-        // the metadata poll is never blocked by it.
+        // the metadata poll is never blocked by it, and bound the wait so a
+        // hung AppleScript can't stall the track-change toast indefinitely
+        // (the fetch itself keeps running off-thread; its result is discarded
+        // once the cap wins).
         guard let controller = activeController else { return }
         let controllerKey = "\(info.track)|\(info.artist)|\(info.album)"
-        let data = await Task.detached(priority: .utility) { () -> Data? in
-            try? controller.fetchArtworkData(for: controllerKey)
-        }.value
+        let fetchTask = Task.detached(priority: .utility) { () throws -> Data? in
+            try controller.fetchArtworkData(for: controllerKey)
+        }
+        let data = await withTaskGroup(of: Data?.self) { group -> Data? in
+            group.addTask { try? await fetchTask.value }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(4))
+                return nil
+            }
+            let first = await group.next() ?? nil
+            group.cancelAll()
+            return first
+        }
         guard currentArtworkKey == key,
               let data,
               let image = RemoteResourceSecurity.safeImage(from: data) else { return }

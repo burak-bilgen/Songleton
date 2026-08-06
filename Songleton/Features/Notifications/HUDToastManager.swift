@@ -93,18 +93,8 @@ struct TrackNotificationMotion {
 final class HUDToastManager: NSObject {
     static let shared = AppContainer.shared.hudToasts
 
-    private struct ActiveToastState {
-        let key: String
-        let track: String
-        let artist: String
-        let layout: TrackNotificationLayout
-        let accentColor: Color?
-        let isPreview: Bool
-    }
-
     private var toastWindow: NonActivatingToastPanel?
     private var dismissTask: Task<Void, Never>?
-    private var activeToastState: ActiveToastState?
 
     override init() {
         super.init()
@@ -115,11 +105,9 @@ final class HUDToastManager: NSObject {
         artist: String,
         artwork: NSImage?,
         accentColor: Color? = nil,
-        isPreview: Bool = false,
-        trackKey: String? = nil
+        isPreview: Bool = false
     ) {
         dismissTask?.cancel()
-        activeToastState = nil
 
         // Close existing toast window immediately
         if let existing = toastWindow {
@@ -183,17 +171,6 @@ final class HUDToastManager: NSObject {
 
         self.toastWindow = panel
 
-        if let trackKey {
-            activeToastState = ActiveToastState(
-                key: trackKey,
-                track: track,
-                artist: artist,
-                layout: layout,
-                accentColor: accentColor,
-                isPreview: isPreview
-            )
-        }
-
         // Display visually WITHOUT ever stealing keyboard focus from active application!
         panel.orderFrontRegardless()
         NSAnimationContext.runAnimationGroup { context in
@@ -219,25 +196,10 @@ final class HUDToastManager: NSObject {
                         panel.close()
                         guard let self, self.toastWindow === panel else { return }
                         self.toastWindow = nil
-                        self.activeToastState = nil
                     }
                 }
             }
         }
-    }
-
-    func updateArtwork(_ artwork: NSImage?, for trackKey: String) {
-        guard let state = activeToastState, state.key == trackKey,
-              let panel = toastWindow,
-              let hosting = panel.contentView as? NSHostingView<HUDToastView> else { return }
-        hosting.rootView = HUDToastView(
-            track: state.track,
-            artist: state.artist,
-            artwork: artwork,
-            layout: state.layout,
-            accentColor: state.accentColor,
-            isPreview: state.isPreview
-        )
     }
 
     func showPreview() {
