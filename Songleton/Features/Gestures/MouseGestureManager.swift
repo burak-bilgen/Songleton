@@ -75,6 +75,8 @@ final class MouseGestureManager: ObservableObject {
     private var eventTapRunLoopSource: CFRunLoopSource?
     private var activeZone: EdgeZone?
     private var pendingWorkItem: DispatchWorkItem?
+    private var zoneExitWorkItem: DispatchWorkItem?
+    private static let zoneExitGrace: TimeInterval = 0.30
     private var edgeProgressTask: Task<Void, Never>?
     private var cursorGestureWindow: NSPanel?
     private var edgeGestureStartedAt = Date.distantPast
@@ -219,6 +221,8 @@ final class MouseGestureManager: ObservableObject {
         endVolumeGesture()
         pendingWorkItem?.cancel()
         pendingWorkItem = nil
+        zoneExitWorkItem?.cancel()
+        zoneExitWorkItem = nil
         lastTriggeredAt = .distantPast
         logger.info("Global mouse monitor stopped")
     }
@@ -277,6 +281,24 @@ final class MouseGestureManager: ObservableObject {
 
     private func handleMouseLocation(_ location: NSPoint, now: Date) {
         let zone = edgeZone(at: location)
+
+        // Grace period: a cursor that briefly dips out of the active edge zone
+        // (hand jitter, thin top strip) must not instantly cancel a nearly
+        // complete gesture. Only cancel once it stays out for the grace time.
+        if zone == nil, activeZone != nil {
+            guard zoneExitWorkItem == nil else { return }
+            let exitItem = DispatchWorkItem { [weak self] in
+                Task { @MainActor in
+                    self?.cancelEdgeGesture()
+                }
+            }
+            zoneExitWorkItem = exitItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.zoneExitGrace, execute: exitItem)
+            return
+        }
+        zoneExitWorkItem?.cancel()
+        zoneExitWorkItem = nil
+
         guard zone != activeZone else { return }
 
         pendingWorkItem?.cancel()
@@ -295,6 +317,25 @@ final class MouseGestureManager: ObservableObject {
         guard let zone else { return }
 
         scheduleZoneGesture(zone, now: now)
+    }
+
+    /// Cancels any in-flight edge gesture and clears the active zone. Used when
+    /// the cursor leaves the zone past the grace period (or monitoring stops).
+    private func cancelEdgeGesture() {
+        zoneExitWorkItem?.cancel()
+        zoneExitWorkItem = nil
+        pendingWorkItem?.cancel()
+        pendingWorkItem = nil
+        edgeProgressTask?.cancel()
+        edgeProgressTask = nil
+        if cursorGestureWindow != nil {
+            edgeGestureCancelBurst += 1
+            cancelCursorGestureOverlay()
+        } else {
+            edgeGestureProgress = 0
+            hideCursorGestureOverlay()
+        }
+        activeZone = nil
     }
 
     private func scheduleZoneGesture(_ zone: EdgeZone, now: Date) {
@@ -434,7 +475,16 @@ final class MouseGestureManager: ObservableObject {
     }
 
     private func edgeZone(at location: NSPoint) -> EdgeZone? {
-        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(location) }) else { return nil }
+        // A cursor pushed against the physical top/right edge reports exactly
+        // frame.maxY/frame.maxX, and NSRect.contains excludes max edges — which
+        // silently killed the top (play/pause) and right (next) zones. Prefer
+        // the exact frame first so displays sharing an edge (stacked or
+        // side-by-side) keep their ownership, then fall back to a hair-expanded
+        // frame to catch a cursor pinned to a max edge.
+        let tolerance: CGFloat = 1
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(location) })
+            ?? NSScreen.screens.first(where: { $0.frame.insetBy(dx: -tolerance, dy: -tolerance).contains(location) })
+        else { return nil }
         return Self.edgeZone(
             at: location,
             in: screen.frame,
@@ -450,13 +500,14 @@ final class MouseGestureManager: ObservableObject {
         in frame: NSRect,
         horizontalEnabled: Bool,
         verticalEnabled: Bool,
-        edgeInset: CGFloat = 4
+        edgeInset: CGFloat = 4,
+        topInset: CGFloat = 8
     ) -> EdgeZone? {
         if horizontalEnabled {
             if location.x <= frame.minX + edgeInset { return .previous }
             if location.x >= frame.maxX - edgeInset { return .next }
         }
-        if verticalEnabled, location.y >= frame.maxY - edgeInset {
+        if verticalEnabled, location.y >= frame.maxY - topInset {
             return .playPause
         }
         return nil

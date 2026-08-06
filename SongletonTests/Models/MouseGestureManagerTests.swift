@@ -4,6 +4,7 @@ import AppKit
 final class MouseGestureManagerTests {
     func runAllTests() {
         runTest(name: "testEdgeZonesUseScreenTopForPlayPause", test: testEdgeZonesUseScreenTopForPlayPause)
+        runTest(name: "testTopEdgeZoneIsEasyToHitAndHold", test: testTopEdgeZoneIsEasyToHitAndHold)
         runTest(name: "testEdgeZonesSupportVerticallyArrangedDisplays", test: testEdgeZonesSupportVerticallyArrangedDisplays)
         runTest(name: "testEdgeZonesRespectEnabledGestureGroups", test: testEdgeZonesRespectEnabledGestureGroups)
     }
@@ -29,6 +30,31 @@ final class MouseGestureManagerTests {
         assertEqual(
             MouseGestureManager.edgeZone(
                 at: NSPoint(x: 720, y: 1),
+                in: frame,
+                horizontalEnabled: true,
+                verticalEnabled: true
+            ),
+            nil
+        )
+    }
+
+    private func testTopEdgeZoneIsEasyToHitAndHold() {
+        let frame = NSRect(x: 0, y: 0, width: 1440, height: 900)
+
+        // The play/pause zone extends 8pt down from the screen top (inside the
+        // menu bar area) so pushing the cursor to the top edge is easy to hold.
+        assertEqual(
+            MouseGestureManager.edgeZone(
+                at: NSPoint(x: 720, y: frame.maxY - 7),
+                in: frame,
+                horizontalEnabled: true,
+                verticalEnabled: true
+            ),
+            .playPause
+        )
+        assertEqual(
+            MouseGestureManager.edgeZone(
+                at: NSPoint(x: 720, y: frame.maxY - 9),
                 in: frame,
                 horizontalEnabled: true,
                 verticalEnabled: true
