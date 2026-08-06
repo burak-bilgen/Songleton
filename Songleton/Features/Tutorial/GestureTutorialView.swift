@@ -1067,7 +1067,9 @@ struct GestureTutorialView: View {
 
             case .volumeControl:
                 let volumeCenterY = demoCenterY(for: size)
-                let volumeX = min(size.width - 65, size.width / 2 + 250)
+                // Cursor lands 40pt right of the HUD column center so the drag
+                // animation plays over the slider's own track, not its label.
+                let volumeX = min(size.width - 25, size.width / 2 + 290)
                 let topY = volumeCenterY - 82
                 let bottomY = volumeCenterY + 72
 
