@@ -633,7 +633,6 @@ final class NowPlayingModel: ObservableObject {
                 // notification opens with the cover photo viewable right away.
                 if let pendingToast {
                     self.pendingToast = pendingToast
-                    self.artwork = nil
                     self.dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
                 }
 
@@ -716,11 +715,6 @@ final class NowPlayingModel: ObservableObject {
             triggerPendingToastIfMatching()
             return
         }
-        // Drop the previous cover in this same MainActor turn, so the new title
-        // is never shown above stale artwork while the task body waits to run
-        // (matters when the track-change toast is suppressed). The task body
-        // clears again as defense in depth.
-        artwork = nil
         dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
         artworkTask?.cancel()
         artworkTask = Task { [weak self] in
@@ -738,10 +732,6 @@ final class NowPlayingModel: ObservableObject {
         // out without touching the current artwork.
         guard ArtworkPipeline.shouldPublish(resultKey: key, currentKey: currentArtworkKey),
               !Task.isCancelled else { return }
-        // Never leave the previous track's cover under the new title while the
-        // artwork loads — fall back to the placeholder immediately.
-        artwork = nil
-        dominantColor = Color(red: 0.38, green: 0.42, blue: 0.95)
         let loadStart = Date()
 
         if let data = info.artworkData {
@@ -829,6 +819,7 @@ final class NowPlayingModel: ObservableObject {
         lastArtworkFailureKey = key
         lastArtworkFailureAt = Date()
         currentArtworkKey = nil
+        artwork = nil
     }
 
     private func triggerPendingToastIfMatching() {
