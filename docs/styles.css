@@ -46,7 +46,8 @@ a { text-decoration: none; }
 .eyebrow { display: inline-flex; align-items: center; gap: 9px; padding: 7px 11px; border: 1px solid rgba(47,107,255,.22); border-radius: 999px; background: rgba(47,107,255,.07); color: var(--cyan); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 14px var(--cyan); animation: breathe 2.2s ease-in-out infinite; }
 .hero h1 { margin: 28px 0 24px; max-width: 760px; font-size: clamp(46px, 5.8vw, 74px); line-height: .92; letter-spacing: -.06em; font-weight: 820; }
-.hero h1 span { display: inline-block; white-space: nowrap; color: transparent; background: linear-gradient(105deg, #0e1628 0%, #2f6bff 38%, #7c5cff 68%, #e256a8 100%); background-clip: text; -webkit-background-clip: text; }
+.hero h1 span { display: inline-block; white-space: nowrap; line-height: 1.2; padding: 0 .14em .04em 0; color: transparent; background: linear-gradient(105deg, #0e1628 0%, #2f6bff 38%, #7c5cff 68%, #e256a8 100%); background-clip: text; -webkit-background-clip: text; }
+/* Painted box must exceed the glyphs: the h1's tight .92 line-height used to clip the descender of "ğ" and the trailing period under background-clip: text. line-height 1.2 + right/bottom padding overpaint them. */
 .hero-copy > p { max-width: 600px; margin: 0; color: var(--muted); font-size: clamp(17px, 1.5vw, 21px); line-height: 1.62; letter-spacing: -.015em; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 18px; min-height: 52px; padding: 0 20px; border-radius: 14px; font-size: 13px; font-weight: 780; transition: transform .2s, border-color .2s, background .2s, box-shadow .2s; }
