@@ -13,8 +13,13 @@ jobs:
     name: Build and test
     runs-on: macos-26
     timeout-minutes: 20
+    env:
+      # macOS runner images carry Homebrew taps (e.g. aws/tap) that the new
+      # tap-trust feature refuses to load, failing every brew call with exit 74.
+      # The official mitigation is disabling the trust check.
+      HOMEBREW_NO_REQUIRE_TAP_TRUST: "1"
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
       # The audit scripts need jq and ripgrep; macOS runners sometimes ship a
