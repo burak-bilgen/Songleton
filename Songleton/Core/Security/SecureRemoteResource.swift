@@ -129,6 +129,34 @@ nonisolated private final class SecureRedirectDelegate: NSObject, URLSessionTask
 }
 
 nonisolated enum SecureRemoteResource {
+    /// Persistent per-kind sessions: a fresh URLSession per request meant every
+    /// artwork download re-did DNS + TCP + TLS handshakes from scratch and never
+    /// reused responses — the main reason covers arrived seconds late. A shared
+    /// session keeps connections alive and honors an in-memory/disk URL cache,
+    /// while cookies and credential storage stay disabled for security.
+    private static func makeSession(kind: RemoteResourceKind) -> URLSession {
+        let configuration = URLSessionConfiguration.default
+        configuration.requestCachePolicy = .useProtocolCachePolicy
+        configuration.urlCache = URLCache(
+            memoryCapacity: 8 * 1024 * 1024,
+            diskCapacity: 32 * 1024 * 1024
+        )
+        configuration.httpCookieStorage = nil
+        configuration.httpShouldSetCookies = false
+        configuration.urlCredentialStorage = nil
+        configuration.timeoutIntervalForRequest = 8
+        configuration.timeoutIntervalForResource = 12
+        configuration.waitsForConnectivity = false
+        return URLSession(
+            configuration: configuration,
+            delegate: SecureRedirectDelegate(kind: kind),
+            delegateQueue: nil
+        )
+    }
+
+    nonisolated private static let artworkSession = makeSession(kind: .artwork)
+    nonisolated private static let lyricsSession = makeSession(kind: .lyrics)
+
     static func data(for request: URLRequest, kind: RemoteResourceKind) async throws -> Data {
         guard let url = request.url,
               request.httpMethod == nil || request.httpMethod == "GET",
@@ -142,23 +170,9 @@ nonisolated enum SecureRemoteResource {
 
         var safeRequest = URLRequest(url: url)
         safeRequest.httpMethod = "GET"
-        safeRequest.cachePolicy = .reloadIgnoringLocalCacheData
         safeRequest.setValue(kind == .lyrics ? "application/json" : "image/jpeg, image/png, image/webp, image/heic, image/heif", forHTTPHeaderField: "Accept")
 
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-        configuration.urlCache = nil
-        configuration.httpCookieStorage = nil
-        configuration.httpShouldSetCookies = false
-        configuration.urlCredentialStorage = nil
-        configuration.timeoutIntervalForRequest = 8
-        configuration.timeoutIntervalForResource = 12
-        configuration.waitsForConnectivity = false
-
-        let delegate = SecureRedirectDelegate(kind: kind)
-        let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
-        defer { session.finishTasksAndInvalidate() }
-
+        let session = kind == .lyrics ? lyricsSession : artworkSession
         let (bytes, response) = try await session.bytes(for: safeRequest)
         guard let httpResponse = response as? HTTPURLResponse,
               RemoteResourceSecurity.accepts(httpResponse, for: kind) else {

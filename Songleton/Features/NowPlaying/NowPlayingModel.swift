@@ -93,7 +93,10 @@ final class NowPlayingModel: ObservableObject {
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
-        timerCancellable = Timer.publish(every: 1.0, on: .main, in: .common)
+        // 0.5s cadence halves the worst-case latency between a track change and
+        // its artwork download (poll detection + network). The fetch itself is
+        // cheap (AppleScript reads); commands are separately queued.
+        timerCancellable = Timer.publish(every: 0.5, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self, self.hasAnyPlayerPermission else { return }
