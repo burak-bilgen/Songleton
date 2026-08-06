@@ -126,6 +126,24 @@ final class HUDToastManager: NSObject {
                 }
             }
             .store(in: &cancellables)
+
+        NowPlayingModel.shared.$artwork
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                if SettingsModel.shared.permanentHUDMode {
+                    self?.updatePermanentMode()
+                }
+            }
+            .store(in: &cancellables)
+
+        NowPlayingModel.shared.$state
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                if SettingsModel.shared.permanentHUDMode {
+                    self?.updatePermanentMode()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     func show(
@@ -174,6 +192,16 @@ final class HUDToastManager: NSObject {
         if isPermanent {
             if let existing = toastWindow {
                 existing.ignoresMouseEvents = false
+                existing.contentView = NSHostingView(
+                    rootView: HUDToastView(
+                        track: track,
+                        artist: artist,
+                        artwork: artwork,
+                        layout: layout,
+                        accentColor: accentColor,
+                        isPreview: isPreview
+                    )
+                )
                 NSAnimationContext.runAnimationGroup { context in
                     context.duration = 0.35
                     context.allowsImplicitAnimation = true

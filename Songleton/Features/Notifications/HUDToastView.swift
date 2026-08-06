@@ -56,7 +56,10 @@ struct HUDToastView: View {
     }
 
     private var resolvedArtwork: NSImage? {
-        isPreview ? artwork : (artwork ?? model.artwork)
+        if isPreview {
+            return artwork ?? model.artwork
+        }
+        return model.artwork ?? artwork
     }
 
     init(
