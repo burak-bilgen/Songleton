@@ -360,6 +360,20 @@ final class NowPlayingModel: ObservableObject {
         return info.track
     }
 
+    var activeControllerDisplayName: String? {
+        activeController?.displayName
+    }
+
+    var isSpotifyActive: Bool {
+        if let name = activeController?.displayName.lowercased(), name.contains("spotify") {
+            return true
+        }
+        if case .loaded(_, let source) = state, source.lowercased().contains("spotify") {
+            return true
+        }
+        return SpotifyController().isRunning
+    }
+
     var platformAccentColor: Color {
         guard case .loaded(_, let source) = state else {
             return Color(red: 29/255, green: 185/255, blue: 84/255)

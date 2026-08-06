@@ -19,16 +19,30 @@ struct TrackNotificationLayout {
         )
     }
 
-    static func make(track: String, artist: String, in visibleFrame: NSRect) -> TrackNotificationLayout {
-        let horizontalPadding: CGFloat = 10
+    static func make(
+        track: String,
+        artist: String,
+        in visibleFrame: NSRect,
+        isPermanent: Bool = false
+    ) -> TrackNotificationLayout {
+        let horizontalPadding: CGFloat = 12
         let verticalPadding: CGFloat = 10
         let artworkSize: CGFloat = 44
         let contentSpacing: CGFloat = 12
+        let controlsSpacing: CGFloat = 10
+        let controlsWidth: CGFloat = isPermanent ? 96 : 0
         let titleFont = NSFont.systemFont(ofSize: 13, weight: .bold)
         let artistFont = NSFont.systemFont(ofSize: 11, weight: .medium)
 
-        // Keep a usable margin even when the notification is centered on a
-        // narrow display, but never force a fixed narrow card on normal ones.
+        if isPermanent {
+            let permanentCardWidth: CGFloat = 350
+            let textWidth = permanentCardWidth - horizontalPadding * 2 - artworkSize - contentSpacing - controlsSpacing - controlsWidth
+            return TrackNotificationLayout(
+                size: NSSize(width: permanentCardWidth, height: 64),
+                textWidth: max(120, textWidth)
+            )
+        }
+
         let maximumWidth = max(
             Self.minimumWidth,
             min(Self.maximumPreferredWidth, visibleFrame.width - 40)
@@ -40,8 +54,6 @@ struct TrackNotificationLayout {
         let cardWidth = min(maximumWidth, max(Self.minimumWidth, ceil(naturalWidth)))
         let textWidth = max(80, cardWidth - horizontalPadding * 2 - artworkSize - contentSpacing)
 
-        // A long title uses all available width, then wraps rather than ending
-        // in an ellipsis. The panel grows vertically only when it needs to.
         let titleHeight = measuredSize(track, font: titleFont, constrainedTo: textWidth).height
         let artistHeight = artist.isEmpty ? 0 : measuredSize(artist, font: artistFont, constrainedTo: textWidth).height
         let textHeight = titleHeight + (artist.isEmpty ? 0 : 2 + artistHeight)
@@ -109,12 +121,7 @@ final class HUDToastManager: NSObject {
     ) {
         dismissTask?.cancel()
 
-        // Close existing toast window immediately
-        if let existing = toastWindow {
-            existing.orderOut(nil)
-            existing.close()
-            toastWindow = nil
-        }
+        let isPermanent = SettingsModel.shared.permanentHUDMode && !isPreview
 
         let pointerLocation = NSEvent.mouseLocation
         let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
@@ -123,7 +130,12 @@ final class HUDToastManager: NSObject {
         guard let screen else { return }
 
         let visibleFrame = screen.visibleFrame
-        let layout = TrackNotificationLayout.make(track: track, artist: artist, in: visibleFrame)
+        let layout = TrackNotificationLayout.make(
+            track: track,
+            artist: artist,
+            in: visibleFrame,
+            isPermanent: isPermanent
+        )
         let position = SettingsModel.shared.trackNotificationPosition
         let cardOrigin = toastOrigin(
             in: visibleFrame,
@@ -134,8 +146,63 @@ final class HUDToastManager: NSObject {
             x: cardOrigin.x - TrackNotificationLayout.shadowInset,
             y: cardOrigin.y - TrackNotificationLayout.shadowInset
         )
-
         let finalPanelFrame = NSRect(origin: panelOrigin, size: layout.panelSize)
+
+        // --- 1. PERMANENT HUD MODE (Stationary card, in-place cross-fade, zero offscreen motion) ---
+        if isPermanent {
+            if let existing = toastWindow {
+                existing.ignoresMouseEvents = false
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.35
+                    context.allowsImplicitAnimation = true
+                    existing.animator().setFrame(finalPanelFrame, display: true)
+                    existing.animator().alphaValue = 1.0
+                }
+                return
+            }
+
+            // Initial appearance when permanent mode is enabled: create window directly at final position!
+            let panel = NonActivatingToastPanel(
+                contentRect: finalPanelFrame,
+                styleMask: [.borderless, .nonactivatingPanel],
+                backing: .buffered,
+                defer: false
+            )
+            panel.level = .statusBar
+            panel.backgroundColor = .clear
+            panel.isOpaque = false
+            panel.hasShadow = false
+            panel.ignoresMouseEvents = false
+            panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+            panel.contentView = NSHostingView(
+                rootView: HUDToastView(
+                    track: track,
+                    artist: artist,
+                    artwork: artwork,
+                    layout: layout,
+                    accentColor: accentColor,
+                    isPreview: isPreview
+                )
+            )
+            panel.alphaValue = 0.0
+            self.toastWindow = panel
+
+            panel.orderFrontRegardless()
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.40
+                context.allowsImplicitAnimation = true
+                panel.animator().alphaValue = 1.0
+            }
+            return
+        }
+
+        // --- 2. TRANSIENT MODE (Permanent Mode disabled: entry/exit motion animations work as before) ---
+        if let existing = toastWindow {
+            existing.orderOut(nil)
+            existing.close()
+            toastWindow = nil
+        }
+
         let entryPanelFrame = NSRect(
             origin: TrackNotificationMotion.offscreenOrigin(
                 finalOrigin: panelOrigin,
@@ -167,37 +234,78 @@ final class HUDToastManager: NSObject {
                 isPreview: isPreview
             )
         )
-        panel.alphaValue = 0
+        panel.alphaValue = 0.0
 
         self.toastWindow = panel
 
-        // Display visually WITHOUT ever stealing keyboard focus from active application!
         panel.orderFrontRegardless()
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.46
             context.allowsImplicitAnimation = true
             panel.animator().setFrame(finalPanelFrame, display: true)
-            panel.animator().alphaValue = 1
+            panel.animator().alphaValue = 1.0
         }
 
-        dismissTask = Task { [weak self, weak panel] in
-            try? await Task.sleep(for: .seconds(2.8))
-            guard !Task.isCancelled, let self, let panel else { return }
-            if !Task.isCancelled {
-                NSAnimationContext.runAnimationGroup { context in
-                    context.duration = 0.34
-                    context.allowsImplicitAnimation = true
-                    panel.animator().setFrame(entryPanelFrame, display: true)
-                    panel.animator().alphaValue = 0.0
-                } completionHandler: { [weak self, weak panel] in
-                    Task { @MainActor [weak self, weak panel] in
-                        guard let panel else { return }
-                        panel.orderOut(nil)
-                        panel.close()
-                        guard let self, self.toastWindow === panel else { return }
-                        self.toastWindow = nil
+        if !isPreview {
+            dismissTask = Task { [weak self, weak panel] in
+                try? await Task.sleep(for: .seconds(2.8))
+                guard !Task.isCancelled, let self, let panel else { return }
+                if !Task.isCancelled {
+                    NSAnimationContext.runAnimationGroup { context in
+                        context.duration = 0.34
+                        context.allowsImplicitAnimation = true
+                        panel.animator().setFrame(entryPanelFrame, display: true)
+                        panel.animator().alphaValue = 0.0
+                    } completionHandler: { [weak self, weak panel] in
+                        Task { @MainActor [weak self, weak panel] in
+                            guard let panel else { return }
+                            panel.orderOut(nil)
+                            panel.close()
+                            guard let self, self.toastWindow === panel else { return }
+                            self.toastWindow = nil
+                        }
                     }
                 }
+            }
+        }
+    }
+
+    func updatePermanentMode() {
+        if SettingsModel.shared.permanentHUDMode && SettingsModel.shared.showTrackNotifications {
+            if case .loaded(let info, _) = NowPlayingModel.shared.state {
+                show(
+                    track: info.track,
+                    artist: info.artist,
+                    artwork: NowPlayingModel.shared.artwork
+                )
+            } else {
+                show(
+                    track: "Songleton",
+                    artist: LocalizationManager.shared.string("notification.preview_artist"),
+                    artwork: nil,
+                    accentColor: SongletonTheme.cyan
+                )
+            }
+        } else {
+            dismiss()
+        }
+    }
+
+    func dismiss() {
+        dismissTask?.cancel()
+        dismissTask = nil
+        guard let panel = toastWindow else { return }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.34
+            context.allowsImplicitAnimation = true
+            panel.animator().alphaValue = 0.0
+        } completionHandler: { [weak self, weak panel] in
+            Task { @MainActor [weak self, weak panel] in
+                guard let panel else { return }
+                panel.orderOut(nil)
+                panel.close()
+                guard let self, self.toastWindow === panel else { return }
+                self.toastWindow = nil
             }
         }
     }

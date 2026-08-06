@@ -1,6 +1,48 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "easter_egg.badge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "SECRET STASH" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "GİZLİ STASH" } }
+      }
+    },
+    "easter_egg.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "EASTER EGG UNLOCKED! 🎉" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "EASTER EGG KİLİDİ AÇILDI! 🎉" } }
+      }
+    },
+    "easter_egg.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Developer's Playlist Activated 🎧" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Geliştiricinin Playlist'i Aktifleştirildi 🎧" } }
+      }
+    },
+    "easter_egg.playing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Burak's Spotify Playlist is now playing on shuffle 🔀" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Burak'ın Spotify Playlist'i şu an karışık çalınıyor 🔀" } }
+      }
+    },
+    "easter_egg.open_spotify" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open in Spotify" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Spotify'da Aç" } }
+      }
+    },
+    "easter_egg.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Awesome! 🚀" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Harika! 🚀" } }
+      }
+    },
     "ambient.exit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -132,7 +174,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ambient Modu"
+            "value" : "Ambient"
           }
         }
       }
@@ -2258,6 +2300,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Parça değiştiğinde ekranda bildirim göster"
+          }
+        }
+      }
+    },
+    "settings.permanent_hud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permanent Miniplayer Mode"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sürekli Mini Oyuncu Modu"
+          }
+        }
+      }
+    },
+    "settings.permanent_hud_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the player visible in the selected position"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oyuncuyu seçtiğiniz konumda sürekli görünür tut"
           }
         }
       }

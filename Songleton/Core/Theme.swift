@@ -8,6 +8,7 @@ enum SongletonTheme {
     static let cyan = Color(red: 0.28, green: 0.82, blue: 0.82)
     static let violet = Color(red: 0.52, green: 0.39, blue: 0.92)
     static let pink = Color(red: 0.94, green: 0.32, blue: 0.62)
+    static let spotifyGreen = Color(red: 29/255, green: 185/255, blue: 84/255)
     static let secondaryText = Color.white.opacity(0.58)
 
     static let panelGradient = LinearGradient(

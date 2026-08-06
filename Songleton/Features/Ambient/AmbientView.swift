@@ -737,46 +737,51 @@ struct AmbientView: View {
 
     // Base Artwork Cover Element
     private var artworkCoverView: some View {
-        ZStack {
-            if let artwork = model.artwork {
-                Image(nsImage: artwork)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: showLyrics ? 300 : 380, height: showLyrics ? 300 : 380)
-                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.white.opacity(0.35), .white.opacity(0.1)],
-                                    startPoint: .topLeading, endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    )
-                    .shadow(color: .black.opacity(0.8), radius: 36, x: -8, y: 16)
-                    .transition(.asymmetric(
-                        insertion: .modifier(
-                            active: ScreenOffsetModifier(offset: slideDirection == .next ? 1600 : -1600),
-                            identity: ScreenOffsetModifier(offset: 0)
-                        ).combined(with: .opacity).combined(with: .scale(scale: 0.92)),
-                        removal: .modifier(
-                            active: ScreenOffsetModifier(offset: slideDirection == .next ? -1600 : 1600),
-                            identity: ScreenOffsetModifier(offset: 0)
-                        ).combined(with: .opacity)
-                    ))
-                    .animation(.spring(response: 0.55, dampingFraction: 0.82), value: model.artwork)
-            } else {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(Color.white.opacity(0.06))
-                    .frame(width: showLyrics ? 300 : 380, height: showLyrics ? 300 : 380)
-                    .overlay(
-                        Image(systemName: "music.note")
-                            .font(.system(size: 72, weight: .ultraLight))
-                            .foregroundStyle(Color.white.opacity(0.3))
-                    )
+        Button {
+            EasterEggManager.shared.registerAlbumTap()
+        } label: {
+            ZStack {
+                if let artwork = model.artwork {
+                    Image(nsImage: artwork)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: showLyrics ? 300 : 380, height: showLyrics ? 300 : 380)
+                        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.white.opacity(0.35), .white.opacity(0.1)],
+                                        startPoint: .topLeading, endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(color: .black.opacity(0.8), radius: 36, x: -8, y: 16)
+                        .transition(.asymmetric(
+                            insertion: .modifier(
+                                active: ScreenOffsetModifier(offset: slideDirection == .next ? 1600 : -1600),
+                                identity: ScreenOffsetModifier(offset: 0)
+                            ).combined(with: .opacity).combined(with: .scale(scale: 0.92)),
+                            removal: .modifier(
+                                active: ScreenOffsetModifier(offset: slideDirection == .next ? -1600 : 1600),
+                                identity: ScreenOffsetModifier(offset: 0)
+                            ).combined(with: .opacity)
+                        ))
+                        .animation(.spring(response: 0.55, dampingFraction: 0.82), value: model.artwork)
+                } else {
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(Color.white.opacity(0.06))
+                        .frame(width: showLyrics ? 300 : 380, height: showLyrics ? 300 : 380)
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .font(.system(size: 72, weight: .ultraLight))
+                                .foregroundStyle(Color.white.opacity(0.3))
+                        )
+                }
             }
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Dynamic Synced Lyrics Component connected to LyricsModel.shared

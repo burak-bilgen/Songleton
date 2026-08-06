@@ -20,6 +20,7 @@ final class AppContainer {
     let hudToasts: HUDToastManager
     let ambient: AmbientModeManager
     let tutorial: GestureTutorialManager
+    let easterEgg: EasterEggManager
 
     let lyricsService: LyricsService
     let tutorialAudio: TutorialAudioService
@@ -37,6 +38,7 @@ final class AppContainer {
         hudToasts = HUDToastManager()
         ambient = AmbientModeManager()
         tutorial = GestureTutorialManager()
+        easterEgg = EasterEggManager()
         tutorialAudio = TutorialAudioService()
     }
 
@@ -45,6 +47,7 @@ final class AppContainer {
         menuBar.setup()
         nowPlaying.checkAutomationPermission()
         settings.wireGestureDependencies()
+        hudToasts.updatePermanentMode()
     }
 
     /// Stops monitoring and tears down transient state. Called on quit.

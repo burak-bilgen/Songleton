@@ -138,6 +138,15 @@ struct SettingsView: View {
             if settings.showTrackNotifications {
                 sectionDivider
 
+                settingsToggleRow(
+                    icon: "pin.fill",
+                    title: localization.string("settings.permanent_hud"),
+                    subtitle: localization.string("settings.permanent_hud_hint"),
+                    isOn: $settings.permanentHUDMode
+                )
+
+                sectionDivider
+
                 notificationPositionRow
             }
 

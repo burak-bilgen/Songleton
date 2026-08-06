@@ -301,43 +301,48 @@ struct UnifiedHoverPanelView: View {
     private func nowPlayingView(info: NowPlayingInfo, source: String) -> some View {
         VStack(spacing: 10) {
             // Artwork (Clean Specular Border with Gentle Breathing Micro-Animation)
-            ZStack {
-                if let artwork = model.artwork {
-                    Image(nsImage: artwork)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 130, height: 130)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [.white.opacity(0.35), .white.opacity(0.1)],
-                                        startPoint: .topLeading, endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1
-                                )
-                        )
-                        .shadow(color: themeColor.opacity(0.40), radius: 14, x: 0, y: 6)
-                        .scaleEffect(info.isPlaying && isArtworkBreathing ? 1.025 : 1.0)
-                        .animation(
-                            info.isPlaying
-                                ? .easeInOut(duration: 2.4).repeatForever(autoreverses: true)
-                                : .default,
-                            value: isArtworkBreathing
-                        )
-                        .onAppear { isArtworkBreathing = true }
-                } else {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.08))
-                        .frame(width: 130, height: 130)
-                        .overlay(
-                            Image(systemName: "music.note")
-                                .font(.system(size: 32, weight: .ultraLight))
-                                .foregroundStyle(Color.white.opacity(0.4))
-                        )
+            Button {
+                EasterEggManager.shared.registerAlbumTap()
+            } label: {
+                ZStack {
+                    if let artwork = model.artwork {
+                        Image(nsImage: artwork)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 130, height: 130)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.white.opacity(0.35), .white.opacity(0.1)],
+                                            startPoint: .topLeading, endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
+                            .shadow(color: themeColor.opacity(0.40), radius: 14, x: 0, y: 6)
+                            .scaleEffect(info.isPlaying && isArtworkBreathing ? 1.025 : 1.0)
+                            .animation(
+                                info.isPlaying
+                                    ? .easeInOut(duration: 2.4).repeatForever(autoreverses: true)
+                                    : .default,
+                                value: isArtworkBreathing
+                            )
+                            .onAppear { isArtworkBreathing = true }
+                    } else {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white.opacity(0.08))
+                            .frame(width: 130, height: 130)
+                            .overlay(
+                                Image(systemName: "music.note")
+                                    .font(.system(size: 32, weight: .ultraLight))
+                                    .foregroundStyle(Color.white.opacity(0.4))
+                            )
+                    }
                 }
             }
+            .buttonStyle(.plain)
 
             // Track & Artist Meta
             VStack(spacing: 3) {

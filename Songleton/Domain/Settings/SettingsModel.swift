@@ -72,11 +72,34 @@ final class SettingsModel: ObservableObject {
     }
 
     @Published var showTrackNotifications: Bool {
-        didSet { defaults.set(showTrackNotifications, forKey: "showTrackNotifications") }
+        didSet {
+            defaults.set(showTrackNotifications, forKey: "showTrackNotifications")
+            if !showTrackNotifications {
+                Task { @MainActor in
+                    HUDToastManager.shared.dismiss()
+                }
+            }
+        }
+    }
+
+    @Published var permanentHUDMode: Bool {
+        didSet {
+            defaults.set(permanentHUDMode, forKey: "permanentHUDMode")
+            Task { @MainActor in
+                HUDToastManager.shared.updatePermanentMode()
+            }
+        }
     }
 
     @Published var trackNotificationPosition: TrackNotificationPosition {
-        didSet { defaults.set(trackNotificationPosition.rawValue, forKey: "trackNotificationPosition") }
+        didSet {
+            defaults.set(trackNotificationPosition.rawValue, forKey: "trackNotificationPosition")
+            Task { @MainActor in
+                if self.permanentHUDMode {
+                    HUDToastManager.shared.updatePermanentMode()
+                }
+            }
+        }
     }
 
     @Published var horizontalGesturesEnabled: Bool {
@@ -133,6 +156,7 @@ final class SettingsModel: ObservableObject {
             "menuBarFont": MenuBarFont.system.rawValue,
             "launchAtLogin": false,
             "showTrackNotifications": true,
+            "permanentHUDMode": false,
             "trackNotificationPosition": TrackNotificationPosition.bottomTrailing.rawValue,
             "horizontalGesturesEnabled": true,
             "verticalGesturesEnabled": true,
@@ -149,6 +173,7 @@ final class SettingsModel: ObservableObject {
             launchAtLogin = SMAppService.mainApp.status == .enabled
         }
         showTrackNotifications = userDefaults.bool(forKey: "showTrackNotifications")
+        permanentHUDMode = userDefaults.bool(forKey: "permanentHUDMode")
         trackNotificationPosition = TrackNotificationPosition(
             rawValue: userDefaults.string(forKey: "trackNotificationPosition") ?? ""
         ) ?? .bottomTrailing

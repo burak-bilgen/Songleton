@@ -263,6 +263,133 @@ a { text-decoration: none; }
 .tv-toast span { overflow: hidden; color: var(--dim); font-size: 8px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .tv-toast > em { width: 3px; height: 22px; border-radius: 3px; background: linear-gradient(var(--cyan), var(--violet)); box-shadow: 0 0 10px rgba(47,107,255,.4); }
 
+/* --- Permanent HUD Mini Player mockup --- */
+.permanent-card .permanent-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(29, 185, 84, 0.18), rgba(12, 12, 16, 0.95));
+  padding: 24px 16px;
+  border-radius: 16px;
+  width: 100%;
+}
+
+.permanent-card .hud-widget {
+  width: 100%;
+  max-width: 350px;
+  height: 64px;
+  background: linear-gradient(135deg, rgba(35, 35, 42, 0.92), rgba(14, 14, 18, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 24px rgba(29, 185, 84, 0.25);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.permanent-card .hud-widget:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 30px rgba(29, 185, 84, 0.38);
+}
+
+.permanent-card .hud-artwork {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  background: #111;
+}
+
+.permanent-card .hud-artwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.permanent-card .hud-text-container {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.permanent-card .hud-marquee-track {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent, black 4px, black calc(100% - 6px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 4px, black calc(100% - 6px), transparent);
+}
+
+.permanent-card .hud-marquee-track span {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  padding-left: 100%;
+  animation: hud-marquee 10s linear infinite;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+@keyframes hud-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.permanent-card .hud-artist {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.permanent-card .hud-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.permanent-card .hud-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.permanent-card .hud-btn:hover {
+  background: rgba(29, 185, 84, 0.85);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.12);
+  box-shadow: 0 0 12px rgba(29, 185, 84, 0.6);
+}
+
+.permanent-card .hud-btn:active {
+  transform: scale(0.95);
+}
+
 /* --- Ambient lyrics mockup --- */
 .tv-ambient { display: grid; justify-items: center; width: min(234px, 84%); padding: 17px 15px 14px; border: 1px solid rgba(255,255,255,.16); border-radius: 17px; background: radial-gradient(circle at 30% 20%, rgba(57,185,255,.2), transparent 45%), radial-gradient(circle at 75% 85%, rgba(157,76,255,.18), transparent 45%), #0b1226; color: #fff; box-shadow: 0 22px 55px rgba(13,22,41,.32); }
 .tv-ambient-kicker { color: #59e7ff; font-size: 7px; font-weight: 900; letter-spacing: .18em; }

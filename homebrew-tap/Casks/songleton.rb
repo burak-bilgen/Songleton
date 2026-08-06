@@ -5,7 +5,7 @@ cask "songleton" do
   # shasum -a 256 Songleton-#{version}.dmg
   # The release helper at ../../scripts/update-homebrew-cask.sh does this.
   # All-zero SHA intentionally fails closed until a release is prepared.
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  sha256 "187c1fc11449e465e6c604caed0eae9f8fcb765e631f374b0c3b1fd70bd97cd1"
 
   url "https://github.com/burak-bilgen/Songleton/releases/download/v#{version}/Songleton-#{version}.dmg"
   name "Songleton"

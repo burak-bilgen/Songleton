@@ -24,6 +24,7 @@ It is designed for people who work, write, code, design, or browse with music on
 | Menu bar | Shows the current track only while Spotify or Apple Music has usable playback. Previous, next, and title controls remain one click away. |
 | Hover panel | Artwork, playback, shuffle, repeat, mute, volume, settings, and Ambient Mode in one compact panel. |
 | Screen gestures | Previous, next, play or pause, and volume without finding a button. Clear visual feedback prevents accidental triggers. |
+| Permanent Mini Player | A persistent desktop widget pinned to your chosen position with in-place cross-fade, marquee text, and 3 interactive playback buttons. |
 | New-track HUD | A non-activating track notification that enters from the selected screen edge, keeps its glow intact, and never steals focus. |
 | Ambient Mode | A full-screen music scene with Vinyl, Cassette, and Glass themes, lyrics, seek, sleep timer, and keyboard controls. |
 | Guided setup | Human onboarding, permission recovery, and a synchronized visual tutorial before controls become active. |
@@ -41,6 +42,16 @@ Songleton reveals itself only when a supported player has a track ready. When Sp
 | Previous / next buttons | Move through the queue |
 
 The three status items intentionally use a non-obvious AppKit initialization order. Do not reorder their creation or visibility calls without testing on a real macOS menu bar. AppKit is being AppKit.
+
+## Permanent Mini Player
+
+Songleton can transform into a persistent desktop mini player widget that stays visible on your screen while you work.
+
+- **Always Visible**: Stays pinned in your chosen screen location as long as Songleton is running.
+- **In-Place Smooth Cross-Fade**: When a new track starts, content updates in-place with a smooth 0.45s cross-fade transition—no flying on/off screen.
+- **Interactive Controls**: Includes 3 integrated playback buttons (`⏮`, `⏯` / `⏸`, `⏭`) to change tracks or toggle playback directly from the desktop.
+- **Focus-Safe**: Non-activating window panel that never steals keyboard or window focus from your active apps.
+- **Marquee Text**: Automatically scrolls long song titles smoothly to the left so every track name is fully readable.
 
 ## The hover panel
 
