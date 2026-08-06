@@ -27,6 +27,8 @@ jobs:
       NOTARY_PROFILE: ""
       APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
       APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+      APPLE_ID_EMAIL: ${{ secrets.APPLE_ID_EMAIL }}
+      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
     steps:
       - name: Checkout the exact tagged commit
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -82,14 +84,21 @@ jobs:
             rm -f "${RUNNER_TEMP}/api-key.p8"
           }
           trap cleanup EXIT
-          [[ -n "${APPLE_API_PRIVATE_KEY:-}" ]] || {
-            echo "Missing secret: APPLE_API_PRIVATE_KEY" >&2
-            exit 1
+          [[ -n "${APPLE_ID_EMAIL:-}" && -n "${APPLE_APP_PASSWORD:-}" ]] || {
+            [[ -n "${APPLE_API_PRIVATE_KEY:-}" ]] || {
+              echo "Missing notarization secrets: set either APPLE_ID_EMAIL + APPLE_APP_PASSWORD, or APPLE_API_KEY_ID + APPLE_API_ISSUER_ID + APPLE_API_PRIVATE_KEY" >&2
+              exit 1
+            }
           }
-          echo "${APPLE_API_PRIVATE_KEY}" | base64 --decode > "${RUNNER_TEMP}/api-key.p8"
+          if [[ -n "${APPLE_API_PRIVATE_KEY:-}" ]]; then
+            echo "${APPLE_API_PRIVATE_KEY}" | base64 --decode > "${RUNNER_TEMP}/api-key.p8"
+          fi
           security unlock-keychain -p "${TEMP_KEYCHAIN_PASSWORD}" "${KEYCHAIN}"
-          APPLE_API_PRIVATE_KEY_PATH="${RUNNER_TEMP}/api-key.p8" \
+          if [[ -f "${RUNNER_TEMP}/api-key.p8" ]]; then
+            APPLE_API_PRIVATE_KEY_PATH="${RUNNER_TEMP}/api-key.p8" ./scripts/release.sh "${VERSION}" --skip-cask
+          else
             ./scripts/release.sh "${VERSION}" --skip-cask
+          fi
 
       - name: Create or update the GitHub Release
         run: |

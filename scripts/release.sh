@@ -255,8 +255,10 @@ else
     NOTARY_ARGS+=(--keychain-profile "${NOTARY_PROFILE}")
   elif [[ -n "${APPLE_API_KEY_ID:-}" && -n "${APPLE_API_ISSUER_ID:-}" && -n "${APPLE_API_PRIVATE_KEY_PATH:-}" ]]; then
     NOTARY_ARGS+=(--key "${APPLE_API_PRIVATE_KEY_PATH}" --key-id "${APPLE_API_KEY_ID}" --issuer "${APPLE_API_ISSUER_ID}")
+  elif [[ -n "${APPLE_ID_EMAIL:-}" && -n "${APPLE_APP_PASSWORD:-}" ]]; then
+    NOTARY_ARGS+=(--apple-id "${APPLE_ID_EMAIL}" --password "${APPLE_APP_PASSWORD}" --team-id "${TEAM_ID}")
   else
-    die "Notarization required but no credentials found. Set NOTARY_PROFILE, or APPLE_API_KEY_ID + APPLE_API_ISSUER_ID + APPLE_API_PRIVATE_KEY_PATH."
+    die "Notarization required but no credentials found. Set NOTARY_PROFILE, or APPLE_API_KEY_ID + APPLE_API_ISSUER_ID + APPLE_API_PRIVATE_KEY_PATH, or APPLE_ID_EMAIL + APPLE_APP_PASSWORD."
   fi
 
   log "Submitting DMG for Apple notarization..."
