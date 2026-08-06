@@ -22,6 +22,17 @@ if rg -n '<(script|style)[^>]*>[[:space:]]*[^<[:space:]]|[[:space:]]on(click|loa
   fail "inline scripts, styles, and event handlers are not allowed"
 fi
 
+DOWNLOAD_URL="https://github.com/burak-bilgen/Songleton/releases/latest/download/Songleton.dmg"
+if ! rg -q "href=\"${DOWNLOAD_URL}\"" docs/index.html; then
+  fail "the macOS download button must target ${DOWNLOAD_URL}"
+fi
+if rg -q 'href="https://github.com/burak-bilgen/Songleton/releases/latest"' docs/index.html; then
+  fail "download links must point at the stable Songleton.dmg asset, not the release page"
+fi
+rg -q 'aria-label="Download the latest version of Songleton for macOS"' docs/index.html \
+  || fail "download buttons must carry the accessibility label"
+rg -q 'release-version' docs/index.html || fail "the visible release version badge is missing"
+
 node <<'NODE'
 const fs = require("fs");
 const vm = require("vm");
@@ -33,7 +44,7 @@ if (!match) throw new Error("Could not parse website translation dictionary");
 const copy = vm.runInNewContext(`(${match[1]})`, Object.create(null));
 
 const referenced = new Set(["pageTitle", "pageDescription"]);
-for (const pattern of [/data-i18n="([^"]+)"/g, /data-i18n-label="([^"]+)"/g]) {
+for (const pattern of [/data-i18n="([^"]+)"/g, /data-i18n-label="([^"]+)"/g, /data-i18n-alt="([^"]+)"/g]) {
   for (const item of html.matchAll(pattern)) referenced.add(item[1]);
 }
 for (const language of ["tr", "en"]) {

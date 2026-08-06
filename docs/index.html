@@ -45,7 +45,7 @@
         <button type="button" data-language="tr" lang="tr" aria-label="Türkçe" aria-pressed="true">TR</button>
         <button type="button" data-language="en" lang="en" aria-label="English" aria-pressed="false">EN</button>
       </div>
-      <a class="nav-download" href="https://github.com/burak-bilgen/Songleton/releases/latest" data-i18n="download">İndir</a>
+      <a class="nav-download" href="https://github.com/burak-bilgen/Songleton/releases/latest/download/Songleton.dmg" aria-label="Download the latest version of Songleton for macOS" data-i18n="download">İndir</a>
     </div>
   </nav>
 
@@ -67,7 +67,7 @@
         <h1 data-i18n="heroTitle">Müziğini kolayca<br><span>kontrol et.</span></h1>
         <p data-i18n="heroText">Şarkın nerede çalarsa çalsın, Songleton onu menü çubuğuna taşır. İstersen ekran kenarlarını da hızlı kontrole çevirir.</p>
         <div class="hero-actions">
-          <a class="button primary download-btn" href="https://github.com/burak-bilgen/Songleton/releases/latest"><span class="dl-label" data-i18n="downloadFree">macOS için indir</span><span class="dl-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M6.5 10.5 12 16l5.5-5.5"/></svg><i class="dl-tray"></i></span></a>
+          <a class="button primary download-btn" href="https://github.com/burak-bilgen/Songleton/releases/latest/download/Songleton.dmg" aria-label="Download the latest version of Songleton for macOS"><span class="dl-label" data-i18n="downloadFree">macOS için indir</span><span class="dl-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M6.5 10.5 12 16l5.5-5.5"/></svg><i class="dl-tray"></i></span></a>
           <a class="button ghost" href="#tour"><span data-i18n="watchTour">Turu izle</span><span aria-hidden="true">⌄</span></a>
         </div>
         <div class="hero-install">
@@ -75,6 +75,13 @@
           <code>brew install --cask songleton</code>
           <button type="button" class="hero-install-copy" data-i18n-label="copyHomebrew" aria-label="Homebrew komutunu kopyala"><span class="hicon">⧉</span><span class="hcopied" data-i18n="copied">Kopyalandı</span></button>
         </div>
+        <p class="release-meta">
+          <span class="rm-item">v<span id="release-version">1.0.0</span></span><span class="rm-sep">·</span>
+          <span class="rm-item" data-i18n="releaseMinMac">macOS 14+</span><span class="rm-sep">·</span>
+          <span class="rm-item" data-i18n="releaseArch">Intel &amp; Apple Silicon</span><span class="rm-sep">·</span>
+          <span class="rm-item rm-signed" data-i18n="releaseSigned">İmzalı &amp; noter onaylı</span>
+          <span class="rm-links"><a href="https://github.com/burak-bilgen/Songleton/releases" data-i18n="releaseNotes">Sürüm notları</a><span class="rm-sep">·</span><a href="https://github.com/burak-bilgen/Songleton/releases/latest/download/Songleton.dmg.sha256" data-i18n="releaseChecksum">SHA-256</a></span>
+        </p>
         <div class="hero-platforms" aria-hidden="true">
           <span class="hero-platforms-label" data-i18n="heroPlatformsLabel">Çalıştığı uygulamalar:</span>
           <span class="hero-platforms-marks">
@@ -520,7 +527,7 @@
     </section>
 
     <section class="final-cta shell reveal">
-      <div class="cta-aura"></div><img src="assets/songleton-app-icon.png" alt="" width="96" height="96"><p class="section-kicker">Songleton for macOS</p><h2 data-i18n="ctaTitle">Müzik açıkken,<br><span>Songleton hazır.</span></h2><p data-i18n="ctaText">macOS 14 ve sonrası için ücretsiz, yerel ve açık kaynak.</p><div class="hero-actions"><a class="button primary download-btn" href="https://github.com/burak-bilgen/Songleton/releases/latest"><span class="dl-label" data-i18n="downloadSongleton">Songleton'ı indir</span><span class="dl-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M6.5 10.5 12 16l5.5-5.5"/></svg><i class="dl-tray"></i></span></a><a class="button ghost" href="https://github.com/burak-bilgen/Songleton"><span>GitHub</span><span>↗</span></a></div>
+      <div class="cta-aura"></div><img src="assets/songleton-app-icon.png" alt="" width="96" height="96"><p class="section-kicker">Songleton for macOS</p><h2 data-i18n="ctaTitle">Müzik açıkken,<br><span>Songleton hazır.</span></h2><p data-i18n="ctaText">macOS 14 ve sonrası için ücretsiz, yerel ve açık kaynak.</p><div class="hero-actions"><a class="button primary download-btn" href="https://github.com/burak-bilgen/Songleton/releases/latest/download/Songleton.dmg" aria-label="Download the latest version of Songleton for macOS"><span class="dl-label" data-i18n="downloadSongleton">Songleton'ı indir</span><span class="dl-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M6.5 10.5 12 16l5.5-5.5"/></svg><i class="dl-tray"></i></span></a><a class="button ghost" href="https://github.com/burak-bilgen/Songleton"><span>GitHub</span><span>↗</span></a></div>
     </section>
 
     <div class="lightbox-overlay" id="lightbox" aria-hidden="true" role="dialog" aria-label="Image Zoom Preview">

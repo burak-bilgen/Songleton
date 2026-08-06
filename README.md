@@ -11,6 +11,19 @@ No separate music library. No account layer. No floating player that competes wi
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-Native-6D5DFB?style=for-the-badge&logo=swift&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-38BDF8?style=for-the-badge)
 
+## Installation
+
+**Homebrew (recommended):**
+
+```bash
+brew tap burak-bilgen/tap
+brew install --cask songleton
+```
+
+**Direct download:** grab the latest signed and notarized `Songleton.dmg` from the [releases page](https://github.com/burak-bilgen/Songleton/releases), or download it directly from [Songleton.dmg](https://github.com/burak-bilgen/Songleton/releases/latest/download/Songleton.dmg). Verify the checksum against [Songleton.dmg.sha256](https://github.com/burak-bilgen/Songleton/releases/latest/download/Songleton.dmg.sha256).
+
+Requires macOS 14 or newer (Intel and Apple Silicon).
+
 ## Screenshots
 
 ### 1. Mini Player, Hover Menu & Menu Bar App
@@ -190,17 +203,7 @@ The animated product site lives in [`docs/index.html`](docs/index.html). It is a
 
 After pushing this repository, enable **Settings > Pages > Build and deployment > Source: GitHub Actions** once. The included workflow deploys every change to `main` that touches `docs/`, and GitHub serves the site at `https://burak-bilgen.github.io/Songleton/`.
 
-The release path is deliberately strict:
-
-```bash
-# Build, sign, notarize, and package the DMG with the release credentials.
-make notarize
-
-# Replace the staged checksum in the Homebrew cask with the actual DMG checksum.
-./scripts/update-homebrew-cask.sh build/Songleton-1.0.dmg
-```
-
-Then commit the generated checksum, create the matching `v1.0` GitHub Release, and attach `Songleton-1.0.dmg`. The cask at [`homebrew-tap/Casks/songleton.rb`](homebrew-tap/Casks/songleton.rb) starts with an all-zero fail-closed checksum; installation cannot succeed until the release helper pins the real DMG digest. The exact Homebrew steps are in [`homebrew-tap/README.md`](homebrew-tap/README.md).
+The release pipeline — signing, notarization, stapling, DMG packaging, and the Homebrew tap — is fully documented in [`RELEASING.md`](RELEASING.md). The downloadable asset is always named `Songleton.dmg` and is produced only by [`scripts/release.sh`](scripts/release.sh) or the `Release` GitHub Actions workflow; unsigned or unnotarized builds are never published.
 
 ## Build from source
 

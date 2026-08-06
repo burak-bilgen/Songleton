@@ -1,26 +1,31 @@
 cask "songleton" do
-  version "1.0"
+  version "1.0.0"
+  # SHA-256 of the notarized Songleton.dmg published for this version.
+  # Pinned automatically by ./scripts/release.sh or
+  # ./scripts/update-homebrew-cask.sh; never use sha256 :no_check.
+  sha256 "47fb9b817edba4cef159353294e7f6be1741fd7df86ee0ea0565b2357f8b2866"
 
-  # Release-blocking placeholder. Replace it with the checksum printed by:
-  # shasum -a 256 Songleton-#{version}.dmg
-  # The release helper at ../../scripts/update-homebrew-cask.sh does this.
-  # All-zero SHA intentionally fails closed until a release is prepared.
-  sha256 "187c1fc11449e465e6c604caed0eae9f8fcb765e631f374b0c3b1fd70bd97cd1"
-
-  url "https://github.com/burak-bilgen/Songleton/releases/download/v#{version}/Songleton-#{version}.dmg"
+  url "https://github.com/burak-bilgen/Songleton/releases/download/v#{version}/Songleton.dmg",
+      verified: "github.com/burak-bilgen/Songleton/"
   name "Songleton"
-  desc "Native macOS music controls for Spotify and Apple Music"
+  desc "Menu bar, screen edge, and Ambient Mode controls for music apps"
   homepage "https://burak-bilgen.github.io/Songleton/"
 
-  depends_on macos: ">= :sonoma"
+  livecheck do
+    url "https://github.com/burak-bilgen/Songleton/releases"
+    regex(%r{/releases/tag/v?(\d+(?:\.\d+)+)}i)
+  end
+
+  depends_on macos: :sonoma
 
   app "Songleton.app"
 
+  uninstall quit: "bilgenworks.app.Songleton"
+
   zap trash: [
-    "~/Library/Containers/bilgenworks.app.Songleton",
-    "~/Library/Preferences/bilgenworks.app.Songleton.plist",
-    "~/Library/Caches/bilgenworks.app.Songleton",
+    "~/Library/Caches/SongletonArtwork",
     "~/Library/HTTPStorages/bilgenworks.app.Songleton",
-    "~/Library/Saved Application State/bilgenworks.app.Songleton.savedState"
+    "~/Library/Preferences/bilgenworks.app.Songleton.plist",
+    "~/Library/Saved Application State/bilgenworks.app.Songleton.savedState",
   ]
 end

@@ -69,3 +69,17 @@ DerivedData/
 *.dmg
 *.xcarchive
 *.xcresult
+
+# Release credentials and secrets. Never commit these.
+.env
+.env.*
+!.env.release.example
+*.p12
+*.p8
+*.key
+*.cer
+*.mobileprovision
+*.keychain
+*.keychain-db
+notarytool-api-key/
+release-credentials/

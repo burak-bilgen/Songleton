@@ -25,6 +25,10 @@ if rg -n 'uses:[[:space:]]+[^[:space:]#]+@(v[0-9]+|main|master)([[:space:]]|$)' 
   fail "GitHub Actions must use full commit SHAs"
 fi
 
+if rg -n 'codesign[[:space:]]+--(force|sign)[[:space:]]+[^|&;\n]*--deep' scripts Makefile; then
+  fail "codesign --deep as a signing strategy is forbidden (--verify --deep is allowed)"
+fi
+
 if rg -n 'sha256[[:space:]]+:no_check' homebrew-tap/Casks --glob '*.rb'; then
   fail "Homebrew artifacts must never disable checksum verification"
 fi
@@ -55,5 +59,16 @@ fi
 if rg -n 'NSAllowsArbitraryLoads|NSExceptionAllowsInsecureHTTPLoads' Songleton Songleton.xcodeproj --glob '!**/*.xcstrings'; then
   fail "ATS exceptions require an explicit security review"
 fi
+
+if ! rg -q 'Songleton\.dmg' homebrew-tap/Casks/songleton.rb; then
+  fail "The cask must download the stable Songleton.dmg asset"
+fi
+if rg -q 'releases/latest/' homebrew-tap/Casks/songleton.rb; then
+  fail "The cask must use the immutable versioned release URL, never /releases/latest/"
+fi
+
+[ -f .github/workflows/release.yml ] || fail "release.yml workflow is missing"
+rg -q 'releases/latest/download/Songleton\.dmg' docs/index.html \
+  || fail "The website download button must target the stable Songleton.dmg asset"
 
 echo "Security guardrails passed."

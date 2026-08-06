@@ -108,7 +108,7 @@ final class LyricsService {
     private func performLyricsRequest(url: URL) async -> [LyricLine]? {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Songleton/1.0 (https://github.com/bilgenworks/Songleton)", forHTTPHeaderField: "User-Agent")
+        request.setValue("Songleton/1.0 (https://github.com/burak-bilgen/Songleton)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 6.0
 

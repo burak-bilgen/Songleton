@@ -7,14 +7,7 @@ BUNDLE_ID    = bilgenworks.app.Songleton
 DERIVED_DATA := $(shell xcodebuild -project $(PROJECT) -scheme $(SCHEME) -showBuildSettings 2>/dev/null | grep ' BUILT_PRODUCTS_DIR' | head -1 | awk '{print $$3}')
 DEBUG_APP    = $(DERIVED_DATA)/$(APP_NAME).app
 
-# Release build directory.
-RELEASE_DIR  = build/Release
-RELEASE_APP  = $(RELEASE_DIR)/$(APP_NAME).app
-VERSION      := $(shell xcodebuild -project $(PROJECT) -scheme $(SCHEME) -showBuildSettings 2>/dev/null | grep ' MARKETING_VERSION' | head -1 | awk '{print $$3}')
-DMG_NAME     = $(APP_NAME)-$(VERSION).dmg
-DMG_PATH     = build/$(DMG_NAME)
-ARCHIVE_PATH = build/$(APP_NAME).xcarchive
-ARCHIVE_APP  = $(ARCHIVE_PATH)/Products/Applications/$(APP_NAME).app
+VERSION ?= 1.0.0
 
 # ─────────────────────────────────────────────
 # Development targets.
@@ -64,43 +57,21 @@ logs:
 
 # ─────────────────────────────────────────────
 # Distribution targets.
+#
+# There is exactly one release path: scripts/release.sh. It builds, signs,
+# notarizes, staples, verifies, and packages the DMG, and it fails hard on any
+# signing, notarization, or verification error. Never publish a DMG that did
+# not go through this script.
 # ─────────────────────────────────────────────
 
-## Create a distributable DMG from a Developer ID-signed archive.
-dmg: archive
-	@echo "Creating DMG..."
-	@rm -rf build/dmg-stage
-	@mkdir -p build/dmg-stage
-	@cp -R "$(ARCHIVE_APP)" build/dmg-stage/
-	@ln -sf /Applications build/dmg-stage/Applications
-	@rm -f "$(DMG_PATH)"
-	@diskutil image create from \
-		--volumeName "$(APP_NAME)" \
-		--format UDZO \
-		build/dmg-stage \
-		"$(DMG_PATH)"
-	@codesign --force --timestamp --sign "$(DEVELOPER_IDENTITY)" "$(DMG_PATH)"
-	@codesign --verify --strict --verbose=2 "$(DMG_PATH)"
-	@rm -rf build/dmg-stage
-	@echo "DMG ready: $(DMG_PATH)"
-	@ls -lh "$(DMG_PATH)"
-	@open build/
+## Build the signed, notarized, stapled release DMG (requires a Developer ID
+## certificate and notarization credentials). Usage: make release VERSION=1.0.0
+release:
+	@./scripts/release.sh $(VERSION)
 
-build-release:
-	@echo "🔨 Release build..."
-	@xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration Release build \
-		CONFIGURATION_BUILD_DIR="$(PWD)/$(RELEASE_DIR)"
-	@codesign --verify --deep --strict --verbose=2 "$(RELEASE_APP)"
-
-## Create a Developer ID-signed archive suitable for distribution.
-archive:
-	@test -n "$(DEVELOPER_IDENTITY)" || (echo "DEVELOPER_IDENTITY is required, for example: Developer ID Application: Your Name (TEAMID)" && exit 1)
-	@echo "📦 Archiving release..."
-	@rm -rf "$(ARCHIVE_PATH)"
-	@xcodebuild archive -project $(PROJECT) -scheme $(SCHEME) -configuration Release \
-		-archivePath "$(ARCHIVE_PATH)" \
-		CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$(DEVELOPER_IDENTITY)"
-	@codesign --verify --deep --strict --verbose=2 "$(ARCHIVE_APP)"
+## Build the Release configuration locally without signing, for validation only.
+release-unsigned:
+	@./scripts/release.sh $(VERSION) --allow-dirty
 
 ## Clean build artifacts.
 clean:
@@ -142,13 +113,8 @@ quality: security localization site test
 		-destination 'generic/platform=macOS' build \
 		CODE_SIGNING_ALLOWED=NO SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
 
-## Create a notarized release DMG using credentials stored in Keychain.
-notarize: dmg
-	@test -n "$(NOTARY_PROFILE)" || (echo "NOTARY_PROFILE is required. Store credentials with notarytool store-credentials." && exit 1)
-	@xcrun notarytool submit "$(DMG_PATH)" --keychain-profile "$(NOTARY_PROFILE)" --wait
-	@xcrun stapler staple "$(DMG_PATH)"
-	@xcrun stapler validate "$(DMG_PATH)"
-	@spctl --assess --type open --context context:primary-signature --verbose=2 "$(DMG_PATH)"
+## Create a notarized release DMG through the single release pipeline.
+notarize: release
 
-.PHONY: run build-debug fresh kill restart logs dmg build-release archive clean test coverage security localization site quality notarize
+.PHONY: run build-debug fresh kill restart logs release release-unsigned build-release clean test coverage security localization site quality notarize
 .DEFAULT_GOAL := run

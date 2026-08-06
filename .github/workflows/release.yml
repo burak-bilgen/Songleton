@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, notarize, and publish
+    runs-on: macos-26
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+      DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
+      NOTARY_PROFILE: ""
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+    steps:
+      - name: Checkout the exact tagged commit
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Validate tag version format
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must look like vX.Y.Z, got: ${GITHUB_REF_NAME}" >&2
+            exit 1
+          fi
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "Releasing Songleton ${VERSION}"
+
+      - name: Import Developer ID certificate into a temporary keychain
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          TEMP_KEYCHAIN_PASSWORD: ${{ secrets.TEMP_KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          [[ -n "${MACOS_CERTIFICATE}" && -n "${MACOS_CERTIFICATE_PASSWORD}" && -n "${TEMP_KEYCHAIN_PASSWORD}" ]] || {
+            echo "Missing secrets: MACOS_CERTIFICATE, MACOS_CERTIFICATE_PASSWORD, TEMP_KEYCHAIN_PASSWORD" >&2
+            exit 1
+          }
+          KEYCHAIN="${RUNNER_TEMP}/songleton-release.keychain-db"
+          echo "${MACOS_CERTIFICATE}" | base64 --decode > "${RUNNER_TEMP}/developer-id.p12"
+          security create-keychain -p "${TEMP_KEYCHAIN_PASSWORD}" "${KEYCHAIN}"
+          security default-keychain -s "${KEYCHAIN}"
+          security unlock-keychain -p "${TEMP_KEYCHAIN_PASSWORD}" "${KEYCHAIN}"
+          security import "${RUNNER_TEMP}/developer-id.p12" -P "${MACOS_CERTIFICATE_PASSWORD}" \
+            -A -t cert -f pkcs12 -k "${KEYCHAIN}"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "${TEMP_KEYCHAIN_PASSWORD}" "${KEYCHAIN}"
+          echo "KEYCHAIN=${KEYCHAIN}" >> "$GITHUB_ENV"
+          rm -f "${RUNNER_TEMP}/developer-id.p12"
+          echo "Developer ID identity imported:"
+          security find-identity -v -p codesigning "${KEYCHAIN}" | grep "Developer ID Application" || true
+
+      - name: Build, sign, notarize, staple, and verify
+        env:
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          TEMP_KEYCHAIN_PASSWORD: ${{ secrets.TEMP_KEYCHAIN_PASSWORD }}
+          KEYCHAIN: ${{ env.KEYCHAIN }}
+        run: |
+          set -euo pipefail
+          cleanup() {
+            security delete-keychain "${KEYCHAIN}" >/dev/null 2>&1 || true
+            security default-keychain -s login.keychain-db >/dev/null 2>&1 || true
+            rm -f "${RUNNER_TEMP}/api-key.p8"
+          }
+          trap cleanup EXIT
+          [[ -n "${APPLE_API_PRIVATE_KEY:-}" ]] || {
+            echo "Missing secret: APPLE_API_PRIVATE_KEY" >&2
+            exit 1
+          }
+          echo "${APPLE_API_PRIVATE_KEY}" | base64 --decode > "${RUNNER_TEMP}/api-key.p8"
+          security unlock-keychain -p "${TEMP_KEYCHAIN_PASSWORD}" "${KEYCHAIN}"
+          APPLE_API_PRIVATE_KEY_PATH="${RUNNER_TEMP}/api-key.p8" \
+            ./scripts/release.sh "${VERSION}" --skip-cask
+
+      - name: Create or update the GitHub Release
+        run: |
+          NOTES_FILE="${RUNNER_TEMP}/release-notes.md"
+          {
+            echo "Songleton ${VERSION} for macOS 14 and later."
+            echo ""
+            echo "- Universal 2 binary (Apple Silicon + Intel)"
+            echo "- Signed with Developer ID and notarized by Apple"
+            echo "- SHA-256: $(awk '{print $1}' dist/Songleton.dmg.sha256)"
+            echo ""
+            echo "Direct download: https://github.com/burak-bilgen/Songleton/releases/latest/download/Songleton.dmg"
+            echo ""
+            echo "Install with Homebrew:"
+            echo '```'
+            echo 'brew tap burak-bilgen/tap'
+            echo 'brew install --cask songleton'
+            echo '```'
+            echo ""
+            PREVIOUS_TAG="$(git describe --tags --abbrev=0 --always 2>/dev/null || true)"
+            if [[ "${PREVIOUS_TAG}" != "${GITHUB_REF_NAME}" && -n "${PREVIOUS_TAG}" ]]; then
+              echo "### Commits since ${PREVIOUS_TAG}"
+              git log --no-merges --oneline "${PREVIOUS_TAG}..HEAD" || true
+            else
+              echo "### Initial release"
+              git log --no-merges --oneline --max-count=30 HEAD || true
+            fi
+          } > "${NOTES_FILE}"
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            echo "Release ${GITHUB_REF_NAME} already exists; uploading assets..."
+            gh release upload "${GITHUB_REF_NAME}" dist/Songleton.dmg dist/Songleton.dmg.sha256 --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" \
+              dist/Songleton.dmg dist/Songleton.dmg.sha256 \
+              --title "Songleton ${VERSION}" \
+              --notes-file "${NOTES_FILE}"
+          fi
