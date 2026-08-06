@@ -17,5 +17,21 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - name: Run quality gate
-        run: make quality
+      # The audit scripts need jq and ripgrep; macOS runners sometimes ship a
+      # minimal ripgrep without PCRE2 (rg -oP) or no jq at all. Installing both
+      # via Homebrew makes the gate deterministic. The quality gate is split
+      # into separate steps so any failure pinpoints its target immediately.
+      - name: Install audit tools
+        run: brew install jq ripgrep
+      - name: Security guardrails
+        run: make security
+      - name: Localization guardrails
+        run: make localization
+      - name: Site guardrails
+        run: make site
+      - name: Tests
+        run: make test
+      - name: Build (Debug, warnings as errors)
+        run: xcodebuild -quiet -project Songleton.xcodeproj -scheme Songleton -configuration Debug build CODE_SIGNING_ALLOWED=NO SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+      - name: Build (Release, warnings as errors)
+        run: xcodebuild -quiet -project Songleton.xcodeproj -scheme Songleton -configuration Release -destination 'generic/platform=macOS' build CODE_SIGNING_ALLOWED=NO SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
