@@ -4,6 +4,7 @@ struct SettingsView: View {
     @ObservedObject var settings: SettingsModel
     @ObservedObject private var model = NowPlayingModel.shared
     @ObservedObject private var localization = LocalizationManager.shared
+    @ObservedObject private var hudManager = HUDToastManager.shared
 
     @State private var appearScale: CGFloat = 0.95
     @State private var appearOpacity: Double = 0.0
@@ -840,6 +841,8 @@ struct SettingsView: View {
                     .background(SongletonTheme.cyan, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             .buttonStyle(.plain)
+            .disabled(hudManager.isMiniPlayerOnScreen)
+            .opacity(hudManager.isMiniPlayerOnScreen ? 0.45 : 1)
             .accessibilityHint(localization.string("settings.preview_notification_hint"))
         }
         .padding(.horizontal, 16)

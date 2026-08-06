@@ -27,7 +27,7 @@ struct HUDToastView: View {
 
     @State private var isDragging: Bool = false
 
-    private let cornerRadius: CGFloat = 18
+    static let cornerRadius: CGFloat = 18
 
     private var isPermanentMode: Bool {
         forcePermanent || (SettingsModel.shared.permanentHUDMode && !isPreview)
@@ -86,7 +86,7 @@ struct HUDToastView: View {
     }
 
     private var cardShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
     }
 
     var body: some View {

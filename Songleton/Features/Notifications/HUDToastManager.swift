@@ -6,10 +6,10 @@ struct TrackNotificationLayout {
     static let minimumWidth: CGFloat = 270
     static let maximumPreferredWidth: CGFloat = 560
     static let minimumHeight: CGFloat = 64
-    // The widest glow has a 46pt radius. Give it a generous transparent
-    // runway instead of letting the hosting panel crop its soft falloff.
+    // Transparent runway around the card so the drop shadow (radius 12)
+    // renders without being cropped. ToastHostingView keeps these margins
+    // click-through so only the visible card receives mouse events.
     static let shadowInset: CGFloat = 76
-
     let size: NSSize
     let textWidth: CGFloat
 
@@ -103,8 +103,10 @@ struct TrackNotificationMotion {
 }
 
 @MainActor
-final class HUDToastManager: NSObject {
+final class HUDToastManager: NSObject, ObservableObject {
     static let shared = AppContainer.shared.hudToasts
+
+    @Published private(set) var isMiniPlayerOnScreen = false
 
     private var toastWindow: NonActivatingToastPanel?
     private var dismissTask: Task<Void, Never>?
@@ -167,6 +169,8 @@ final class HUDToastManager: NSObject {
 
         let isPermanent = SettingsModel.shared.permanentHUDMode && !isPreview
 
+        isMiniPlayerOnScreen = true
+
         let pointerLocation = NSEvent.mouseLocation
         let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
             ?? NSScreen.main
@@ -196,7 +200,7 @@ final class HUDToastManager: NSObject {
         if isPermanent {
             if let existing = toastWindow {
                 existing.ignoresMouseEvents = false
-                existing.contentView = NSHostingView(
+                existing.contentView = ToastHostingView(
                     rootView: HUDToastView(
                         track: track,
                         artist: artist,
@@ -204,7 +208,10 @@ final class HUDToastManager: NSObject {
                         layout: layout,
                         accentColor: accentColor,
                         isPreview: isPreview
-                    )
+                    ),
+                    cardInset: TrackNotificationLayout.shadowInset,
+                    cardSize: layout.size,
+                    cornerRadius: HUDToastView.cornerRadius
                 )
                 NSAnimationContext.runAnimationGroup { context in
                     context.duration = 0.35
@@ -229,7 +236,7 @@ final class HUDToastManager: NSObject {
             panel.ignoresMouseEvents = false
             panel.isMovableByWindowBackground = false
             panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
-            panel.contentView = NSHostingView(
+            panel.contentView = ToastHostingView(
                 rootView: HUDToastView(
                     track: track,
                     artist: artist,
@@ -237,7 +244,10 @@ final class HUDToastManager: NSObject {
                     layout: layout,
                     accentColor: accentColor,
                     isPreview: isPreview
-                )
+                ),
+                cardInset: TrackNotificationLayout.shadowInset,
+                cardSize: layout.size,
+                cornerRadius: HUDToastView.cornerRadius
             )
             panel.alphaValue = 0.0
             self.toastWindow = panel
@@ -280,7 +290,7 @@ final class HUDToastManager: NSObject {
         panel.ignoresMouseEvents = !isPermanent && !isPreview
         panel.isMovableByWindowBackground = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
-        panel.contentView = NSHostingView(
+        panel.contentView = ToastHostingView(
             rootView: HUDToastView(
                 track: track,
                 artist: artist,
@@ -288,7 +298,10 @@ final class HUDToastManager: NSObject {
                 layout: layout,
                 accentColor: accentColor,
                 isPreview: isPreview
-            )
+            ),
+            cardInset: TrackNotificationLayout.shadowInset,
+            cardSize: layout.size,
+            cornerRadius: HUDToastView.cornerRadius
         )
         panel.alphaValue = 0.0
 
@@ -319,6 +332,7 @@ final class HUDToastManager: NSObject {
                             panel.close()
                             guard let self, self.toastWindow === panel else { return }
                             self.toastWindow = nil
+                            self.isMiniPlayerOnScreen = false
                         }
                     }
                 }
@@ -351,6 +365,7 @@ final class HUDToastManager: NSObject {
     func dismiss() {
         dismissTask?.cancel()
         dismissTask = nil
+        isMiniPlayerOnScreen = false
         guard let panel = toastWindow else { return }
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.34
@@ -568,6 +583,42 @@ final class HUDToastManager: NSObject {
 }
 
 // MARK: - Custom Panel Subclass with Native Mouse Dragging & 8px Hysteresis Threshold
+
+/// Hosting view that only accepts mouse hits inside the rounded card shape.
+/// The transparent margins (glow/shadow runway) return nil from `hitTest`,
+/// so clicks fall through to whatever is behind the panel.
+@MainActor
+private final class ToastHostingView<Content: View>: NSHostingView<Content> {
+    private let cardPath: NSBezierPath
+
+    init(rootView: Content, cardInset: CGFloat, cardSize: NSSize, cornerRadius: CGFloat) {
+        self.cardPath = NSBezierPath(
+            roundedRect: NSRect(
+                origin: NSPoint(x: cardInset, y: cardInset),
+                size: cardSize
+            ),
+            xRadius: cornerRadius,
+            yRadius: cornerRadius
+        )
+        super.init(rootView: rootView)
+    }
+
+    @available(*, unavailable)
+    required init(rootView: Content) {
+        fatalError("Use the card-aware init")
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("ToastHostingView does not support coder-based init")
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let localPoint = convert(point, from: superview)
+        guard cardPath.contains(localPoint) else { return nil }
+        return super.hitTest(point)
+    }
+}
 
 final class NonActivatingToastPanel: NSPanel {
     override var canBecomeKey: Bool { false }
