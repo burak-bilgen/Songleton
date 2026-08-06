@@ -88,15 +88,13 @@ struct HUDToastView: View {
             ZStack {
                 LinearGradient(
                     colors: [
-                        Color(white: 0.12),
-                        Color(white: 0.055),
+                        Color(white: 0.13),
+                        Color(white: 0.06),
                         Color.black.opacity(0.96)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
-
-                artworkAura
 
                 LinearGradient(
                     colors: [.white.opacity(0.08), .clear, .black.opacity(0.18)],
@@ -111,17 +109,14 @@ struct HUDToastView: View {
             .overlay(
                 cardShape.stroke(
                     LinearGradient(
-                        colors: [.white.opacity(0.34), themeColor.opacity(0.46), .white.opacity(0.08)],
+                        colors: [.white.opacity(0.30), .white.opacity(0.10)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
                     lineWidth: 1
                 )
             )
-            .shadow(color: .black.opacity(0.68), radius: 11, x: 0, y: 7)
-            .shadow(color: themeColor.opacity(0.30), radius: 20, x: 0, y: 8)
-            .shadow(color: themeColor.opacity(0.13), radius: 30, x: 0, y: 9)
-            .shadow(color: themeColor.opacity(0.08), radius: 46, x: 0, y: 10)
+            .shadow(color: .black.opacity(0.55), radius: 12, x: 0, y: 6)
         }
         .frame(width: layout.panelSize.width, height: layout.panelSize.height)
         .accessibilityElement(children: .combine)

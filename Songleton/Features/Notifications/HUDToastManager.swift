@@ -326,6 +326,11 @@ final class HUDToastManager: NSObject {
 
     private var overlayWindow: SnapGuideOverlayWindow?
     private var currentNearestSnapPosition: TrackNotificationPosition?
+    private var isPreviewActive: Bool = false
+
+    func isDraggablePanel(_ panel: NSPanel) -> Bool {
+        return panel === toastWindow && (SettingsModel.shared.permanentHUDMode || isPreviewActive)
+    }
 
     func handleNativeDragStart(window: NSWindow) {
         let pointerLocation = NSEvent.mouseLocation
@@ -355,7 +360,7 @@ final class HUDToastManager: NSObject {
         self.overlayWindow = overlay
     }
 
-    func handleNativeDragMoved(window: NSWindow) {
+    func handleNativeDragMoved(window: NSWindow, dx: CGFloat, dy: CGFloat, startOrigin: NSPoint) {
         let pointerLocation = NSEvent.mouseLocation
         let screen = NSScreen.screens.first(where: { $0.frame.contains(pointerLocation) })
             ?? window.screen
@@ -363,15 +368,36 @@ final class HUDToastManager: NSObject {
             ?? NSScreen.screens.first
         guard let screen else { return }
 
+        let visibleFrame = screen.visibleFrame
+        let panelSize = window.frame.size
+        let shadowInset = TrackNotificationLayout.shadowInset
+        let cardSize = NSSize(width: panelSize.width - shadowInset * 2, height: panelSize.height - shadowInset * 2)
+
+        // Calculate unconstrained raw position
+        let rawX = startOrigin.x + dx
+        let rawY = startOrigin.y + dy
+
+        // Clamp card origin to stay strictly within screen.visibleFrame
+        let minCardX = visibleFrame.minX + 12
+        let maxCardX = visibleFrame.maxX - cardSize.width - 12
+        let minCardY = visibleFrame.minY + 12
+        let maxCardY = visibleFrame.maxY - cardSize.height - 12
+
+        let clampedCardX = min(max(rawX + shadowInset, minCardX), maxCardX)
+        let clampedCardY = min(max(rawY + shadowInset, minCardY), maxCardY)
+
+        let clampedPanelOrigin = NSPoint(x: clampedCardX - shadowInset, y: clampedCardY - shadowInset)
+        window.setFrameOrigin(clampedPanelOrigin)
+
         let isPermanent = SettingsModel.shared.permanentHUDMode
         let layout = TrackNotificationLayout.make(
             track: "Songleton",
             artist: "",
-            in: screen.visibleFrame,
+            in: visibleFrame,
             isPermanent: isPermanent
         )
 
-        let nearest = findNearestPosition(forWindowOrigin: window.frame.origin, windowSize: window.frame.size, on: screen)
+        let nearest = findNearestPosition(forWindowOrigin: clampedPanelOrigin, windowSize: panelSize, on: screen)
 
         if nearest != currentNearestSnapPosition {
             currentNearestSnapPosition = nearest
@@ -416,7 +442,7 @@ final class HUDToastManager: NSObject {
 
         // Smooth spring magnetic snap animation
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.26
+            context.duration = 0.24
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             window.animator().setFrame(finalPanelFrame, display: true)
         }
@@ -478,28 +504,57 @@ final class HUDToastManager: NSObject {
     }
 }
 
-// MARK: - Custom Panel Subclass with Native Mouse Dragging
+// MARK: - Custom Panel Subclass with Native Mouse Dragging & 8px Hysteresis Threshold
 
 final class NonActivatingToastPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
+    private var initialMouseDownLocation: NSPoint?
+    private var initialWindowOrigin: NSPoint?
+    private var isDraggingActive = false
+
     override func sendEvent(_ event: NSEvent) {
-        switch event.type {
-        case .leftMouseDown:
-            if self.isMovableByWindowBackground {
-                HUDToastManager.shared.handleNativeDragStart(window: self)
+        if HUDToastManager.shared.isDraggablePanel(self) {
+            switch event.type {
+            case .leftMouseDown:
+                initialMouseDownLocation = NSEvent.mouseLocation
+                initialWindowOrigin = self.frame.origin
+                isDraggingActive = false
+
+            case .leftMouseDragged:
+                if let startLoc = initialMouseDownLocation, let startOrigin = initialWindowOrigin {
+                    let currentLoc = NSEvent.mouseLocation
+                    let dx = currentLoc.x - startLoc.x
+                    let dy = currentLoc.y - startLoc.y
+                    let distance = hypot(dx, dy)
+
+                    if !isDraggingActive && distance >= 8.0 {
+                        isDraggingActive = true
+                        HUDToastManager.shared.handleNativeDragStart(window: self)
+                    }
+
+                    if isDraggingActive {
+                        HUDToastManager.shared.handleNativeDragMoved(window: self, dx: dx, dy: dy, startOrigin: startOrigin)
+                        return
+                    }
+                }
+
+            case .leftMouseUp:
+                if isDraggingActive {
+                    HUDToastManager.shared.handleNativeDragEnded(window: self)
+                    initialMouseDownLocation = nil
+                    initialWindowOrigin = nil
+                    isDraggingActive = false
+                    return
+                }
+                initialMouseDownLocation = nil
+                initialWindowOrigin = nil
+                isDraggingActive = false
+
+            default:
+                break
             }
-        case .leftMouseDragged:
-            if self.isMovableByWindowBackground {
-                HUDToastManager.shared.handleNativeDragMoved(window: self)
-            }
-        case .leftMouseUp:
-            if self.isMovableByWindowBackground {
-                HUDToastManager.shared.handleNativeDragEnded(window: self)
-            }
-        default:
-            break
         }
         super.sendEvent(event)
     }
@@ -551,7 +606,7 @@ struct SnapGuideOverlayView: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            Color.black.opacity(0.12)
+            Color.black.opacity(0.08)
                 .ignoresSafeArea()
 
             ForEach(TrackNotificationPosition.allCases) { pos in
@@ -560,26 +615,22 @@ struct SnapGuideOverlayView: View {
 
                 ZStack {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(isActive ? model.platformAccentColor.opacity(0.22) : Color.white.opacity(0.04))
+                        .fill(isActive ? model.platformAccentColor.opacity(0.18) : Color.white.opacity(0.03))
                         .overlay(
                             RoundedRectangle(cornerRadius: 18, style: .continuous)
                                 .stroke(
-                                    isActive ? model.platformAccentColor : Color.white.opacity(0.28),
+                                    isActive ? model.platformAccentColor : Color.white.opacity(0.24),
                                     style: StrokeStyle(
                                         lineWidth: isActive ? 2.5 : 1.5,
                                         dash: isActive ? [] : [6, 4]
                                     )
                                 )
                         )
-                        .shadow(color: isActive ? model.platformAccentColor.opacity(0.60) : .clear, radius: 14)
+                        .shadow(color: isActive ? model.platformAccentColor.opacity(0.45) : .clear, radius: 10)
 
-                    HStack(spacing: 8) {
-                        Image(systemName: pos.iconName)
-                            .font(.system(size: 14, weight: .bold))
-                        Text(LocalizationManager.shared.string(pos.localizationKey))
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
-                    }
-                    .foregroundStyle(isActive ? .white : .white.opacity(0.55))
+                    Image(systemName: pos.iconName)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(isActive ? .white : .white.opacity(0.40))
                 }
                 .frame(width: cardSize.width, height: cardSize.height)
                 .position(
