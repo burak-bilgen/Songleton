@@ -88,12 +88,15 @@ final class TutorialAudioService {
 
     func resume(fadeIn: Bool = false) {
         guard let player else { return }
-        if fadeIn {
+        transitionTask?.cancel()
+        volumeTask?.cancel()
+        if fadeIn && !player.isPlaying {
             player.volume = 0
         }
         player.play()
         if fadeIn {
-            fade(player, from: 0, to: targetVolume, duration: 0.7)
+            let gain: Float = currentTrack == 2 ? 0.82 : 1.0
+            fade(player, from: player.volume, to: targetVolume * gain, duration: 0.7)
         }
     }
 
@@ -174,6 +177,10 @@ final class TutorialAudioService {
         let oldVolume = oldPlayer?.volume ?? 0
 
         do {
+            // Track 2 is mastered ~1.7 dB hotter than track 1 (RMS -10.5 vs
+            // -12.2 dBFS), so scale it down to match — otherwise the song
+            // change reads as a volume jump on top of the transition.
+            let gain: Float = track == 2 ? 0.82 : 1.0
             let newPlayer: AVAudioPlayer
             if let prepared = preparedPlayers[track] {
                 newPlayer = prepared
@@ -183,14 +190,14 @@ final class TutorialAudioService {
                 preparedPlayers[track] = newPlayer
             }
             newPlayer.numberOfLoops = -1
-            newPlayer.volume = fadeIn ? 0 : targetVolume
+            newPlayer.volume = fadeIn ? 0 : targetVolume * gain
             newPlayer.prepareToPlay()
             newPlayer.play()
 
             player = newPlayer
             currentTrack = track
 
-            let targetVolume = self.targetVolume
+            let targetVolume = self.targetVolume * gain
             let generation = sessionGeneration
             transitionTask = Task { @MainActor [weak self, oldPlayer, newPlayer] in
                 await self?.animateCrossfade(
@@ -198,7 +205,9 @@ final class TutorialAudioService {
                     oldVolume: oldVolume,
                     to: newPlayer,
                     newVolume: targetVolume,
-                    duration: fadeIn ? 1.35 : 0.5
+                    // Short and crisp so the change lands at the ring burst
+                    // instead of blending the two songs for over a second.
+                    duration: fadeIn ? 0.32 : 0.5
                 )
                 guard !Task.isCancelled, self?.sessionGeneration == generation else { return }
                 oldPlayer?.stop()

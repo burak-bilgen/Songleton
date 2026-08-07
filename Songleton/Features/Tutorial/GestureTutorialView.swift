@@ -372,7 +372,10 @@ struct GestureTutorialView: View {
         size: CGSize
     ) -> CGPoint {
         let origin = HUDToastManager.toastOrigin(in: screen.visibleFrame, toastSize: cardSize, position: pos)
-        let x = origin.x + cardSize.width / 2
+        // Toast origins are global screen coordinates; the tutorial window's
+        // SwiftUI space starts at its own origin, so subtract the screen's
+        // frame origin. frame.maxY flips to top-left and already absorbs minY.
+        let x = origin.x + cardSize.width / 2 - screen.frame.minX
         // Screen coordinates are bottom-left; SwiftUI in the tutorial window
         // is top-left. frame.maxY (not frame.height) is the top edge so
         // secondary displays with a non-zero frame.minY map correctly.

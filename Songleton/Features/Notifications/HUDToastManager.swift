@@ -730,7 +730,10 @@ struct SnapGuideOverlayView: View {
                 let cardOrigin = HUDToastManager.toastOrigin(in: screen.visibleFrame, toastSize: cardSize, position: pos)
                 let isActive = (pos == activePosition)
 
-                let swiftUIX = cardOrigin.x + cardSize.width / 2
+                // Toast origins are global screen coordinates; this view spans
+                // the screen with its own local origin, so subtract the
+                // screen's frame origin on both axes.
+                let swiftUIX = cardOrigin.x + cardSize.width / 2 - screen.frame.minX
                 let swiftUIY = screen.frame.maxY - (cardOrigin.y + cardSize.height / 2)
 
                 ZStack {

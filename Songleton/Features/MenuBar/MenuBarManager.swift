@@ -197,9 +197,8 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
         // Left-click on the track name toggles playback. Ambient Mode remains
         // on right-click, so the track item has one predictable primary action.
         closeVolumePopoverImmediately()
-        if case .loaded(let info, _) = NowPlayingModel.shared.state {
+        if case .loaded = NowPlayingModel.shared.state {
             NowPlayingModel.shared.togglePlayPause()
-            GestureOutcomeFeedback.shared.show(info.isPlaying ? .pause : .resume)
         } else {
             openSettingsMenu()
         }
@@ -250,14 +249,12 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
         if isBlockedByGuide { return }
         closeVolumePopoverImmediately()
         NowPlayingModel.shared.previousTrack()
-        GestureOutcomeFeedback.shared.show(.previous)
     }
 
     @objc private func fwdTapped() {
         if isBlockedByGuide { return }
         closeVolumePopoverImmediately()
         NowPlayingModel.shared.nextTrack()
-        GestureOutcomeFeedback.shared.show(.next)
     }
 
     func showVolumePopover() {

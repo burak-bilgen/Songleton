@@ -142,6 +142,11 @@ struct CursorGestureOverlayView: View {
                 successMarkOpacity = 0.0
                 isCancelling = false
                 cancelShrink = false
+            } else {
+                // A new hold has started. Clear any leftover cancel visuals so
+                // the progress ring is visible again on the next attempt.
+                isCancelling = false
+                cancelShrink = false
             }
         }
         .onChange(of: manager.edgeGestureBurst) { _, _ in

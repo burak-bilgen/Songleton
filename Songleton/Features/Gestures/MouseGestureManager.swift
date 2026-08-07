@@ -379,14 +379,10 @@ final class MouseGestureManager: ObservableObject {
                 switch zone {
                 case .previous:
                     NowPlayingModel.shared.previousTrack()
-                    GestureOutcomeFeedback.shared.show(.previous)
                 case .playPause:
-                    let willPause = playbackIsPlaying
                     NowPlayingModel.shared.togglePlayPause()
-                    GestureOutcomeFeedback.shared.show(willPause ? .pause : .resume)
                 case .next:
                     NowPlayingModel.shared.nextTrack()
-                    GestureOutcomeFeedback.shared.show(.next)
                 }
             }
             self.pendingWorkItem = trigger
@@ -394,13 +390,6 @@ final class MouseGestureManager: ObservableObject {
         }
         pendingWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + cooldownDelay, execute: workItem)
-    }
-
-    private var playbackIsPlaying: Bool {
-        if case .loaded(let info, _) = NowPlayingModel.shared.state {
-            return info.isPlaying
-        }
-        return false
     }
 
     private func showCursorGestureOverlay(for zone: EdgeZone) {

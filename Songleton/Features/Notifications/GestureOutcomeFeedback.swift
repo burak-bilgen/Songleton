@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 /// The kind of playback action the user just triggered. Each maps to a
@@ -82,59 +81,5 @@ struct GestureOutcomeFeedbackView: View {
                 onComplete()
             }
         }
-    }
-}
-
-/// Presents the outcome feedback as a borderless, non-interactive panel
-/// centered on the screen that currently holds the mouse pointer.
-@MainActor
-final class GestureOutcomeFeedback {
-    static let shared = GestureOutcomeFeedback()
-
-    private var panel: NSPanel?
-    private var dismissTask: Task<Void, Never>?
-
-    private init() {}
-
-    func show(_ kind: GestureOutcomeKind) {
-        dismissTask?.cancel()
-
-        let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) })
-            ?? NSScreen.main
-            ?? NSScreen.screens.first
-        let panelSize = CGSize(width: 420, height: 420)
-
-        let panel = NSPanel(
-            contentRect: NSRect(origin: .zero, size: panelSize),
-            styleMask: [.borderless, .nonactivatingPanel],
-            backing: .buffered,
-            defer: false
-        )
-        let origin = CGPoint(
-            x: screen.map { $0.frame.midX - panelSize.width / 2 } ?? 0,
-            y: screen.map { $0.frame.midY - panelSize.height / 2 } ?? 0
-        )
-        panel.setFrame(NSRect(origin: origin, size: panelSize), display: true)
-        panel.level = .statusBar
-        panel.isOpaque = false
-        panel.backgroundColor = .clear
-        panel.hasShadow = false
-        panel.ignoresMouseEvents = true
-        panel.isReleasedWhenClosed = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-
-        let view = GestureOutcomeFeedbackView(kind: kind) { [weak self] in
-            self?.dismiss()
-        }
-        panel.contentView = NSHostingView(rootView: view)
-        panel.orderFrontRegardless()
-
-        self.panel?.close()
-        self.panel = panel
-    }
-
-    private func dismiss() {
-        panel?.close()
-        panel = nil
     }
 }
