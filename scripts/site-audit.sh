@@ -44,7 +44,7 @@ if (!match) throw new Error("Could not parse website translation dictionary");
 const copy = vm.runInNewContext(`(${match[1]})`, Object.create(null));
 
 const referenced = new Set(["pageTitle", "pageDescription"]);
-for (const pattern of [/data-i18n="([^"]+)"/g, /data-i18n-label="([^"]+)"/g, /data-i18n-alt="([^"]+)"/g]) {
+for (const pattern of [/data-i18n="([^"]+)"/g, /data-i18n-label="([^"]+)"/g, /data-i18n-alt="([^"]+)"/g, /data-i18n-title="([^"]+)"/g]) {
   for (const item of html.matchAll(pattern)) referenced.add(item[1]);
 }
 for (const language of ["tr", "en"]) {
