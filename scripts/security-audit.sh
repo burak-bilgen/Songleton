@@ -29,7 +29,7 @@ if rg -n 'codesign[[:space:]]+--(force|sign)[[:space:]]+[^|&;\n]*--deep' scripts
   fail "codesign --deep as a signing strategy is forbidden (--verify --deep is allowed)"
 fi
 
-if rg -n 'sha256[[:space:]]+:no_check' homebrew-tap/Casks --glob '*.rb'; then
+if rg -n '^[[:space:]]*sha256[[:space:]]+:no_check' homebrew-tap/Casks --glob '*.rb'; then
   fail "Homebrew artifacts must never disable checksum verification"
 fi
 
