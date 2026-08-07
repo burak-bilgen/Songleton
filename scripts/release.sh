@@ -162,7 +162,8 @@ fi
 # --- 9. Export a Developer ID signed application --------------------------------
 
 # Xcode's archive export signs every nested component itself; we never re-sign
-# with `codesign --deep` after export.
+# with `codesign --deep` after export. The top-level bundle is re-signed once
+# below to restore the entitlements exportArchive drops (see note there).
 if [[ "$UNSIGNED_ONLY" == "true" ]]; then
   log "Exporting unsigned app (validation only)..."
   mkdir -p "${EXPORT_DIR}"
@@ -192,6 +193,19 @@ PLIST
     -exportOptionsPlist "${EXPORT_OPTIONS}" \
     -exportPath "${EXPORT_DIR}" -quiet
   [[ -d "${APP_PATH}" ]] || die "Export did not produce ${APP_PATH}"
+
+  # exportArchive re-signs for Developer ID and, with no provisioning profile to
+  # source them from, discards every entitlement the Release build embedded.
+  # Under Hardened Runtime that silently drops apple-events, after which macOS
+  # refuses to even prompt ("Policy disallows prompt; access to
+  # kTCCServiceAppleEvents denied") and the app never appears in Privacy &
+  # Security > Automation. Re-apply them on the single top-level binary; this
+  # bundle has no nested code, so `--deep` is neither needed nor permitted.
+  [[ -f "${ENTITLEMENTS_PATH}" ]] || die "Entitlements file not found: ${ENTITLEMENTS_PATH}"
+  log "Restoring entitlements dropped by exportArchive..."
+  codesign --force --sign "${SIGNING_IDENTITY}" --timestamp --options runtime \
+    --entitlements "${ENTITLEMENTS_PATH}" "${APP_PATH}" \
+    || die "Failed to re-sign the exported app with ${ENTITLEMENTS_PATH}"
 fi
 
 # --- 10-13. Security, entitlement, and signature verification --------------------
@@ -218,7 +232,16 @@ for forbidden in com.apple.security.app-sandbox com.apple.security.get-task-allo
     die "Forbidden entitlement present in the exported app: ${forbidden}"
   fi
 done
+
+# The loop above passes vacuously when the blob is empty, which is exactly how
+# an app carrying no entitlements at all shipped as 1.0.2. Assert presence, not
+# just absence.
+if [[ "$UNSIGNED_ONLY" != "true" ]]; then
+  grep -q 'com.apple.security.automation.apple-events' <<<"${ENTITLEMENTS_XML}" \
+    || die "Required entitlement missing from the exported app: com.apple.security.automation.apple-events (Automation permission would be impossible to grant)"
+fi
 log "Confirmed: App Sandbox disabled, get-task-allow absent, no weakened security entitlements."
+log "Confirmed: com.apple.security.automation.apple-events is present."
 # Note: spctl assessment of the exported app is intentionally deferred until
 # after notarization, where the mounted-DMG Gatekeeper check runs below. An
 # unnotarized Developer ID app is always "rejected" by spctl, so checking
