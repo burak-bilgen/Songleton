@@ -1658,6 +1658,23 @@
         }
       }
     },
+    "settings.gestures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestures"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hareketler"
+          }
+        }
+      }
+    },
     "settings.gestures_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1947,6 +1964,23 @@
         }
       }
     },
+    "settings.notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildirimler"
+          }
+        }
+      }
+    },
     "settings.notification_position.bottom" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2151,40 +2185,6 @@
         }
       }
     },
-    "settings.preview_notification" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show preview"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Önizlemeyi göster"
-          }
-        }
-      }
-    },
-    "settings.preview_notification_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shows a sample at the selected position on the display under the pointer"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İmlecin bulunduğu ekranda, seçilen konumda örnek bir bildirim gösterir"
-          }
-        }
-      }
-    },
     "settings.seconds_format" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2215,6 +2215,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kısayollar ve hareketler"
+          }
+        }
+      }
+    },
+    "settings.show_gesture_overlay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show gesture ring"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hareket halkasını göster"
+          }
+        }
+      }
+    },
+    "settings.show_gesture_overlay_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide the progress ring around the pointer; edge gestures still work"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İmlecin etrafındaki dolum halkasını gizle; kenar hareketleri çalışmaya devam eder"
           }
         }
       }

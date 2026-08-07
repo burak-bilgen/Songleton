@@ -351,13 +351,22 @@ final class MouseGestureManager: ObservableObject {
             self.edgeGestureProgress = 0
             self.showCursorGestureOverlay(for: zone)
 
+            // Progress and trigger share one clock: the gesture fires exactly
+            // when the ring reaches 100%, never before the fill completes.
             self.edgeProgressTask = Task { @MainActor [weak self] in
                 guard let self else { return }
+                var fired = false
                 while !Task.isCancelled {
                     let progress = min(1, Date().timeIntervalSince(self.edgeGestureStartedAt) / self.edgeGestureDuration)
                     self.edgeGestureProgress = progress
                     self.updateCursorGestureOverlayPosition()
-                    if progress >= 1 { return }
+                    if progress >= 1 {
+                        if !fired {
+                            fired = true
+                            self.fireZoneGesture(zone)
+                        }
+                        return
+                    }
                     do {
                         try await Task.sleep(for: .milliseconds(16))
                     } catch {
@@ -365,34 +374,34 @@ final class MouseGestureManager: ObservableObject {
                     }
                 }
             }
-
-            let trigger = DispatchWorkItem { [weak self] in
-                guard let self, self.activeZone == zone else { return }
-                self.lastTriggeredAt = Date()
-                self.pendingWorkItem = nil
-                self.edgeProgressTask?.cancel()
-                self.edgeProgressTask = nil
-                self.edgeGestureProgress = 1
-                self.edgeGestureBurst += 1
-                self.burstCursorGestureOverlay()
-                self.logger.info("Screen edge gesture recognized: \(String(describing: zone), privacy: .public)")
-                switch zone {
-                case .previous:
-                    NowPlayingModel.shared.previousTrack()
-                case .playPause:
-                    NowPlayingModel.shared.togglePlayPause()
-                case .next:
-                    NowPlayingModel.shared.nextTrack()
-                }
-            }
-            self.pendingWorkItem = trigger
-            DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: trigger)
         }
         pendingWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + cooldownDelay, execute: workItem)
     }
 
+    private func fireZoneGesture(_ zone: EdgeZone) {
+        guard activeZone == zone else { return }
+        lastTriggeredAt = Date()
+        pendingWorkItem?.cancel()
+        pendingWorkItem = nil
+        edgeProgressTask?.cancel()
+        edgeProgressTask = nil
+        edgeGestureProgress = 1
+        edgeGestureBurst += 1
+        burstCursorGestureOverlay()
+        logger.info("Screen edge gesture recognized: \(String(describing: zone), privacy: .public)")
+        switch zone {
+        case .previous:
+            NowPlayingModel.shared.previousTrack()
+        case .playPause:
+            NowPlayingModel.shared.togglePlayPause()
+        case .next:
+            NowPlayingModel.shared.nextTrack()
+        }
+    }
+
     private func showCursorGestureOverlay(for zone: EdgeZone) {
+        guard SettingsModel.shared.showGestureOverlay else { return }
         guard cursorGestureWindow == nil else { return }
 
         let hostingController = NSHostingController(rootView: CursorGestureOverlayView(manager: self, zone: zone))
@@ -415,7 +424,7 @@ final class MouseGestureManager: ObservableObject {
         cursorGestureWindow = panel
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = 0.06
             panel.animator().alphaValue = 1
         }
     }

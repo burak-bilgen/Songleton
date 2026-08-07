@@ -89,7 +89,7 @@ a { text-decoration: none; }
 .hero-install.copied .hero-install-copy { min-width: 94px; background: rgba(18,146,79,.14); }
 .hero-install.copied .hero-install-copy .hicon { opacity: 0; transform: scale(.4); }
 .hero-install.copied .hero-install-copy .hcopied { opacity: 1; transform: scale(1); }
-.release-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 34px 0 30px; padding: 6px 9px; border-radius: 8px; background: rgba(13,22,41,.04); color: var(--dim); font-size: 8.25px; font-weight: 600; }
+.hero-copy > p.release-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 30px 0 30px; padding: 6px 9px; border-radius: 8px; background: rgba(13,22,41,.04); color: var(--dim); font-size: 8.25px; font-weight: 600; }
 .release-meta .rm-item { color: var(--dim); }
 .release-meta .rm-sep { opacity: .45; }
 .release-meta .rm-links { display: inline-flex; align-items: center; gap: 6px; margin-left: 3px; }

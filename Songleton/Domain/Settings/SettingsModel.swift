@@ -122,6 +122,10 @@ final class SettingsModel: ObservableObject {
         }
     }
 
+    @Published var showGestureOverlay: Bool {
+        didSet { defaults.set(showGestureOverlay, forKey: "showGestureOverlay") }
+    }
+
     @Published var horizontalEdgeHoldDuration: Double {
         didSet { defaults.set(horizontalEdgeHoldDuration, forKey: "horizontalEdgeHoldDuration") }
     }
@@ -164,6 +168,7 @@ final class SettingsModel: ObservableObject {
             "trackNotificationPosition": TrackNotificationPosition.bottomTrailing.rawValue,
             "horizontalGesturesEnabled": true,
             "verticalGesturesEnabled": true,
+            "showGestureOverlay": true,
             "lyricsOffset": 0.9
         ])
         showArtistInMenuBar = userDefaults.bool(forKey: "showArtistInMenuBar")
@@ -182,6 +187,7 @@ final class SettingsModel: ObservableObject {
         ) ?? .bottomTrailing
         horizontalGesturesEnabled = userDefaults.bool(forKey: "horizontalGesturesEnabled")
         verticalGesturesEnabled = userDefaults.bool(forKey: "verticalGesturesEnabled")
+        showGestureOverlay = userDefaults.bool(forKey: "showGestureOverlay")
         // The single hold duration was split into per-zone settings. Migrate
         // any previously stored value so users keep their tuned timing.
         let legacyHoldDuration = userDefaults.double(forKey: "edgeGestureHoldDuration")
@@ -190,7 +196,7 @@ final class SettingsModel: ObservableObject {
             : (userDefaults.object(forKey: "edgeGestureHoldDuration") != nil ? legacyHoldDuration : 0.65)
         let storedTop = userDefaults.object(forKey: "topEdgeHoldDuration") != nil
             ? userDefaults.double(forKey: "topEdgeHoldDuration")
-            : (userDefaults.object(forKey: "edgeGestureHoldDuration") != nil ? legacyHoldDuration * 0.70 : 0.45)
+            : (userDefaults.object(forKey: "edgeGestureHoldDuration") != nil ? legacyHoldDuration * 0.875 : 0.56)
         horizontalEdgeHoldDuration = min(2, max(0.2, storedHorizontal))
         topEdgeHoldDuration = min(2, max(0.2, storedTop))
         

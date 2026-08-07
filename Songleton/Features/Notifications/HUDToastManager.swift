@@ -382,16 +382,6 @@ final class HUDToastManager: NSObject, ObservableObject {
         }
     }
 
-    func showPreview() {
-        show(
-            track: LocalizationManager.shared.string("notification.preview_track"),
-            artist: LocalizationManager.shared.string("notification.preview_artist"),
-            artwork: nil,
-            accentColor: SongletonTheme.cyan,
-            isPreview: true
-        )
-    }
-
     // MARK: - Native Drag & Translucent Snap Overlay
 
     private var overlayWindow: SnapGuideOverlayWindow?
