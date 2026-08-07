@@ -104,7 +104,8 @@ final class TutorialAudioService {
         let clamped = Float(min(max(volume, 0), 20)) / 100
         targetVolume = clamped
         volumeTask?.cancel()
-        player?.setVolume(clamped, fadeDuration: 0.05)
+        let gain: Float = currentTrack == 2 ? 0.82 : 1.0
+        player?.setVolume(clamped * gain, fadeDuration: 0.05)
     }
 
     func stop() {
