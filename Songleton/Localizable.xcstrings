@@ -2654,36 +2654,36 @@
         }
       }
     },
-    "tutorial.cancel_desc" : {
+    "tutorial.next_desc" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold at the right edge until the ring fills to skip. Let go early and nothing happens."
+            "value" : "Hold at the right edge until the ring fills to skip to the next track."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sağ kenarda bekle, halka dolunca sonraki parçaya geçer. Erken bırakırsan iptal olur."
+            "value" : "İmleci sağ kenarda tut, halka dolunca sonraki parçaya geçer."
           }
         }
       }
     },
-    "tutorial.cancel_header" : {
+    "tutorial.next_header" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cancel"
+            "value" : "Play the next track"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İptal"
+            "value" : "Sonraki parçaya geç"
           }
         }
       }
@@ -2841,19 +2841,19 @@
         }
       }
     },
-    "tutorial.edge_status_cancel" : {
+    "tutorial.edge_status_cancel_restart" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Let go early and nothing happens."
+            "value" : "Let go early to cancel, or hold until the ring fills to restart."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erken bırakırsan iptal olur."
+            "value" : "Erken bırakırsan iptal olur, halka dolarsa şarkı başa sarar."
           }
         }
       }
@@ -2875,19 +2875,19 @@
         }
       }
     },
-    "tutorial.edge_status_previous" : {
+    "tutorial.edge_status_next" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold at the left edge until the ring fills to go back."
+            "value" : "Hold at the right edge until the ring fills to go forward."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sol kenarda bekle, halka dolunca önceki parçaya geçer."
+            "value" : "Sağ kenarda bekle, halka dolunca sonraki parçaya geçer."
           }
         }
       }
@@ -3034,13 +3034,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold at the left edge until the ring fills to go back."
+            "value" : "Hold at the left edge. Let go early to cancel; hold until the ring fills to restart the track."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İmleci sol kenarda tut, halka dolunca önceki parçaya geçer."
+            "value" : "İmleci sol kenarda tut. Erken bırakırsan iptal olur; halka dolunca şarkı başa sarar."
           }
         }
       }
@@ -3249,19 +3249,19 @@
         }
       }
     },
-    "tutorial.stage_cancel" : {
+    "tutorial.stage_next" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cancel"
+            "value" : "Next track"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İptal etme"
+            "value" : "Sonraki parça"
           }
         }
       }
