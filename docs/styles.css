@@ -89,10 +89,10 @@ a { text-decoration: none; }
 .hero-install.copied .hero-install-copy { min-width: 94px; background: rgba(18,146,79,.14); }
 .hero-install.copied .hero-install-copy .hicon { opacity: 0; transform: scale(.4); }
 .hero-install.copied .hero-install-copy .hcopied { opacity: 1; transform: scale(1); }
-.release-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 34px 0 30px; padding: 10px 14px; border-radius: 10px; background: rgba(13,22,41,.04); color: var(--dim); font-size: 11px; font-weight: 600; }
+.release-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 34px 0 30px; padding: 6px 9px; border-radius: 8px; background: rgba(13,22,41,.04); color: var(--dim); font-size: 8.25px; font-weight: 600; }
 .release-meta .rm-item { color: var(--dim); }
 .release-meta .rm-sep { opacity: .45; }
-.release-meta .rm-links { display: inline-flex; align-items: center; gap: 8px; margin-left: 4px; }
+.release-meta .rm-links { display: inline-flex; align-items: center; gap: 6px; margin-left: 3px; }
 .release-meta .rm-links a { color: var(--cyan); text-decoration: none; border-bottom: 1px solid transparent; }
 .release-meta .rm-links a:hover { border-bottom-color: currentColor; }
 .hero-install.copied { border-color: rgba(18,146,79,.4); box-shadow: inset 0 1px rgba(255,255,255,.9), 0 8px 22px rgba(18,146,79,.14); }
