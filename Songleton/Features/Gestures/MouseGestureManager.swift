@@ -93,7 +93,6 @@ final class MouseGestureManager: ObservableObject {
     private var volumeGestureStartValue = 50
     private var volumeGestureWindow: NSPanel?
     private let logger = Logger(subsystem: "bilgenworks.app.Songleton", category: "mouse-gesture")
-    private var lastEventLogDate = Date.distantPast
 
     init() {
         refreshAccessibilityStatus()

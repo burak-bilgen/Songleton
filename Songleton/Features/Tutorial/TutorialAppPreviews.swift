@@ -76,11 +76,11 @@ struct FullMacOSMenuBarPreview: View {
                         .font(.system(size: 13, weight: .bold))
 
                     Group {
-                        Text(verbatim: "File")
-                        Text(verbatim: "Edit")
-                        Text(verbatim: "View")
-                        Text(verbatim: "Window")
-                        Text(verbatim: "Help")
+                        Text(LocalizationManager.shared.string("tutorial.mock_menu_file"))
+                        Text(LocalizationManager.shared.string("tutorial.mock_menu_edit"))
+                        Text(LocalizationManager.shared.string("tutorial.mock_menu_view"))
+                        Text(LocalizationManager.shared.string("tutorial.mock_menu_window"))
+                        Text(LocalizationManager.shared.string("tutorial.mock_menu_help"))
                     }
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.white.opacity(0.85))

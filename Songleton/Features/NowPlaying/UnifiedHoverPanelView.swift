@@ -112,23 +112,24 @@ struct UnifiedHoverPanelView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 21)
-
-            // 5. Ambient Mode Button (top-left) + Settings (top-right)
-            .overlay(alignment: .topLeading) {
-                if case .loaded = model.state {
-                    ambientButton
-                        .padding(.top, 14)
-                        .padding(.leading, 14)
-                }
+        }
+        // 5. Ambient Mode Button (top-left) + Settings (top-right). Pinned to
+        //    the panel edges so they stay flush with the right edge even when
+        //    the content (e.g. the "not playing" state) is much narrower.
+        .overlay(alignment: .topLeading) {
+            if case .loaded = model.state {
+                ambientButton
+                    .padding(.top, 14)
+                    .padding(.leading, 14)
             }
-            .overlay(alignment: .topTrailing) {
-                HStack(spacing: 8) {
-                    settingsButton
-                    quitButton
-                }
-                .padding(.top, 14)
-                .padding(.trailing, 14)
+        }
+        .overlay(alignment: .topTrailing) {
+            HStack(spacing: 8) {
+                settingsButton
+                quitButton
             }
+            .padding(.top, 14)
+            .padding(.trailing, 14)
         }
         .frame(width: 360)
         .fixedSize(horizontal: true, vertical: true)

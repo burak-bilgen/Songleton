@@ -206,7 +206,7 @@ struct EasterEggView: View {
                 }
                 .padding(.top, 4)
 
-                Text(verbatim: "Press ESC or click anywhere to close")
+                Text(LocalizationManager.shared.string("easter_egg.close_hint"))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.35))
             }

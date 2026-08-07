@@ -48,7 +48,8 @@ nonisolated final class ArtworkCache: @unchecked Sendable {
         if let diskDirectory {
             self.diskDirectory = diskDirectory
         } else {
-            let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+                ?? FileManager.default.temporaryDirectory
             self.diskDirectory = caches.appendingPathComponent("SongletonArtwork", isDirectory: true)
         }
         try? FileManager.default.createDirectory(

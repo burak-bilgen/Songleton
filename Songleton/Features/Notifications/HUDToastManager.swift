@@ -731,7 +731,7 @@ struct SnapGuideOverlayView: View {
                 let isActive = (pos == activePosition)
 
                 let swiftUIX = cardOrigin.x + cardSize.width / 2
-                let swiftUIY = screen.frame.height - (cardOrigin.y + cardSize.height / 2)
+                let swiftUIY = screen.frame.maxY - (cardOrigin.y + cardSize.height / 2)
 
                 ZStack {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)

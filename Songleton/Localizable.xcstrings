@@ -36,6 +36,13 @@
         "tr" : { "stringUnit" : { "state" : "translated", "value" : "Harika! 🚀" } }
       }
     },
+    "easter_egg.close_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Press ESC or click anywhere to close" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Kapatmak için ESC'ye bas veya herhangi bir yere tıkla" } }
+      }
+    },
     "ambient.exit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2686,6 +2693,41 @@
             "value" : "Sonraki parçaya geç"
           }
         }
+      }
+    },
+    "tutorial.mock_menu_file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "File" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Dosya" } }
+      }
+    },
+    "tutorial.mock_menu_edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Düzenle" } }
+      }
+    },
+    "tutorial.mock_menu_view" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "View" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Görünüm" } }
+      }
+    },
+    "tutorial.mock_menu_window" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Window" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Pencere" } }
+      }
+    },
+    "tutorial.mock_menu_help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Help" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Yardım" } }
       }
     },
     "tutorial.close_hint" : {

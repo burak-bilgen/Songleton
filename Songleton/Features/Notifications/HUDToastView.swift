@@ -23,9 +23,6 @@ struct HUDToastView: View {
     let forcePermanent: Bool
 
     @ObservedObject private var model = NowPlayingModel.shared
-    @ObservedObject private var localization = LocalizationManager.shared
-
-    @State private var isDragging: Bool = false
 
     static let cornerRadius: CGFloat = 18
 
@@ -127,29 +124,6 @@ struct HUDToastView: View {
         .frame(width: layout.panelSize.width, height: layout.panelSize.height)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(displayArtist.isEmpty ? displayTrack : "\(displayTrack), \(displayArtist)")
-    }
-
-    @ViewBuilder
-    private var artworkAura: some View {
-        if let resolvedArtwork {
-            Image(nsImage: resolvedArtwork)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: layout.size.width * 1.14, height: layout.size.height * 1.8)
-                .blur(radius: 30)
-                .saturation(1.35)
-                .opacity(0.28)
-                .id(resolvedArtwork)
-                .transition(.opacity)
-                .animation(.easeInOut(duration: 0.35), value: resolvedArtwork)
-        } else {
-            RadialGradient(
-                colors: [themeColor.opacity(isPreview ? 0.34 : 0.20), .clear],
-                center: .leading,
-                startRadius: 8,
-                endRadius: 150
-            )
-        }
     }
 
     private var notificationContent: some View {

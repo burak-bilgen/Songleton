@@ -373,7 +373,10 @@ struct GestureTutorialView: View {
     ) -> CGPoint {
         let origin = HUDToastManager.toastOrigin(in: screen.visibleFrame, toastSize: cardSize, position: pos)
         let x = origin.x + cardSize.width / 2
-        let y = screen.frame.height - (origin.y + cardSize.height / 2)
+        // Screen coordinates are bottom-left; SwiftUI in the tutorial window
+        // is top-left. frame.maxY (not frame.height) is the top edge so
+        // secondary displays with a non-zero frame.minY map correctly.
+        let y = screen.frame.maxY - (origin.y + cardSize.height / 2)
         return CGPoint(x: x, y: y)
     }
 
@@ -620,10 +623,6 @@ struct GestureTutorialView: View {
         .scaleEffect(isPressed ? 0.94 : 1.0)
         .shadow(color: isPressed ? SongletonTheme.cyan.opacity(0.8) : .clear, radius: 10)
         .animation(.easeInOut(duration: 0.16), value: isPressed)
-    }
-
-    private var tutorialMenuBarPreview: some View {
-        TutorialMenuBarPreview(isRightClicking: isTrackRightClicking)
     }
 
     // MARK: - Zone Mapping for Real App Overlay
@@ -1558,9 +1557,10 @@ struct GestureTutorialView: View {
                 try? await Task.sleep(for: .milliseconds(170))
                 guard !Task.isCancelled else { return }
 
-                // 3. Drag down the right edge, ending a little past the
-                //    bottom-right snap point so the magnet pull reads.
-                let dropPoint = CGPoint(x: targetPoint.x + 16, y: targetPoint.y + 12)
+                // 3. Drag down the right edge, ending just past the
+                //    bottom-right snap point so the magnet pull reads as a
+                //    small final nudge instead of a long slide.
+                let dropPoint = CGPoint(x: targetPoint.x + 10, y: targetPoint.y + 6)
                 let delta = CGPoint(x: dropPoint.x - nudge.x, y: dropPoint.y - nudge.y)
                 let distance = hypot(delta.x, delta.y)
                 let direction = CGPoint(x: delta.x / distance, y: delta.y / distance)
@@ -1585,30 +1585,34 @@ struct GestureTutorialView: View {
                     onPositionUpdate: { tutorialActiveSnapPosition = nearestSnap($0) }
                 )
 
-                // 4. Release — the magnet pulls the card home. The guides
-                //    disappear the instant the snap takes over, and the stiff
-                //    spring settles without overshoot so the card lands exactly
-                //    on the snap point.
+                // 4. Release — the magnet pulls the card the final few points
+                //    home. The guides stay visible while the card settles so
+                //    the landing is visibly exact, then the snap flash takes
+                //    over and the guides fade.
                 try? await Task.sleep(for: .milliseconds(180))
                 guard !Task.isCancelled else { return }
 
                 await setCursorPressed(false)
                 isTutorialDraggingMiniPlayer = false
-                tutorialSnapGuidesVisible = false
-                withAnimation(reduceMotion ? nil : .spring(response: 0.30, dampingFraction: 0.85, blendDuration: 0.05)) {
+                withAnimation(reduceMotion ? nil : .spring(response: 0.30, dampingFraction: 0.95, blendDuration: 0.05)) {
                     tutorialMiniPlayerPosition = targetPoint
                 }
-                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.45)) {
-                    tutorialSnapFlash = true
-                }
 
-                // The cursor lifts off while the card settles into place.
+                // The cursor lifts down and away while the card settles, so
+                // the card's upward magnet motion reads as its own action.
                 await moveCursor(
-                    to: CGPoint(x: targetPoint.x + 24, y: targetPoint.y - 20),
+                    to: CGPoint(x: targetPoint.x + 24, y: targetPoint.y + 26),
                     duration: 0.36,
                     rotation: 4,
                     scale: 1.04
                 )
+
+                try? await Task.sleep(for: .milliseconds(260))
+                guard !Task.isCancelled else { return }
+                tutorialSnapGuidesVisible = false
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.45)) {
+                    tutorialSnapFlash = true
+                }
 
                 try? await Task.sleep(for: .milliseconds(440))
                 guard !Task.isCancelled else { return }
