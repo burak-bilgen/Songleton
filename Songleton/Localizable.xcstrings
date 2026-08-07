@@ -729,13 +729,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold and drag up or down to change the volume"
+            "value" : "Hold ⌘ and ⌥, then drag the pointer up or down to change the volume"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sesi değiştirmek için basılı tutup yukarı veya aşağı sürükle"
+            "value" : "Sesi değiştirmek için ⌘ ve ⌥'i basılı tutup imleci yukarı veya aşağı sürükle"
           }
         }
       }
@@ -3484,13 +3484,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold Command and Option, then drag up or down. The volume HUD follows the movement."
+            "value" : "Hold Command and Option, then drag the pointer up to raise the volume or down to lower it. The volume HUD follows the pointer."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Command ve Option'ı basılı tutup yukarı veya aşağı sürükle. Ses göstergesi hareketi takip eder."
+            "value" : "Command ve Option'ı basılı tut, imleci sesi açmak için yukarı, kısmak için aşağı sürükle. Ses göstergesi imleci takip eder."
           }
         }
       }
@@ -3518,13 +3518,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drag vertically"
+            "value" : "Drag the pointer vertically"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dikey sürükle"
+            "value" : "İmleci dikey sürükle"
           }
         }
       }
@@ -3535,13 +3535,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Or hold both mouse buttons and drag up or down."
+            "value" : "Or hold both mouse buttons and drag the pointer up or down"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ya da iki fare tuşunu basılı tutup yukarı veya aşağı sürükle."
+            "value" : "Ya da iki fare tuşunu basılı tutup imleci yukarı veya aşağı sürükle"
           }
         }
       }
