@@ -978,11 +978,10 @@ struct GestureTutorialView: View {
                 TutorialAudioService.shared.resume(fadeIn: true)
             }
         case .topEdgePlayPause, .volumeControl, .leftClickToggle, .hoverMenu, .ambientMode, .permanentMiniPlayer:
-            if TutorialAudioService.shared.currentTrack != 2 {
-                TutorialAudioService.shared.switchToSecondTrack()
-            } else {
-                TutorialAudioService.shared.resume(fadeIn: true)
-            }
+            // Stage 1 already demonstrated next (1 -> 2) and stage 2 previous
+            // (2 -> 1). None of these stages change the track, so they keep
+            // playing the current song instead of forcing a needless switch.
+            TutorialAudioService.shared.resume(fadeIn: true)
         }
     }
 
